@@ -1,0 +1,12 @@
+<!doctype html><meta charset=utf-8><pre id=o></pre><script type=module>
+const out=[]; const log=(s)=>{out.push(s); document.getElementById('o').textContent=out.join('\n');};
+const tryAd=async(g,label,opt)=>{ try{ const a=await g.requestAdapter(opt); if(!a){log(label+': null');return;} const i=a.info??{}; log(label+': '+[i.vendor,i.architecture,i.device,i.description].join('|')+' features='+[...a.features].join(',')+' binding='+a.limits.maxStorageBufferBindingSize+' buf='+a.limits.maxBufferSize+' inv='+a.limits.maxComputeInvocationsPerWorkgroup);
+  try{ const d=await a.requestDevice(); log(label+' device ok'); const m=d.createShaderModule({code:'@compute @workgroup_size(1) fn main(){}'}); const ci=await m.getCompilationInfo(); log(label+' shader msgs='+ci.messages.length); d.destroy(); }catch(e){log(label+' device FAIL '+e);} }catch(e){log(label+' threw '+e);} };
+log('ua '+navigator.userAgent); log('secure='+isSecureContext+' gpu in navigator='+('gpu' in navigator)+' JSPI='+('Suspending' in WebAssembly));
+if(navigator.gpu){ log('wgslLanguageFeatures '+[...(navigator.gpu.wgslLanguageFeatures??[])].join(','));
+ await tryAd(navigator.gpu,'main default',undefined); await tryAd(navigator.gpu,'main high',{powerPreference:'high-performance'}); await tryAd(navigator.gpu,'main fallback',{forceFallbackAdapter:true}); }
+const w=new Worker(URL.createObjectURL(new Blob([`(async()=>{let r='worker gpu='+('gpu' in navigator); try{ if(navigator.gpu){const a=await navigator.gpu.requestAdapter(); r+=' adapter='+(a?'ok':'null');} }catch(e){r+=' threw '+e;} postMessage(r);})()`],{type:'text/javascript'})));
+await new Promise(r=>{w.onmessage=e=>{log(e.data);r();}; setTimeout(r,5000);});
+try{ const c=document.createElement('canvas'); const gl=c.getContext('webgl2'); log('webgl2='+(gl? gl.getParameter(gl.RENDERER):'null')); }catch(e){log('webgl2 threw '+e);}
+await fetch('/report',{method:'POST',body:JSON.stringify({probe:out})});
+</script>

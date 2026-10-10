@@ -1,0 +1,50 @@
+From 71c29dedc9015bc227a900f296f1c8dc5905337f Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 05:59:23 -0700
+Subject: [PATCH 16/17] ggml-cpu wasm: quantize_row_q8_0 / q8_1 round to
+ nearest instead of truncating
+
+The WASM SIMD path converted with i32x4.trunc_sat_f32x4 directly, so every
+activation quantized for a Q8_0 dot product was biased towards zero by up to
+one step. The reference uses roundf, AVX2 rounds to nearest, and the Q8_K
+kernel in the same file already calls f32x4.nearest first.
+
+Seen as text drift in the parakeet decoder (packed Q8_0 weights, activations
+quantized per mat-vec): on an 8.9 min clip the Chrome transcript differed from
+the native one in 19 places, 2 after this change; with fp32 decoder weights
+there was 1. Short clips were identical before and after. No time cost.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ ggml/src/ggml-cpu/arch/wasm/quants.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/ggml/src/ggml-cpu/arch/wasm/quants.c b/ggml/src/ggml-cpu/arch/wasm/quants.c
+index 0a7119b4..ef19a1ef 100644
+--- a/ggml/src/ggml-cpu/arch/wasm/quants.c
++++ b/ggml/src/ggml-cpu/arch/wasm/quants.c
+@@ -70,7 +70,9 @@ void quantize_row_q8_0(const float * GGML_RESTRICT x, void * GGML_RESTRICT vy, i
+ 
+         for (int j = 0; j < 8; j++) {
+             const v128_t v  = wasm_f32x4_mul(srcv[j], wasm_f32x4_splat(id));
+-            const v128_t vi = wasm_i32x4_trunc_sat_f32x4(v);
++            // Round to nearest like every other arch (the reference uses roundf, AVX2 _MM_ROUND_NEAREST);
++            // plain truncation biased every quantized activation towards zero by up to one step.
++            const v128_t vi = wasm_i32x4_trunc_sat_f32x4(wasm_f32x4_nearest(v));
+ 
+             y[i].qs[4*j + 0] = wasm_i32x4_extract_lane(vi, 0);
+             y[i].qs[4*j + 1] = wasm_i32x4_extract_lane(vi, 1);
+@@ -117,7 +119,9 @@ void quantize_row_q8_1(const float * GGML_RESTRICT x, void * GGML_RESTRICT vy, i
+ 
+         for (int j = 0; j < 8; j++) {
+             const v128_t v  = wasm_f32x4_mul(srcv[j], wasm_f32x4_splat(id));
+-            const v128_t vi = wasm_i32x4_trunc_sat_f32x4(v);
++            // Round to nearest like every other arch (the reference uses roundf, AVX2 _MM_ROUND_NEAREST);
++            // plain truncation biased every quantized activation towards zero by up to one step.
++            const v128_t vi = wasm_i32x4_trunc_sat_f32x4(wasm_f32x4_nearest(v));
+ 
+             y[i].qs[4*j + 0] = wasm_i32x4_extract_lane(vi, 0);
+             y[i].qs[4*j + 1] = wasm_i32x4_extract_lane(vi, 1);
+-- 
+2.53.0
+

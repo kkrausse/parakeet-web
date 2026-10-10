@@ -1,0 +1,275 @@
+From 2b922883694976aa80974749fae874e9c7a2dacf Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 05:59:23 -0700
+Subject: [PATCH 15/17] parakeet: chunked long-audio encoding
+ (TRANSCRIBE_PARAKEET_CHUNK_S)
+
+Full-attention checkpoints without a VAD head keep every attention score
+tensor at T x (2T-1) per head, so GPU memory is quadratic in clip length
+(110m Q8_0, native WebGPU: 212 MiB at 56 s, 558 at 2.1 min, 1276 at 4.4 min).
+
+With TRANSCRIBE_PARAKEET_CHUNK_S=<s> a clip longer than chunk + 2 x halo
+(TRANSCRIBE_PARAKEET_CHUNK_HALO_S, default 4) and longer than
+TRANSCRIBE_PARAKEET_CHUNK_MIN_S is encoded in equal windows: mel computed and
+normalized once over the whole clip, each window = its own frames plus halo
+seconds of real audio either side, windows start on the subsampling grid, only
+the window's own encoder frames are kept, and the stitched encoder output is
+decoded once (decoder state runs through the cuts; nothing to merge in text).
+
+GPU peak is then one window's: 192-193 MiB from 2 to 9 min (110m), 529-576 MiB
+(0.6b Q4_0); encoder time is linear. Not bit-identical to single-shot: frames
+near a cut see halo seconds of context instead of the whole clip.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ src/arch/parakeet/model.cpp  | 187 +++++++++++++++++++++++++++++++++--
+ src/arch/parakeet/parakeet.h |   6 ++
+ 2 files changed, 185 insertions(+), 8 deletions(-)
+
+diff --git a/src/arch/parakeet/model.cpp b/src/arch/parakeet/model.cpp
+index 490a8fd3..b438ff13 100644
+--- a/src/arch/parakeet/model.cpp
++++ b/src/arch/parakeet/model.cpp
+@@ -1069,14 +1069,21 @@ transcribe_status run_one_shot_inner(ParakeetSession *             pc,
+     const int64_t t_mel_start  = ggml_time_us();
+     int           mel_n_mels   = 0;
+     int           mel_n_frames = 0;
+-    if (const transcribe_status mst =
+-            pm->mel->compute(pcm, static_cast<size_t>(n_samples), pc->mel_buf, mel_n_mels, mel_n_frames);
+-        mst != TRANSCRIBE_OK) {
+-        log_msg(TRANSCRIBE_LOG_LEVEL_ERROR, "parakeet run: MelFrontend::compute failed (%s)",
+-                transcribe_status_string(mst));
+-        return mst;
++    const bool    chunk_slice  = pc->chunk_mel != nullptr && pc->chunk_mel_frames > 0;
++    if (chunk_slice) {
++        // run_chunked: one slice of a mel computed (and normalized) over the whole clip.
++        mel_n_mels   = pc->chunk_mel_n_mels;
++        mel_n_frames = pc->chunk_mel_frames;
++    } else {
++        if (const transcribe_status mst =
++                pm->mel->compute(pcm, static_cast<size_t>(n_samples), pc->mel_buf, mel_n_mels, mel_n_frames);
++            mst != TRANSCRIBE_OK) {
++            log_msg(TRANSCRIBE_LOG_LEVEL_ERROR, "parakeet run: MelFrontend::compute failed (%s)",
++                    transcribe_status_string(mst));
++            return mst;
++        }
++        pc->t_mel_us = ggml_time_us() - t_mel_start;
+     }
+-    pc->t_mel_us = ggml_time_us() - t_mel_start;
+ 
+     // Multitalker masked mode (NeMo mask_features): binarize the target
+     // speaker's per-diar-frame activity, expand 8x to feature frames from
+@@ -1185,7 +1192,12 @@ transcribe_status run_one_shot_inner(ParakeetSession *             pc,
+ 
+     // Upload the mel; the row-major [num_mels, n_frames] buffer is
+     // byte-identical to the ggml ne=[n_frames, num_mels, 1, 1] input.
+-    ggml_backend_tensor_set(eb.mel_in, pc->mel_buf.data(), 0, pc->mel_buf.size() * sizeof(float));
++    if (chunk_slice) {
++        ggml_backend_tensor_set(eb.mel_in, pc->chunk_mel, 0,
++                                static_cast<size_t>(mel_n_mels) * static_cast<size_t>(mel_n_frames) * sizeof(float));
++    } else {
++        ggml_backend_tensor_set(eb.mel_in, pc->mel_buf.data(), 0, pc->mel_buf.size() * sizeof(float));
++    }
+ 
+     transcribe::debug::dump_tensor("enc.mel.in", eb.mel_in, "encoder.mel");
+ 
+@@ -1444,6 +1456,9 @@ transcribe_status run_one_shot_inner(ParakeetSession *             pc,
+     } else {
+         ggml_backend_tensor_get(eb.out, pc->enc_host.data(), 0, pc->enc_host.size() * sizeof(float));
+     }
++    if (chunk_slice) {
++        return TRANSCRIBE_OK;  // run_chunked stitches the kept rows and decodes once
++    }
+ 
+     // kestrel length masking: frames past the valid length are padding (the
+     // reference masks them out of attention as queries too, so their values
+@@ -1774,6 +1789,158 @@ transcribe_status run_longform(ParakeetSession *             pc,
+     return TRANSCRIBE_OK;
+ }
+ 
++// ----- Chunked long-audio encoding (TRANSCRIBE_PARAKEET_CHUNK_S) -----
++//
++// Full-attention checkpoints without a VAD head: attention memory is quadratic
++// in the clip length. With TRANSCRIBE_PARAKEET_CHUNK_S=<seconds> set, a clip
++// longer than chunk + 2 * halo is encoded in windows instead: the mel is
++// computed (and normalized) once over the whole clip, each window is the
++// chunk's mel frames plus TRANSCRIBE_PARAKEET_CHUNK_HALO_S seconds (default 4)
++// of real audio on each side, and only the chunk's own encoder frames are
++// kept. Windows start on a multiple of the subsampling factor, so the kept
++// frames sit on the same grid as the single-shot encoder's. The stitched
++// encoder output is decoded once, so the decoder state runs through the cuts
++// and there is nothing to merge in the text. Encoder (GPU) memory is that of
++// one window whatever the clip length; the host keeps the mel and the
++// encoder output, both linear and small (about 45 kB per second together).
++// Not bit-identical to single-shot: frames near a cut see halo seconds of
++// context instead of the whole clip.
++struct ChunkPlan {
++    int chunk_frames = 0;  // encoder frames kept per window
++    int halo_frames  = 0;  // encoder frames of context on each side
++};
++
++ChunkPlan chunk_plan(const ParakeetModel * pm) {
++    ChunkPlan    cp;
++    const char * e = std::getenv("TRANSCRIBE_PARAKEET_CHUNK_S");
++    if (e == nullptr || *e == '\0') {
++        return cp;
++    }
++    const double chunk_s = std::atof(e);
++    const char * h       = std::getenv("TRANSCRIBE_PARAKEET_CHUNK_HALO_S");
++    const double halo_s  = (h != nullptr && *h != '\0') ? std::atof(h) : 4.0;
++    const int    sub     = pm->hparams.enc_subsampling_factor > 0 ? pm->hparams.enc_subsampling_factor : 8;
++    const double fps     = 100.0 / static_cast<double>(sub);  // 10 ms mel hop
++    if (chunk_s <= 0.0 || halo_s < 0.0) {
++        return cp;
++    }
++    cp.chunk_frames = std::max(1, static_cast<int>(std::lround(chunk_s * fps)));
++    cp.halo_frames  = static_cast<int>(std::lround(halo_s * fps));
++    return cp;
++}
++
++bool needs_chunked(const ParakeetModel * pm, int n_samples) {
++    const ParakeetHParams & hp = pm->hparams;
++    if (hp.has_vad_head || hp.has_prompt || hp.kestrel_length_masking ||
++        hp.enc_att_context_style != ParakeetHParams::AttContextStyle::Regular || hp.enc_att_context_left >= 0 ||
++        transcribe::debug::enabled()) {
++        return false;
++    }
++    const ChunkPlan cp = chunk_plan(pm);
++    if (cp.chunk_frames <= 0) {
++        return false;
++    }
++    const int     sub     = hp.enc_subsampling_factor > 0 ? hp.enc_subsampling_factor : 8;
++    const int64_t one_win = static_cast<int64_t>(cp.chunk_frames + 2 * cp.halo_frames) * sub * 160;
++    // TRANSCRIBE_PARAKEET_CHUNK_MIN_S: clips up to this long stay single-shot even if longer than one window.
++    const char *  mn      = std::getenv("TRANSCRIBE_PARAKEET_CHUNK_MIN_S");
++    const int64_t min_smp = (mn != nullptr && *mn != '\0') ? static_cast<int64_t>(std::atof(mn) * 16000.0) : 0;
++    return static_cast<int64_t>(n_samples) > std::max(one_win, min_smp);
++}
++
++transcribe_status run_chunked(ParakeetSession *             pc,
++                              ParakeetModel *               pm,
++                              const float *                 pcm,
++                              int                           n_samples,
++                              const transcribe_run_params * params) {
++    if (!pm->mel.has_value()) {
++        return TRANSCRIBE_ERR_INVALID_ARG;
++    }
++    const int64_t      t_mel_start = ggml_time_us();
++    std::vector<float> mel;
++    int                n_mels = 0, n_frames = 0;
++    if (const transcribe_status mst = pm->mel->compute(pcm, static_cast<size_t>(n_samples), mel, n_mels, n_frames);
++        mst != TRANSCRIBE_OK) {
++        return mst;
++    }
++    const int64_t t_mel_us = ggml_time_us() - t_mel_start;
++
++    const int       sub     = pm->hparams.enc_subsampling_factor > 0 ? pm->hparams.enc_subsampling_factor : 8;
++    const int       T_total = pre_encode_time_out(pre_encode_time_out(pre_encode_time_out(n_frames, false), false), false);
++    const ChunkPlan cp      = chunk_plan(pm);
++    // Even windows: no short tail.
++    const int n_chunks = std::max(1, (T_total + cp.chunk_frames - 1) / cp.chunk_frames);
++    const int C        = (T_total + n_chunks - 1) / n_chunks;
++    const int H        = cp.halo_frames;
++
++    std::vector<float> acc;       // kept rows, [T_total, d]
++    std::vector<float> slice;     // one window's mel, row-major [n_mels, frames]
++    int                d        = 0;
++    int                d_enc    = 0;
++    bool               use_proj = false;
++    int64_t            t_enc    = 0;
++    int                max_win  = 0;
++    for (int k = 0; k < n_chunks; ++k) {
++        if (pc->poll_abort()) {
++            return TRANSCRIBE_ERR_ABORTED;
++        }
++        const int c0 = k * C;
++        const int c1 = std::min(T_total, c0 + C);
++        const int a  = std::max(0, c0 - H);
++        const int m0 = a * sub;
++        const int m1 = (c1 + H >= T_total) ? n_frames : std::min(n_frames, (c1 + H) * sub);
++        const int nf = m1 - m0;
++        slice.resize(static_cast<size_t>(n_mels) * static_cast<size_t>(nf));
++        for (int m = 0; m < n_mels; ++m) {
++            std::memcpy(slice.data() + static_cast<size_t>(m) * nf,
++                        mel.data() + static_cast<size_t>(m) * n_frames + m0, static_cast<size_t>(nf) * sizeof(float));
++        }
++        pc->chunk_mel        = slice.data();
++        pc->chunk_mel_frames = nf;
++        pc->chunk_mel_n_mels = n_mels;
++        const int64_t           t0 = ggml_time_us();
++        const transcribe_status st = run_one_shot_inner(pc, pm, pcm, n_samples, params, nullptr);
++        pc->chunk_mel        = nullptr;
++        pc->chunk_mel_frames = 0;
++        if (st != TRANSCRIBE_OK) {
++            return st;
++        }
++        t_enc += ggml_time_us() - t0;  // graph build, compute and the read-back
++        const int T_win = static_cast<int>(pc->encoder_out->ne[1]);
++        max_win         = std::max(max_win, T_win);
++        if (k == 0) {
++            d_enc    = static_cast<int>(pc->encoder_out->ne[0]);
++            use_proj = pc->enc_proj_rows == T_win;
++            d        = use_proj ? static_cast<int>(pc->enc_proj_host.size() / static_cast<size_t>(T_win)) : d_enc;
++            acc.resize(static_cast<size_t>(T_total) * static_cast<size_t>(d));
++        }
++        if ((pc->enc_proj_rows == T_win) != use_proj || T_win < c1 - a) {
++            log_msg(TRANSCRIBE_LOG_LEVEL_ERROR, "parakeet chunked: window %d has %d frames, need %d", k, T_win, c1 - a);
++            return TRANSCRIBE_ERR_BACKEND;
++        }
++        const std::vector<float> & src = use_proj ? pc->enc_proj_host : pc->enc_host;
++        std::memcpy(acc.data() + static_cast<size_t>(c0) * d, src.data() + static_cast<size_t>(c0 - a) * d,
++                    static_cast<size_t>(c1 - c0) * static_cast<size_t>(d) * sizeof(float));
++    }
++    log_msg(TRANSCRIBE_LOG_LEVEL_DEBUG,
++            "parakeet chunked: %d encoder frames in %d windows of %d + 2 x %d halo (largest window %d frames)", T_total,
++            n_chunks, C, H, max_win);
++
++    pc->encoder_out = nullptr;  // the last window's tensor is not the clip's encoder output
++    pc->enc_host.resize(static_cast<size_t>(d_enc) * static_cast<size_t>(T_total));
++    if (use_proj) {
++        pc->enc_proj_host.swap(acc);
++        pc->enc_proj_rows = T_total;
++    } else {
++        pc->enc_host.swap(acc);
++        pc->enc_proj_rows = 0;
++    }
++    const transcribe_status st = decode_and_populate(pc, pm, params, pc->enc_host.data(), T_total, d_enc, -1, nullptr);
++    pc->t_mel_us    = t_mel_us;
++    pc->t_encode_us = t_enc;
++    return st;
++}
++
+ bool needs_longform(const ParakeetModel * pm, int n_samples) {
+     return pm->hparams.has_vad_head && !longform::fits_one_segment(n_samples, longform_params(pm->hparams));
+ }
+@@ -1816,6 +1983,10 @@ transcribe_status run(transcribe_session *          session,
+         return run_longform(pc, pm, pcm, n_samples, params);
+     }
+ 
++    if (needs_chunked(pm, n_samples)) {
++        return run_chunked(pc, pm, pcm, n_samples, params);
++    }
++
+     return run_one_shot_inner(pc, pm, pcm, n_samples, params);
+ }
+ 
+diff --git a/src/arch/parakeet/parakeet.h b/src/arch/parakeet/parakeet.h
+index 5a552d4c..5cbd3920 100644
+--- a/src/arch/parakeet/parakeet.h
++++ b/src/arch/parakeet/parakeet.h
+@@ -311,6 +311,12 @@ struct ParakeetSession final : public transcribe_session {
+     // (EncoderBuild::enc_proj); enc_proj_rows > 0 only for the decode that follows.
+     std::vector<float>    enc_proj_host;
+     int                   enc_proj_rows = 0;
++    // Chunked long-audio encoding (run_chunked): when chunk_mel_frames > 0 the
++    // one-shot helper encodes this mel slice (row-major [n_mels, frames]) instead
++    // of computing the mel from pcm, and returns after the encoder read-back.
++    const float *         chunk_mel        = nullptr;
++    int                   chunk_mel_frames = 0;
++    int                   chunk_mel_n_mels = 0;
+     std::vector<TdtToken> raw_tokens;
+ 
+     // Multitalker bundle scratch: streaming-diarizer AOSC/FIFO state for
+-- 
+2.53.0
+

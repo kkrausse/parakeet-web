@@ -1,0 +1,310 @@
+{
+ "name": "t3-q4-l2",
+ "url": "http://127.0.0.1:8791/?model=q4&clip=l2&runs=3&auto=1",
+ "chromeArgs": [
+  "--enable-dawn-features=vulkan_enable_f16_on_nvidia"
+ ],
+ "machineAtStart": {
+  "loadavg": "2.25 2.77 2.96 22/1962 178948",
+  "cpuPressure": "some avg10=0.38 avg60=0.47 avg300=0.64 total=10198362948"
+ },
+ "chrome": "154.0.8037.97",
+ "error": null,
+ "memory": {
+  "gpuProcessGpuMibAfterLoad": 501,
+  "gpuProcessGpuMibPeak": 577,
+  "rendererRssMibAfterLoad": 228,
+  "rendererRssMibPeak": 398,
+  "gpuProcessRssMibAfterLoad": 301,
+  "gpuProcessRssMibPeak": 334
+ },
+ "pids": {
+  "gpu": 178583,
+  "renderers": [
+   179037,
+   178798,
+   178746
+  ]
+ },
+ "page": {
+  "config": {
+   "model": "q4",
+   "clip": "l2",
+   "runs": 3,
+   "threads": 1,
+   "store": "opfs",
+   "f16": true,
+   "flash": false,
+   "variant": "jspi",
+   "verbose": false,
+   "base": "models/",
+   "env": {}
+  },
+  "model": {
+   "label": "0.6b v2, Q4_0 (4-bit weights)",
+   "file": "parakeet-tdt-0.6b-v2-Q4_0.gguf",
+   "mb": 438,
+   "family": "0.6b"
+  },
+  "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "crossOriginIsolated": true,
+  "clips": [
+   {
+    "clip": "l2",
+    "seconds": 125.9,
+    "firstInPage": true,
+    "firstRunMs": {
+     "pre": 99,
+     "enc": 1267.6,
+     "dec": 606.9,
+     "total": 1973.5
+    },
+    "startToFirstTranscriptMs": 8484,
+    "decSteps": 716,
+    "text": "Welcome to Quirk QuidQuill Inc., where finance meets innovation. Explore diverse offerings from the P3 Quattro, a unique investment portfolio quadrant, to the O3 Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B3 Bond X and experience non-standard equity trading with E3 equity. Personalize your wealth management with W3 RAPZ and anticipate market trends with the O2 Outlier, our forward-thinking financial forecasting tool. Explore venture capital world with U3 Unifund or move your money with the M3 Mover, our sophisticated monetary transfer module. At Cork QuidQuill Inc., we turn complex finance into creative solutions. Join us in redefining financial services. Going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards. Welcome to Quirk Quid Quill Inc., where finance meets innovation. Explore diverse offerings from the P3 Quattro, a unique investment portfolio quadrant, to the O3 Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B3 Bond X and our and experience non-standard equity trading with E3 equity. Personalize your wealth management with W3WZ and anticipate market trends with the O2 Outlier, our forward-thinking financial forecasting tool. Explore venture capital world with U3Unifund or move your money with the M3Mover, our sophisticated monetary transfer module. At CorkQuidQuill Inc., we turn complex finance into creative solutions. Join us in redefining financial services.",
+    "matchesNative": true,
+    "hasReference": true,
+    "wordDiff": {
+     "differing": 0,
+     "words": 255
+    },
+    "warmRuns": 3,
+    "preMs": {
+     "median": 79.1,
+     "worst": 81.6,
+     "best": 78.4
+    },
+    "encMs": {
+     "median": 1095.5,
+     "worst": 1099.4,
+     "best": 1088.8
+    },
+    "decMs": {
+     "median": 494.3,
+     "worst": 509.5,
+     "best": 470.6
+    },
+    "totalMs": {
+     "median": 1672.7,
+     "worst": 1676.7,
+     "best": 1647.8
+    },
+    "xRealTime": 75.3,
+    "textStable": true,
+    "wasmHeapMb": 96,
+    "wasmHeapUsedMb": 38
+   }
+  ],
+  "adapter": {
+   "available": true,
+   "vendor": "nvidia",
+   "architecture": "turing",
+   "device": "0x1e07",
+   "description": "NVIDIA GeForce RTX 2080 Ti",
+   "isFallbackAdapter": false,
+   "shaderF16": true,
+   "features": [
+    "bgra8unorm-storage",
+    "chromium-experimental-multi-draw-indirect",
+    "chromium-experimental-sampling-resource-table",
+    "chromium-experimental-subgroup-matrix",
+    "chromium-experimental-timestamp-query-inside-passes",
+    "clip-distances",
+    "core-features-and-limits",
+    "depth-clip-control",
+    "depth32float-stencil8",
+    "dual-source-blending",
+    "float32-blendable",
+    "float32-filterable",
+    "indirect-first-instance",
+    "primitive-index",
+    "rg11b10ufloat-renderable",
+    "shader-f16",
+    "subgroup-size-control",
+    "subgroups",
+    "texture-component-swizzle",
+    "texture-compression-bc",
+    "texture-compression-bc-sliced-3d",
+    "texture-compression-unaligned",
+    "texture-formats-tier1",
+    "texture-formats-tier2",
+    "timestamp-query"
+   ],
+   "wgslLanguageFeatures": [
+    "buffer_view",
+    "immediate_address_space",
+    "linear_indexing",
+    "packed_4x8_integer_dot_product",
+    "pointer_composite_access",
+    "readonly_and_readwrite_storage_textures",
+    "subgroup_id",
+    "subgroup_uniformity",
+    "swizzle_assignment",
+    "texture_and_sampler_let",
+    "texture_formats_tier1",
+    "uniform_buffer_standard_layout",
+    "unrestricted_pointer_parameters"
+   ],
+   "limits": {
+    "maxStorageBufferBindingSize": 2147483644,
+    "maxBufferSize": 4294967292,
+    "maxComputeInvocationsPerWorkgroup": 1024,
+    "maxComputeWorkgroupSizeX": 1024,
+    "maxComputeWorkgroupStorageSize": 49152,
+    "maxStorageBuffersPerShaderStage": 16,
+    "maxComputeWorkgroupsPerDimension": 65535,
+    "maxBindGroups": 4,
+    "minStorageBufferOffsetAlignment": 256,
+    "minUniformBufferOffsetAlignment": 256
+   },
+   "belowSpecDefault": [],
+   "requested": {
+    "requiredFeatures": [
+     "shader-f16"
+    ],
+    "requiredLimits": {
+     "maxStorageBufferBindingSize": 1073741824,
+     "maxBufferSize": 1073741824,
+     "maxComputeInvocationsPerWorkgroup": 256,
+     "maxComputeWorkgroupSizeX": 256
+    }
+   },
+   "deviceProbe": "ok: binding 1024 MiB, buffer 1024 MiB, 256 invocations",
+   "deviceError": null,
+   "probeErrors": [],
+   "plan": {
+    "limits": "",
+    "f16": true
+   },
+   "maxBufferSizeMb": 4096,
+   "maxStorageBufferBindingSizeMb": 2048
+  },
+  "jspi": true,
+  "shaderF16Used": true,
+  "load": {
+   "fetchMs": 3698,
+   "loadMs": 777,
+   "from": "network, streamed to OPFS",
+   "fileMb": 437.5,
+   "wasmHeapMb": 32,
+   "wasmHeapUsedMb": 14.6,
+   "backend": "WebGPU: WebGPU"
+  },
+  "session": {
+   "totalMs": 777
+  },
+  "startToLoadedMs": 5065
+ },
+ "steps": [
+  {
+   "t": 0,
+   "name": "start: 0.6b v2, Q4_0 (4-bit weights), flash=off, store=opfs, jspi"
+  },
+  {
+   "t": 588,
+   "name": "WASM module ready",
+   "ms": 44.8,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 588,
+   "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 present; fallback=false"
+  },
+  {
+   "t": 588,
+   "name": "adapter limits: binding 2048 MiB, buffer 4096 MiB, 1024 invocations/workgroup, workgroup storage 49152 B, 16 storage buffers/stage",
+   "detail": "all at or above the WebGPU spec defaults, which is all this page needs"
+  },
+  {
+   "t": 588,
+   "name": "device probe ok: binding 1024 MiB, buffer 1024 MiB, 256 invocations",
+   "detail": "requested {\"maxStorageBufferBindingSize\":1073741824,\"maxBufferSize\":1073741824,\"maxComputeInvocationsPerWorkgroup\":256,\"maxComputeWorkgroupSizeX\":256} shader-f16"
+  },
+  {
+   "t": 588,
+   "name": "shader path: f16"
+  },
+  {
+   "t": 5065,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 3697.8,
+   "detail": "438 MB"
+  },
+  {
+   "t": 5065,
+   "name": "model loaded on WebGPU: WebGPU",
+   "ms": 777,
+   "detail": "WASM heap 32 MB, 14.6 MB in use"
+  },
+  {
+   "t": 8483,
+   "name": "l2 (2.1 min) first run (cold)",
+   "ms": 1973.5,
+   "detail": "mel 99 ms, encoder 1268 ms, decode 607 ms, heap 96 MB (38 in use)"
+  },
+  {
+   "t": 8485,
+   "name": "l2 transcript (chunked encoding): 0 of 255 words differ from the native build's chunked transcript",
+   "detail": "Welcome to Quirk QuidQuill Inc., where finance meets innovation. Explore diverse offerings..."
+  },
+  {
+   "t": 15212,
+   "name": "l2 warm x3",
+   "ms": 1672.7,
+   "detail": "total median/worst 1672.7 / 1676.7 ms; encoder 1095.5 / 1099.4 ms; mel 79.1 ms; decode 494.3 ms; 75.3x real time; text stable=true"
+  },
+  {
+   "t": 15213,
+   "name": "done",
+   "ms": 15212.9
+  }
+ ],
+ "console": [],
+ "machineAtEnd": {
+  "loadavg": "2.44 2.79 2.97 5/2089 193613",
+  "cpuPressure": "some avg10=0.52 avg60=0.57 avg300=0.66 total=10198557949"
+ },
+ "chromeGpu": {
+  "devices": [
+   {
+    "vendorId": 4318,
+    "deviceId": 7687,
+    "vendorString": "Google Inc. (NVIDIA)",
+    "deviceString": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+    "driverVendor": "NVIDIA",
+    "driverVersion": "580.178.4.0"
+   }
+  ],
+  "featureStatus": {
+   "2d_canvas": "enabled",
+   "direct_rendering_display_compositor": "disabled_off_ok",
+   "gpu_compositing": "enabled",
+   "multiple_raster_threads": "enabled_on",
+   "opengl": "enabled_on",
+   "rasterization": "enabled",
+   "raw_draw": "disabled_off_ok",
+   "skia_graphite": "disabled_off",
+   "trees_in_viz": "disabled_off",
+   "video_decode": "enabled",
+   "video_encode": "disabled_software",
+   "vulkan": "enabled_on",
+   "webgl": "enabled",
+   "webgpu": "enabled",
+   "webgpu_on_vk_via_gl_interop": "disabled_off",
+   "webnn": "disabled_off"
+  },
+  "auxAttributes": {
+   "directRenderingVersion": "",
+   "displayType": "ANGLE_VULKAN",
+   "glRenderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+   "glVendor": "Google Inc. (NVIDIA)",
+   "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "glWsVendor": "Google Inc. (NVIDIA)",
+   "glWsVersion": "1.5 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "hardwareSupportsVulkan": true,
+   "passthroughCmdDecoder": true,
+   "pixelShaderVersion": "3.00",
+   "vertexShaderVersion": "3.00"
+  }
+ }
+}

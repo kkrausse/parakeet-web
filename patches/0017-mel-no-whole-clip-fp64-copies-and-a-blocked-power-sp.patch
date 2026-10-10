@@ -1,0 +1,193 @@
+From 8fd0ad0e143ce3c008099864c1357fd020f3e977 Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 05:59:23 -0700
+Subject: [PATCH 17/17] mel: no whole-clip fp64 copies and a blocked power
+ spectrogram off Apple (bit-identical)
+
+The radix-2 path built emph[] and padded[] (16 bytes per sample) and a
+whole-clip power spectrogram (1 kB per frame): 190 MB of transient heap for a
+9 min clip, which a WASM heap never gives back. The worker now reads the
+pre-emphasized, padded sample straight from pcm and the STFT runs 1024 frames
+at a time, each block reduced to log-mel before the next. Same arithmetic in
+the same order: FNV hash of the log-mel bits unchanged on 7 s, 13.7 s, 56 s
+and 4.4 min clips, 1 and 4 threads (TRANSCRIBE_MEL_HASH=1 prints it).
+vDSP and BLAS builds keep one whole-clip block.
+
+Chrome, WASM heap after an 8.9 min clip: 282 -> 178 MB (4.4 min: 184 -> 115).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ src/transcribe-mel.cpp | 101 ++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 89 insertions(+), 12 deletions(-)
+
+diff --git a/src/transcribe-mel.cpp b/src/transcribe-mel.cpp
+index 3c799f1e..1180eabb 100644
+--- a/src/transcribe-mel.cpp
++++ b/src/transcribe-mel.cpp
+@@ -493,6 +493,7 @@ transcribe_status MelFrontend::compute(const float *        pcm,
+             window_f32[i] = static_cast<float>(window_[i]);
+         }
+     } else {
++#ifdef __APPLE__
+         // FP64 path (Parakeet, Cohere): unchanged. emph buffer + fp64
+         // padded, identical to the original implementation.
+         std::vector<double> emph(n_samples);
+@@ -532,6 +533,10 @@ transcribe_status MelFrontend::compute(const float *        pcm,
+                 std::memset(padded.data() + pad + n_samples, 0, static_cast<size_t>(pad) * sizeof(double));
+             }
+         }
++#endif
++        // Off Apple the radix-2 worker reads the pre-emphasized, padded signal
++        // straight from pcm (padded_at below): the two fp64 whole-clip copies
++        // (16 bytes per sample) are not built. Same arithmetic, same bits.
+     }
+ 
+     // ---- 3. STFT + mel filterbank matmul + log ----
+@@ -634,7 +639,15 @@ transcribe_status MelFrontend::compute(const float *        pcm,
+         // pow2 paths (Parakeet, Cohere): unchanged structure. FFT
+         // worker writes shared power[]; post-pass does the matmul +
+         // log.
+-        std::vector<float> power(static_cast<size_t>(n_frames) * static_cast<size_t>(n_freq));
++        // The power spectrogram is held one block of frames at a time (the
++        // vDSP and BLAS builds keep one whole-clip block, as before), so its
++        // 1 kB per frame no longer grows with the clip.
++#if defined(__APPLE__) || TRANSCRIBE_HAS_BLAS
++        const int blk_frames = n_frames;
++#else
++        const int blk_frames = std::min(n_frames, 1024);
++#endif
++        std::vector<float> power(static_cast<size_t>(blk_frames) * static_cast<size_t>(n_freq));
+ 
+ #ifdef __APPLE__
+         // vDSP real-input FFT (fp64, vectorized via Accelerate SIMD).
+@@ -688,16 +701,55 @@ transcribe_status MelFrontend::compute(const float *        pcm,
+         run_threaded(worker);
+ #else
+         // Hand-rolled radix-2 Cooley-Tukey FFT fallback for non-Apple.
++        // padded_at(i): sample i of the pre-emphasized, padded signal.
++        const bool   emph_on    = (cfg_.pre_emphasis != 0.0f);
++        const double emph_alpha = static_cast<double>(cfg_.pre_emphasis);
++        auto         emph_at    = [&](size_t j) -> double {
++            return (emph_on && j > 0) ? static_cast<double>(pcm[j]) - emph_alpha * static_cast<double>(pcm[j - 1]) :
++                                        static_cast<double>(pcm[j]);
++        };
++        const size_t upad      = static_cast<size_t>(pad);
++        auto         padded_at = [&](size_t i) -> double {
++            if (no_pad) {
++                return i < n_samples ? emph_at(i) : 0.0;
++            }
++            if (i < upad) {
++                return use_reflect ? emph_at(upad - i) : 0.0;
++            }
++            if (i < upad + n_samples) {
++                return emph_at(i - upad);
++            }
++            return use_reflect ? emph_at(n_samples - 2 - (i - upad - n_samples)) : 0.0;
++        };
++        int  blk0   = 0;  // first frame of the block being transformed
++        int  blk_n  = 0;
+         auto worker = [&](int tid) {
+             std::vector<double> frame(2 * static_cast<size_t>(n_fft));
+-            for (int t = tid; t < n_frames; t += stft_threads) {
++            for (int t = blk0 + tid; t < blk0 + blk_n; t += stft_threads) {
+                 const size_t start = static_cast<size_t>(t) * static_cast<size_t>(hop);
+-                for (int k = 0; k < n_fft; ++k) {
+-                    frame[2 * static_cast<size_t>(k)]     = padded[start + static_cast<size_t>(k)] * window_[k];
+-                    frame[2 * static_cast<size_t>(k) + 1] = 0.0;
++                if (!no_pad && start > upad && start + static_cast<size_t>(n_fft) <= upad + n_samples) {
++                    // interior frame: every sample is real audio with a predecessor
++                    const float * src = pcm + (start - upad);
++                    if (emph_on) {
++                        for (int k = 0; k < n_fft; ++k) {
++                            frame[2 * static_cast<size_t>(k)] =
++                                (static_cast<double>(src[k]) - emph_alpha * static_cast<double>(src[k - 1])) * window_[k];
++                            frame[2 * static_cast<size_t>(k) + 1] = 0.0;
++                        }
++                    } else {
++                        for (int k = 0; k < n_fft; ++k) {
++                            frame[2 * static_cast<size_t>(k)]     = static_cast<double>(src[k]) * window_[k];
++                            frame[2 * static_cast<size_t>(k) + 1] = 0.0;
++                        }
++                    }
++                } else {
++                    for (int k = 0; k < n_fft; ++k) {
++                        frame[2 * static_cast<size_t>(k)]     = padded_at(start + static_cast<size_t>(k)) * window_[k];
++                        frame[2 * static_cast<size_t>(k) + 1] = 0.0;
++                    }
+                 }
+                 fft_radix2(frame.data(), n_fft);
+-                float * pwr_row = power.data() + static_cast<size_t>(t) * n_freq;
++                float * pwr_row = power.data() + static_cast<size_t>(t - blk0) * n_freq;
+                 for (int k = 0; k < n_freq; ++k) {
+                     const double re = frame[2 * static_cast<size_t>(k)];
+                     const double im = frame[2 * static_cast<size_t>(k) + 1];
+@@ -705,13 +757,19 @@ transcribe_status MelFrontend::compute(const float *        pcm,
+                 }
+             }
+         };
+-        const auto t_stft0 = std::chrono::steady_clock::now();
+-        run_threaded(worker);
+-        t_stft_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t_stft0).count();
+ #endif
+ 
+         // pow2 post-pass matmul + log → log_mel.
+ #if defined(__APPLE__) || TRANSCRIBE_HAS_BLAS
++#ifndef __APPLE__
++        {
++            blk0               = 0;
++            blk_n              = n_frames;
++            const auto t_stft0 = std::chrono::steady_clock::now();
++            run_threaded(worker);
++            t_stft_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t_stft0).count();
++        }
++#endif
+         // C = A @ B^T  where A=[n_mels, n_freq], B=[n_frames, n_freq].
+         cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, n_mels, n_frames, n_freq, 1.0f, mel_fb_.data(), n_freq,
+                     power.data(), n_freq, 0.0f, log_mel.data(), n_frames);
+@@ -753,9 +811,18 @@ transcribe_status MelFrontend::compute(const float *        pcm,
+             }
+         }
+ #else
+-        // Scalar fused matmul + log fallback (no BLAS available).
+-        for (int t = 0; t < n_frames; ++t) {
+-            const float * pwr = power.data() + static_cast<size_t>(t) * n_freq;
++        // Scalar fused matmul + log fallback (no BLAS available), one block
++        // of frames at a time: transform the block, then reduce it.
++        for (int b0 = 0; b0 < n_frames; b0 += blk_frames) {
++#ifndef __APPLE__
++            blk0               = b0;
++            blk_n              = std::min(blk_frames, n_frames - b0);
++            const auto t_stft0 = std::chrono::steady_clock::now();
++            run_threaded(worker);
++            t_stft_ms += std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t_stft0).count();
++#endif
++        for (int t = b0; t < std::min(n_frames, b0 + blk_frames); ++t) {
++            const float * pwr = power.data() + static_cast<size_t>(t - b0) * n_freq;
+             for (int m = 0; m < n_mels; ++m) {
+                 const float * fb_row = mel_fb_.data() + static_cast<size_t>(m) * n_freq;
+                 const int     k_hi   = fb_hi_[static_cast<size_t>(m)];
+@@ -793,11 +860,21 @@ transcribe_status MelFrontend::compute(const float *        pcm,
+                 log_mel[static_cast<size_t>(m) * n_frames + t] = result;
+             }
+         }
++        }
+ #endif
+     }
+ 
+     log_msg(TRANSCRIBE_LOG_LEVEL_DEBUG, "mel: %d frames, stft %.1f ms, total to log-mel %.1f ms", n_frames, t_stft_ms,
+             std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t_mel0).count());
++    if (std::getenv("TRANSCRIBE_MEL_HASH") != nullptr) {
++        // FNV-1a over the raw log-mel bits: lets a change to this file be checked bit for bit.
++        uint64_t h = 1469598103934665603ull;
++        const unsigned char * bytes = reinterpret_cast<const unsigned char *>(log_mel.data());
++        for (size_t i = 0; i < log_mel.size() * sizeof(float); ++i) {
++            h = (h ^ bytes[i]) * 1099511628211ull;
++        }
++        std::fprintf(stderr, "mel hash %016llx (%d frames)\n", static_cast<unsigned long long>(h), n_frames);
++    }
+     std::vector<double>().swap(padded);
+     std::vector<float>().swap(padded_f32);
+     std::vector<float>().swap(window_f32);
+-- 
+2.53.0
+

@@ -24,10 +24,18 @@ for (const extra of (process.env.PK_EXTRA_MODELS ?? "").split(",").filter(Boolea
 const models: Record<string, { label: string; file: string; mb: number; family: string }> = {};
 for (const [k, label, path, family] of candidates) if (existsSync(path)) models[k] = { label, file: path.split("/").pop()!, mb: Math.round(statSync(path).size / 2 ** 20), family };
 
+// Long clips: expected text = the native build's chunked transcript (scripts/lt.sh NAME=<model>-<clip>-chunk).
+const LONG = ["l2", "l5", "l10"];
+const expectedLong: Record<string, Record<string, string>> = {};
+for (const k of Object.keys(models)) for (const c of LONG) {
+  const f = join(cache, `out/lt/${k}-${c}-chunk.txt`);
+  if (existsSync(f)) (expectedLong[k] ??= {})[c] = await Bun.file(f).text();
+}
+
 rmSync(dist, { recursive: true, force: true });
 const out = await Bun.build({
   entrypoints: [join(here, "src/main.ts"), join(here, "src/worker.ts")], outdir: dist, target: "browser", format: "esm", minify: false,
-  define: { MODELS: JSON.stringify(models) },
+  define: { MODELS: JSON.stringify(models), EXPECTED_LONG: JSON.stringify(expectedLong) },
 });
 if (!out.success) throw new AggregateError(out.logs, "build failed");
 
@@ -46,6 +54,6 @@ for (const [dir, suffix] of [["build-web", ""], ["build-web-asyncify", "-asyncif
   await Bun.write(join(dist, `pk-web${suffix}.js`), (await Bun.file(js).text()).replaceAll("pk-web.wasm", `pk-web${suffix}.wasm`));
   place(join(cache, dir, "bin/pk-web.wasm"), `pk-web${suffix}.wasm`);
 }
-for (const c of ["a07", "a14", "a56"]) place(join(cache, `audio/${c}.f32`), `audio/${c}.f32`);
+for (const c of ["a07", "a14", "a56", ...LONG]) place(join(cache, `audio/${c}.f32`), `audio/${c}.f32`);
 for (const [k, , path] of candidates) if (models[k]) place(path, `models/${models[k].file}`, true);
 console.log(`built ${dist}: models ${Object.keys(models).join(", ")}`);

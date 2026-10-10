@@ -14,7 +14,11 @@ const EXPECTED_110M: Record<string, string> = {
   "a14": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards",
   "a56": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatro a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and our and experience non standard equity trading with E three equity, personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier, our forward thinking financial forecasting tool. Explore venture capital world with U three unifund or move your money with the M three mover, our sophisticated monetary transfer module. At Cork Quid Quill Inc. we turn complex finance into creative solutions. Join us in redefining financial services."
 };
-const CLIPS: Record<string, string> = { a07: "7.0 s", a14: "13.7 s", a56: "56.1 s" };
+const CLIPS: Record<string, string> = { a07: "7.0 s", a14: "13.7 s", a56: "56.1 s", l2: "2.1 min", l5: "4.4 min", l10: "8.9 min" };
+const SHORT_CLIPS = ["a07", "a14", "a56"]; // clip=all; the long ones are the fixtures concatenated (chunked encoding)
+// Long clips have no independent reference: the expected text is what the native build gives with the same
+// chunking (30 s windows + 4 s halo), per model. Filled in by build.ts from out/lt/<model>-<clip>-chunk.txt.
+declare const EXPECTED_LONG: Record<string, Record<string, string>>;
 declare const MODELS: Record<string, { label: string; file: string; mb: number; family: "0.6b" | "110m" }>; // filled in by build.ts from what is on disk
 
 interface Config {
@@ -69,6 +73,17 @@ function step(name: string, ms?: number, detail?: string) {
   (window as any).__pkb.steps = current?.steps;
 }
 function status(text: string) { $("status").textContent = text; }
+/** Words of `a` and `b` outside their longest common subsequence (insertions + deletions), for the long clips. */
+function wordDiff(a: string, b: string) {
+  const x = a.split(/\s+/), y = b.split(/\s+/);
+  let prev = new Uint16Array(y.length + 1);
+  for (let i = 1; i <= x.length; i++) {
+    const cur = new Uint16Array(y.length + 1);
+    for (let j = 1; j <= y.length; j++) cur[j] = x[i - 1] === y[j - 1] ? prev[j - 1] + 1 : Math.max(prev[j], cur[j - 1]);
+    prev = cur;
+  }
+  return { differing: x.length + y.length - 2 * prev[y.length], words: x.length };
+}
 function stats(xs: number[]) {
   const s = [...xs].sort((a, b) => a - b);
   return { median: r1(s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2), worst: r1(s[s.length - 1]), best: r1(s[0]) };
@@ -106,7 +121,7 @@ async function run() {
   history.push(current);
   $("steps").textContent = "";
   const model = MODELS[cfg.model];
-  const EXPECTED = model.family === "110m" ? EXPECTED_110M : EXPECTED_06B;
+  const EXPECTED: Record<string, string> = { ...(model.family === "110m" ? EXPECTED_110M : EXPECTED_06B), ...(EXPECTED_LONG[cfg.model] ?? {}) };
   const result: any = { config: cfg, model, ua: navigator.userAgent, crossOriginIsolated, clips: [] };
   w.__pkb.result = result;
   step(`start: ${model.label}, flash=${cfg.flash ? "on" : "off"}, store=${cfg.store}, ${cfg.variant}`);
@@ -142,6 +157,8 @@ async function run() {
     GGML_WEBGPU_NO_F16: useF16 ? "" : "1", TRANSCRIBE_F32_POINTWISE: useF16 ? "" : "1",
     TRANSCRIBE_PRE_ENCODE_TILE: "128", // clips over 15 s: subsampling convs in 10 s time tiles (exact): their activations no longer grow with the clip
     TRANSCRIBE_ENC_PROJ_GPU: "1", // the joint's encoder projection as the last encoder node; only it is read back
+    // clips over 60 s: encoder in 30 s windows with 4 s of audio either side, stitched and decoded once, so GPU memory is that of one window
+    TRANSCRIBE_PARAKEET_CHUNK_S: "30", TRANSCRIBE_PARAKEET_CHUNK_HALO_S: "4", TRANSCRIBE_PARAKEET_CHUNK_MIN_S: "60",
     ...(a.plan?.limits === "default" ? { GGML_WEBGPU_LIMITS: "default" } : {}), ...cfg.env };
   const ld = await call("load", { url: new URL(cfg.base + model.file, location.href).href, name: model.file, store: cfg.store, env, threads: cfg.threads, verbose: cfg.verbose });
   result.load = { fetchMs: Math.round(ld.fetchMs), loadMs: Math.round(ld.loadMs), from: ld.from, fileMb: r1(ld.mb), wasmHeapMb: ld.heapMb, wasmHeapUsedMb: ld.heapUsedMb, backend: ld.backend };
@@ -161,7 +178,7 @@ async function run() {
   w.__pkb.phase = "loaded";
   await new Promise((r) => setTimeout(r, 700));
 
-  const clips = cfg.clip === "all" ? Object.keys(CLIPS) : [cfg.clip];
+  const clips = cfg.clip === "all" ? SHORT_CLIPS : [cfg.clip];
   for (const [i, clip] of clips.entries()) {
     w.__pkb.phase = `run:${clip}`;
     const audio = new Float32Array(await (await fetch(`audio/${clip}.f32`)).arrayBuffer());
@@ -180,9 +197,12 @@ async function run() {
       clip, seconds: Math.round(seconds * 100) / 100, firstInPage: i === 0,
       firstRunMs: { pre: r1(first.pre), enc: r1(first.enc), dec: r1(first.dec), total: r1(first.total) },
       startToFirstTranscriptMs: i === 0 ? Math.round(performance.now() - runStart) : null,
-      decSteps: first.tokens, text: first.text, matchesNative: first.text === EXPECTED[clip],
+      decSteps: first.tokens, text: first.text, matchesNative: first.text === EXPECTED[clip], hasReference: clip in EXPECTED,
     };
-    step(`${clip} transcript ${rec.matchesNative ? "matches" : "DIFFERS from"} the reference`, undefined, first.text.length > 90 ? first.text.slice(0, 90) + "..." : first.text);
+    const long = !SHORT_CLIPS.includes(clip);
+    if (long && rec.hasReference) rec.wordDiff = wordDiff(EXPECTED[clip], first.text);
+    step(long ? (rec.hasReference ? `${clip} transcript (chunked encoding): ${rec.wordDiff.differing} of ${rec.wordDiff.words} words differ from the native build's chunked transcript` : `${clip} transcript: no stored reference for this model`)
+      : `${clip} transcript ${rec.matchesNative ? "matches" : "DIFFERS from"} the reference`, undefined, first.text.length > 90 ? first.text.slice(0, 90) + "..." : first.text);
     result.clips.push(rec);
     if (cfg.runs > 0) {
       status(`${clip}: warm-up`);
@@ -219,7 +239,7 @@ function render(result: any) {
   $("result").textContent = JSON.stringify(result, null, 1);
   const rows = result.clips.map((c: any) => `<tr><td>${c.clip} ${c.seconds} s</td><td>${fmtMs(c.firstRunMs.total)}</td>
     <td>${c.encMs ? `${c.encMs.median} / ${c.encMs.worst}` : "-"}</td><td>${c.totalMs ? `${c.totalMs.median} / ${c.totalMs.worst}` : "-"}</td>
-    <td>${c.xRealTime ?? "-"}</td><td>${c.matchesNative ? "matches" : "differs"}</td></tr>`).join("");
+    <td>${c.xRealTime ?? "-"}</td><td>${c.matchesNative ? "matches" : c.wordDiff ? `${c.wordDiff.differing} of ${c.wordDiff.words} words differ (chunked)` : c.hasReference ? "differs" : "no reference"}</td></tr>`).join("");
   $("summary").innerHTML = `<table><tr><th>clip</th><th>first run</th><th>encoder ms<br>median / worst</th><th>total ms<br>median / worst</th><th>x real time</th><th>transcript vs reference</th></tr>${rows}</table>`
     + result.clips.map((c: any) => `<p class="text"><b>${c.clip}</b> ${esc(c.text)}</p>`).join("");
 }
@@ -256,7 +276,7 @@ function init() {
     $(id).addEventListener("change", (e) => (location.href = link({ [key]: (e.target as HTMLSelectElement).value, auto: 0 })));
   };
   sel("model", "model", Object.entries(MODELS).map(([k, v]) => [k, `${v.label}, ${v.mb} MB`]));
-  sel("clip", "clip", [...Object.entries(CLIPS).map(([k, v]) => [k, `${k} (${v})`] as [string, string]), ["all", "all three"]]);
+  sel("clip", "clip", [...Object.entries(CLIPS).map(([k, v]) => [k, `${k} (${v})`] as [string, string]), ["all", "the three short clips"]]);
   sel("runs", "runs", [["10", "10 warm runs"], ["3", "3 warm runs"], ["0", "first run only"]]);
   sel("store", "store", [["opfs", "model file: OPFS, read in place"], ["opfs-blob", "model file: OPFS as a File"], ["blob", "model file: fetch Blob"], ["memfs", "model file: copied into WASM heap"]]);
   sel("flash", "flash", [["0", "attention: matmul + softmax"], ["1", "attention: flash kernel"]]);
