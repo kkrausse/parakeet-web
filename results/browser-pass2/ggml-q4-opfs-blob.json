@@ -1,0 +1,242 @@
+{
+ "name": "ggml-q4-opfs-blob",
+ "url": "http://127.0.0.1:8791/?model=q4&store=opfs-blob&clip=a07&runs=3&auto=1",
+ "chromeArgs": [
+  "--enable-dawn-features=vulkan_enable_f16_on_nvidia"
+ ],
+ "machineAtStart": {
+  "loadavg": "3.88 3.79 3.87 6/1989 2553757",
+  "cpuPressure": "some avg10=0.86 avg60=0.90 avg300=0.88 total=10039641342"
+ },
+ "chrome": "154.0.8037.97",
+ "error": null,
+ "memory": {
+  "gpuProcessGpuMibAfterLoad": 501,
+  "gpuProcessGpuMibPeak": 541,
+  "rendererRssMibAfterLoad": 247,
+  "rendererRssMibPeak": 876,
+  "gpuProcessRssMibAfterLoad": 300,
+  "gpuProcessRssMibPeak": 334
+ },
+ "pids": {
+  "gpu": 2553622,
+  "renderers": [
+   2553759,
+   2553727,
+   2553703
+  ]
+ },
+ "page": {
+  "config": {
+   "model": "q4",
+   "clip": "a07",
+   "runs": 3,
+   "threads": 1,
+   "store": "opfs-blob",
+   "flash": false,
+   "variant": "jspi",
+   "verbose": false,
+   "base": "models/",
+   "env": {}
+  },
+  "model": {
+   "label": "Q4_0 (4-bit weights)",
+   "file": "parakeet-tdt-0.6b-v2-Q4_0.gguf",
+   "mb": 438
+  },
+  "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "crossOriginIsolated": true,
+  "clips": [
+   {
+    "clip": "a07",
+    "seconds": 7,
+    "firstInPage": true,
+    "firstRunMs": {
+     "pre": 16.9,
+     "enc": 353.7,
+     "dec": 115.3,
+     "total": 485.9
+    },
+    "startToFirstTranscriptMs": 9414,
+    "decSteps": 47,
+    "text": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight.",
+    "matchesNative": true,
+    "warmRuns": 3,
+    "preMs": {
+     "median": 6.4,
+     "worst": 7.1,
+     "best": 6.2
+    },
+    "encMs": {
+     "median": 72.7,
+     "worst": 73.5,
+     "best": 71.7
+    },
+    "decMs": {
+     "median": 80.4,
+     "worst": 88.1,
+     "best": 76.1
+    },
+    "totalMs": {
+     "median": 159.6,
+     "worst": 168.8,
+     "best": 154
+    },
+    "xRealTime": 43.9,
+    "textStable": true,
+    "wasmHeapMb": 62,
+    "wasmHeapUsedMb": 37.4
+   }
+  ],
+  "adapter": {
+   "available": true,
+   "vendor": "nvidia",
+   "architecture": "turing",
+   "device": "0x1e07",
+   "description": "NVIDIA GeForce RTX 2080 Ti",
+   "isFallbackAdapter": false,
+   "shaderF16": true,
+   "features": [
+    "bgra8unorm-storage",
+    "chromium-experimental-multi-draw-indirect",
+    "chromium-experimental-sampling-resource-table",
+    "chromium-experimental-subgroup-matrix",
+    "chromium-experimental-timestamp-query-inside-passes",
+    "clip-distances",
+    "core-features-and-limits",
+    "depth-clip-control",
+    "depth32float-stencil8",
+    "dual-source-blending",
+    "float32-blendable",
+    "float32-filterable",
+    "indirect-first-instance",
+    "primitive-index",
+    "rg11b10ufloat-renderable",
+    "shader-f16",
+    "subgroup-size-control",
+    "subgroups",
+    "texture-component-swizzle",
+    "texture-compression-bc",
+    "texture-compression-bc-sliced-3d",
+    "texture-compression-unaligned",
+    "texture-formats-tier1",
+    "texture-formats-tier2",
+    "timestamp-query"
+   ],
+   "maxBufferSizeMb": 4096,
+   "maxStorageBufferBindingSizeMb": 2048
+  },
+  "jspi": true,
+  "load": {
+   "fetchMs": 3650,
+   "loadMs": 3476,
+   "from": "network, streamed to OPFS",
+   "fileMb": 437.5,
+   "wasmHeapMb": 62,
+   "wasmHeapUsedMb": 36,
+   "backend": "WebGPU: WebGPU"
+  },
+  "session": {
+   "totalMs": 3476
+  },
+  "startToLoadedMs": 7523
+ },
+ "steps": [
+  {
+   "t": 0,
+   "name": "start: Q4_0 (4-bit weights), flash=off, store=opfs-blob, jspi"
+  },
+  {
+   "t": 395,
+   "name": "WASM module ready",
+   "ms": 38.2,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 395,
+   "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 present; fallback=false"
+  },
+  {
+   "t": 7523,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 3649.6,
+   "detail": "438 MB"
+  },
+  {
+   "t": 7523,
+   "name": "model loaded on WebGPU: WebGPU",
+   "ms": 3476.4,
+   "detail": "WASM heap 62 MB, 36 MB in use"
+  },
+  {
+   "t": 9413,
+   "name": "a07 (7.0 s) first run (cold)",
+   "ms": 485.9,
+   "detail": "mel 16.9 ms, encoder 354 ms, decode 115 ms, heap 62 MB (37.4 in use)"
+  },
+  {
+   "t": 9414,
+   "name": "a07 transcript matches the native one",
+   "detail": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day ..."
+  },
+  {
+   "t": 10169,
+   "name": "a07 warm x3",
+   "ms": 159.6,
+   "detail": "total median/worst 159.6 / 168.8 ms; encoder 72.7 / 73.5 ms; mel 6.4 ms; decode 80.4 ms; 43.9x real time; text stable=true"
+  },
+  {
+   "t": 10169,
+   "name": "done",
+   "ms": 10169
+  }
+ ],
+ "console": [],
+ "machineAtEnd": {
+  "loadavg": "4.10 3.84 3.88 4/2022 2563680",
+  "cpuPressure": "some avg10=0.96 avg60=0.95 avg300=0.89 total=10039825372"
+ },
+ "chromeGpu": {
+  "devices": [
+   {
+    "vendorId": 4318,
+    "deviceId": 7687,
+    "vendorString": "Google Inc. (NVIDIA)",
+    "deviceString": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+    "driverVendor": "NVIDIA",
+    "driverVersion": "580.178.4.0"
+   }
+  ],
+  "featureStatus": {
+   "2d_canvas": "enabled",
+   "direct_rendering_display_compositor": "disabled_off_ok",
+   "gpu_compositing": "enabled",
+   "multiple_raster_threads": "enabled_on",
+   "opengl": "enabled_on",
+   "rasterization": "enabled",
+   "raw_draw": "disabled_off_ok",
+   "skia_graphite": "disabled_off",
+   "trees_in_viz": "disabled_off",
+   "video_decode": "enabled",
+   "video_encode": "disabled_software",
+   "vulkan": "enabled_on",
+   "webgl": "enabled",
+   "webgpu": "enabled",
+   "webgpu_on_vk_via_gl_interop": "disabled_off",
+   "webnn": "disabled_off"
+  },
+  "auxAttributes": {
+   "directRenderingVersion": "",
+   "displayType": "ANGLE_VULKAN",
+   "glRenderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+   "glVendor": "Google Inc. (NVIDIA)",
+   "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "glWsVendor": "Google Inc. (NVIDIA)",
+   "glWsVersion": "1.5 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "hardwareSupportsVulkan": true,
+   "passthroughCmdDecoder": true,
+   "pixelShaderVersion": "3.00",
+   "vertexShaderVersion": "3.00"
+  }
+ }
+}
