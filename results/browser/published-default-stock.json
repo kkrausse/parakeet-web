@@ -3,25 +3,25 @@
  "url": "https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-ggml-browser/?clip=all&runs=5&auto=1",
  "chromeArgs": [],
  "machineAtStart": {
-  "loadavg": "2.83 4.71 5.73 5/2133 3467243",
-  "cpuPressure": "some avg10=0.10 avg60=0.46 avg300=1.86 total=10629582918"
+  "loadavg": "5.58 8.12 8.56 7/2216 2418803",
+  "cpuPressure": "some avg10=0.73 avg60=2.76 avg300=8.25 total=10855812815"
  },
  "chrome": "154.0.8037.97",
  "error": null,
  "memory": {
   "gpuProcessGpuMibAfterLoad": 199,
-  "gpuProcessGpuMibPeak": 274,
-  "rendererRssMibAfterLoad": 225,
-  "rendererRssMibPeak": 326,
+  "gpuProcessGpuMibPeak": 272,
+  "rendererRssMibAfterLoad": 226,
+  "rendererRssMibPeak": 286,
   "gpuProcessRssMibAfterLoad": 296,
   "gpuProcessRssMibPeak": 322
  },
  "pids": {
-  "gpu": 3467171,
+  "gpu": 2418734,
   "renderers": [
-   3467220,
-   3467222,
-   3467211
+   2418778,
+   2418780,
+   2418769
   ]
  },
  "page": {
@@ -53,38 +53,38 @@
     "seconds": 7,
     "firstInPage": true,
     "firstRunMs": {
-     "pre": 5.8,
-     "enc": 149.5,
-     "dec": 55.6,
-     "total": 210.9
+     "pre": 6.6,
+     "enc": 157.4,
+     "dec": 36.5,
+     "total": 200.5
     },
-    "startToFirstTranscriptMs": 6129,
+    "startToFirstTranscriptMs": 6519,
     "decSteps": 41,
     "text": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight.",
     "matchesNative": true,
     "hasReference": true,
     "warmRuns": 5,
     "preMs": {
-     "median": 3.2,
-     "worst": 3.2,
-     "best": 2.9
+     "median": 3.3,
+     "worst": 4.2,
+     "best": 3.2
     },
     "encMs": {
-     "median": 30.6,
-     "worst": 32.9,
-     "best": 24.4
+     "median": 31.2,
+     "worst": 33.8,
+     "best": 30.2
     },
     "decMs": {
-     "median": 13.6,
-     "worst": 14.7,
-     "best": 13.3
+     "median": 17.9,
+     "worst": 19.3,
+     "best": 16.4
     },
     "totalMs": {
-     "median": 47.1,
-     "worst": 50.7,
-     "best": 41.2
+     "median": 52.3,
+     "worst": 55.5,
+     "best": 50.5
     },
-    "xRealTime": 148.6,
+    "xRealTime": 133.8,
     "textStable": true,
     "wasmHeapMb": 39,
     "wasmHeapUsedMb": 20.9,
@@ -136,10 +136,10 @@
     "seconds": 13.69,
     "firstInPage": false,
     "firstRunMs": {
-     "pre": 6.9,
-     "enc": 34.4,
-     "dec": 31.9,
-     "total": 73.2
+     "pre": 7.1,
+     "enc": 41.4,
+     "dec": 38.7,
+     "total": 87.2
     },
     "startToFirstTranscriptMs": null,
     "decSteps": 84,
@@ -148,26 +148,26 @@
     "hasReference": true,
     "warmRuns": 5,
     "preMs": {
-     "median": 6.6,
-     "worst": 6.9,
-     "best": 6
+     "median": 6.2,
+     "worst": 8.6,
+     "best": 6.1
     },
     "encMs": {
-     "median": 31.6,
-     "worst": 33.4,
-     "best": 30.6
+     "median": 36.7,
+     "worst": 40.7,
+     "best": 35.5
     },
     "decMs": {
-     "median": 27.1,
-     "worst": 27.5,
-     "best": 25.8
+     "median": 30.9,
+     "worst": 33.6,
+     "best": 29.2
     },
     "totalMs": {
-     "median": 65.9,
-     "worst": 66.5,
-     "best": 64.1
+     "median": 75.5,
+     "worst": 78.4,
+     "best": 70.8
     },
-    "xRealTime": 207.7,
+    "xRealTime": 181.3,
     "textStable": true,
     "wasmHeapMb": 47,
     "wasmHeapUsedMb": 21.8,
@@ -198,17 +198,17 @@
      "js": {
       "registry": true,
       "objects": 16563,
-      "collected": 16211,
+      "collected": 16326,
       "buffers": 9,
       "buffersDestroyed": 2,
       "buffersCollected": 2,
       "bufferLiveMb": 171.1,
       "bindGroups": 15554,
-      "bindGroupsCollected": 15273,
+      "bindGroupsCollected": 15382,
       "layouts": 20,
       "encoders": 344,
       "commandBuffers": 344,
-      "commandBuffersCollected": 336,
+      "commandBuffersCollected": 338,
       "pipelines": 20,
       "shaderModules": 20
      }
@@ -219,10 +219,10 @@
     "seconds": 56.1,
     "firstInPage": false,
     "firstRunMs": {
-     "pre": 26.8,
-     "enc": 125.7,
-     "dec": 121.7,
-     "total": 274.2
+     "pre": 26.1,
+     "enc": 129.1,
+     "dec": 133.7,
+     "total": 288.9
     },
     "startToFirstTranscriptMs": null,
     "decSteps": 292,
@@ -231,28 +231,28 @@
     "hasReference": true,
     "warmRuns": 5,
     "preMs": {
-     "median": 24.2,
-     "worst": 24.4,
-     "best": 23.9
+     "median": 29.6,
+     "worst": 38.6,
+     "best": 25.1
     },
     "encMs": {
-     "median": 106,
-     "worst": 106.5,
-     "best": 105.4
+     "median": 111.8,
+     "worst": 118.3,
+     "best": 108.2
     },
     "decMs": {
-     "median": 93.8,
-     "worst": 99.1,
-     "best": 92.9
+     "median": 123,
+     "worst": 134.6,
+     "best": 111.3
     },
     "totalMs": {
-     "median": 224.5,
-     "worst": 228.7,
-     "best": 222.8
+     "median": 261.4,
+     "worst": 291.5,
+     "best": 244.6
     },
-    "xRealTime": 249.9,
+    "xRealTime": 214.6,
     "textStable": true,
-    "wasmHeapMb": 56,
+    "wasmHeapMb": 67,
     "wasmHeapUsedMb": 27.5,
     "gpu": {
      "weightsMb": 129,
@@ -281,17 +281,17 @@
      "js": {
       "registry": true,
       "objects": 25299,
-      "collected": 24001,
+      "collected": 21507,
       "buffers": 10,
       "buffersDestroyed": 3,
       "buffersCollected": 3,
       "bufferLiveMb": 195.1,
       "bindGroups": 23870,
-      "bindGroupsCollected": 22682,
+      "bindGroupsCollected": 20306,
       "layouts": 22,
       "encoders": 484,
       "commandBuffers": 484,
-      "commandBuffersCollected": 464,
+      "commandBuffersCollected": 424,
       "pipelines": 22,
       "shaderModules": 22
      }
@@ -420,8 +420,8 @@
   "jspi": true,
   "shaderF16Used": false,
   "load": {
-   "fetchMs": 3534,
-   "loadMs": 357,
+   "fetchMs": 3744,
+   "loadMs": 419,
    "from": "network, streamed to OPFS",
    "fileMb": 129.1,
    "wasmHeapMb": 32,
@@ -429,7 +429,7 @@
    "backend": "WebGPU: WebGPU"
   },
   "session": {
-   "totalMs": 357
+   "totalMs": 419
   },
   "gpuAtLoad": {
    "weightsMb": 129,
@@ -473,194 +473,194 @@
     "shaderModules": 1
    }
   },
-  "startToLoadedMs": 4503
+  "startToLoadedMs": 4893
  },
  "steps": [
   {
-   "t": 1,
+   "t": 2,
    "name": "start: 110M, Q8_0 (8-bit weights), flash=off, store=opfs, jspi",
-   "detail": "session k928ne; desktop user agent; limits raised; clip all"
+   "detail": "session 7sve5k; desktop user agent; limits raised; clip all"
   },
   {
-   "t": 606,
+   "t": 719,
    "name": "WASM module ready",
-   "ms": 98.3,
+   "ms": 279.4,
    "detail": "heap 32 MB; JSPI available"
   },
   {
-   "t": 607,
+   "t": 720,
    "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 ABSENT; fallback=false"
   },
   {
-   "t": 607,
+   "t": 720,
    "name": "adapter limits: binding 2048 MiB, buffer 4096 MiB, 1024 invocations/workgroup, workgroup storage 49152 B, 16 storage buffers/stage",
    "detail": "all at or above the WebGPU spec defaults, which is all this page needs"
   },
   {
-   "t": 607,
+   "t": 721,
    "name": "device probe ok: binding 1024 MiB, buffer 1024 MiB, 256 invocations",
    "detail": "requested {\"maxStorageBufferBindingSize\":1073741824,\"maxBufferSize\":1073741824,\"maxComputeInvocationsPerWorkgroup\":256,\"maxComputeWorkgroupSizeX\":256} no features"
   },
   {
-   "t": 607,
+   "t": 721,
    "name": "shader path: f32 only (adapter has no shader-f16)"
   },
   {
-   "t": 608,
+   "t": 721,
    "name": "WebGPU limits: the two byte limits raised to {\"maxStorageBufferBindingSize\":1073741824,\"maxBufferSize\":1073741824,\"maxComputeInvocationsPerWorkgroup\":256,\"maxComputeWorkgroupSizeX\":256} (limits=default requests none)"
   },
   {
-   "t": 634,
+   "t": 763,
    "name": "model file: 135373280 bytes on the server, 0 bytes stored in this browser (OPFS)"
   },
   {
-   "t": 983,
+   "t": 1222,
    "name": "download: 16777216 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
   },
   {
-   "t": 1343,
+   "t": 1647,
    "name": "download: 33554432 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
   },
   {
-   "t": 1711,
+   "t": 2020,
    "name": "download: 50331648 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
   },
   {
-   "t": 2070,
+   "t": 2392,
    "name": "download: 67108864 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
   },
   {
-   "t": 2411,
+   "t": 2785,
    "name": "download: 83886080 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
   },
   {
-   "t": 2782,
+   "t": 3207,
    "name": "download: 100663296 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
   },
   {
-   "t": 3149,
+   "t": 3589,
    "name": "download: 117440512 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
   },
   {
-   "t": 3540,
+   "t": 3965,
    "name": "download: 134217728 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
   },
   {
-   "t": 4142,
+   "t": 4468,
    "name": "download complete: 135373280 bytes in OPFS (sync access handle)"
   },
   {
-   "t": 4143,
+   "t": 4470,
    "name": "storage path: OPFS sync access handle (the file stays on disk; tensors are read one at a time)"
   },
   {
-   "t": 4144,
+   "t": 4470,
    "name": "loading the model into the backend: WASM heap 32 MB before"
   },
   {
-   "t": 4502,
+   "t": 4891,
    "name": "model file ready (network, streamed to OPFS)",
-   "ms": 3534.4,
+   "ms": 3744.2,
    "detail": "129 MB; storage path opfs-sync"
   },
   {
-   "t": 4503,
+   "t": 4892,
    "name": "model loaded on WebGPU: WebGPU",
-   "ms": 356.9,
+   "ms": 419.4,
    "detail": "WASM heap 32 MB, 9.9 MB in use"
   },
   {
-   "t": 4503,
+   "t": 4892,
    "name": "after load: GPU: weights 129 MiB (q8_0 101.6, f16 25.5, f32 2), working 2 MiB, 6 buffers · since load 7 buffers made, 1 destroyed · JS objects 166 made, 0 collected; JS buffers 6 live (131.1 MiB)"
   },
   {
-   "t": 5917,
+   "t": 6316,
    "name": "a07 first run starting",
    "detail": "7.0 s of audio"
   },
   {
-   "t": 6129,
+   "t": 6519,
    "name": "a07 (7.0 s) first run (cold)",
-   "ms": 210.9,
-   "detail": "mel 5.8 ms, encoder 149 ms, decode 55.6 ms, heap 39 MB (20.9 in use)"
+   "ms": 200.5,
+   "detail": "mel 6.6 ms, encoder 157 ms, decode 36.5 ms, heap 39 MB (20.9 in use)"
   },
   {
-   "t": 6130,
+   "t": 6519,
    "name": "a07 transcript matches the reference",
    "detail": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day ..."
   },
   {
-   "t": 6423,
+   "t": 6847,
    "name": "a07 warm x5",
-   "ms": 47.1,
-   "detail": "total median/worst 47.1 / 50.7 ms; encoder 30.6 / 32.9 ms; mel 3.2 ms; decode 13.6 ms; 148.6x real time; text stable=true"
+   "ms": 52.3,
+   "detail": "total median/worst 52.3 / 55.5 ms; encoder 31.2 / 33.8 ms; mel 3.3 ms; decode 17.9 ms; 133.8x real time; text stable=true"
   },
   {
-   "t": 6423,
+   "t": 6848,
    "name": "a07: GPU: weights 129 MiB (q8_0 101.6, f16 25.5, f32 2), working 20 MiB, 7 buffers, last pass +0 buffers +1111 bind groups +19 encoders +54 writes · since load 8 buffers made, 1 destroyed · JS objects 8393 made, 8340 collected; JS buffers 7 live (149 MiB)"
   },
   {
-   "t": 6461,
+   "t": 6882,
    "name": "a14 first run starting",
    "detail": "13.7 s of audio"
   },
   {
-   "t": 6536,
+   "t": 6973,
    "name": "a14 (13.7 s) first run",
-   "ms": 73.2,
-   "detail": "mel 6.9 ms, encoder 34.4 ms, decode 31.9 ms, heap 47 MB (21.8 in use)"
+   "ms": 87.2,
+   "detail": "mel 7.1 ms, encoder 41.4 ms, decode 38.7 ms, heap 47 MB (21.8 in use)"
   },
   {
-   "t": 6536,
+   "t": 6974,
    "name": "a14 transcript matches the reference",
    "detail": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms da..."
   },
   {
-   "t": 6940,
+   "t": 7440,
    "name": "a14 warm x5",
-   "ms": 65.9,
-   "detail": "total median/worst 65.9 / 66.5 ms; encoder 31.6 / 33.4 ms; mel 6.6 ms; decode 27.1 ms; 207.7x real time; text stable=true"
+   "ms": 75.5,
+   "detail": "total median/worst 75.5 / 78.4 ms; encoder 36.7 / 40.7 ms; mel 6.2 ms; decode 30.9 ms; 181.3x real time; text stable=true"
   },
   {
-   "t": 6940,
-   "name": "a14: GPU: weights 129 MiB (q8_0 101.6, f16 25.5, f32 2), working 42 MiB, 7 buffers, last pass +0 buffers +1111 bind groups +19 encoders +54 writes · since load 9 buffers made, 2 destroyed · JS objects 16563 made, 16211 collected; JS buffers 7 live (171.1 MiB)"
+   "t": 7441,
+   "name": "a14: GPU: weights 129 MiB (q8_0 101.6, f16 25.5, f32 2), working 42 MiB, 7 buffers, last pass +0 buffers +1111 bind groups +19 encoders +54 writes · since load 9 buffers made, 2 destroyed · JS objects 16563 made, 16326 collected; JS buffers 7 live (171.1 MiB)"
   },
   {
-   "t": 7038,
+   "t": 7528,
    "name": "a56 first run starting",
    "detail": "56.1 s of audio"
   },
   {
-   "t": 7319,
+   "t": 7825,
    "name": "a56 (56.1 s) first run",
-   "ms": 274.2,
-   "detail": "mel 26.8 ms, encoder 126 ms, decode 122 ms, heap 56 MB (27.5 in use)"
+   "ms": 288.9,
+   "detail": "mel 26.1 ms, encoder 129 ms, decode 134 ms, heap 67 MB (27.5 in use)"
   },
   {
-   "t": 7319,
+   "t": 7825,
    "name": "a56 transcript matches the reference",
    "detail": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings..."
   },
   {
-   "t": 8723,
+   "t": 9437,
    "name": "a56 warm x5",
-   "ms": 224.5,
-   "detail": "total median/worst 224.5 / 228.7 ms; encoder 106 / 106.5 ms; mel 24.2 ms; decode 93.8 ms; 249.9x real time; text stable=true"
+   "ms": 261.4,
+   "detail": "total median/worst 261.4 / 291.5 ms; encoder 111.8 / 118.3 ms; mel 29.6 ms; decode 123 ms; 214.6x real time; text stable=true"
   },
   {
-   "t": 8724,
-   "name": "a56: GPU: weights 129 MiB (q8_0 101.6, f16 25.5, f32 2), working 66 MiB, 7 buffers, last pass +0 buffers +1188 bind groups +20 encoders +55 writes · since load 10 buffers made, 3 destroyed · JS objects 25299 made, 24001 collected; JS buffers 7 live (195.1 MiB)"
+   "t": 9438,
+   "name": "a56: GPU: weights 129 MiB (q8_0 101.6, f16 25.5, f32 2), working 66 MiB, 7 buffers, last pass +0 buffers +1188 bind groups +20 encoders +55 writes · since load 10 buffers made, 3 destroyed · JS objects 25299 made, 21507 collected; JS buffers 7 live (195.1 MiB)"
   },
   {
-   "t": 8724,
+   "t": 9439,
    "name": "done",
-   "ms": 8724.1
+   "ms": 9438.3
   }
  ],
  "console": [],
  "machineAtEnd": {
-  "loadavg": "3.01 4.72 5.72 3/2154 3475476",
-  "cpuPressure": "some avg10=1.20 avg60=0.69 avg300=1.86 total=10629831404"
+  "loadavg": "6.91 8.33 8.63 9/2277 2429175",
+  "cpuPressure": "some avg10=2.62 avg60=2.97 avg300=8.11 total=10856306965"
  },
  "chromeGpu": {
   "devices": [

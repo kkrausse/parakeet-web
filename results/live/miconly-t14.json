@@ -1,0 +1,646 @@
+{
+ "name": "miconly-t14",
+ "wav": "/home/kkrausse/devfs/cache/parakeet-ggml-webgpu/audio/live/t14.wav",
+ "wavSeconds": 19.69,
+ "recordSeconds": 17,
+ "chromeArgs": [
+  "--enable-dawn-features=vulkan_enable_f16_on_nvidia"
+ ],
+ "noWebgpu": false,
+ "loadavgStart": "6.13 8.58 8.73 20/2251 2375227",
+ "chrome": "154.0.8037.97",
+ "url": "http://127.0.0.1:8791/live.html?model=s4&phone=1&infer=0",
+ "readyMs": 2518,
+ "beforeRecording": {
+  "t": 0,
+  "gpuMib": 198,
+  "rendererRssMib": 226,
+  "gpuProcRssMib": 301,
+  "wasmHeapMb": 0,
+  "jsHeapMb": 4,
+  "gpuWorkingMb": 41,
+  "gpuBuffers": 7,
+  "gpuBuffersMade": 8,
+  "jsGpuObjects": 2555,
+  "jsGpuCollected": 1342,
+  "lagS": 0,
+  "bufferS": 0,
+  "passes": 0,
+  "words": 0,
+  "vad": {
+   "noiseFloor": 0.001,
+   "hasSpeech": false,
+   "lastRms": 0
+  }
+ },
+ "drainMs": 1489,
+ "live": {
+  "committed": "",
+  "provisional": "",
+  "segments": [],
+  "passCount": 0,
+  "finalCount": 0,
+  "reusedCount": 0,
+  "staleCount": 0,
+  "maxLagS": 0,
+  "droppedS": 0,
+  "inputRate": 44100,
+  "backend": "WebGPU: WebGPU",
+  "webgpu": true,
+  "shaderF16": true,
+  "variant": "jspi",
+  "errors": [],
+  "params": {
+   "gapMs": 250,
+   "hangMs": 700,
+   "preRollMs": 300,
+   "tailMs": 300,
+   "capS": 12,
+   "cutLookbackS": 10,
+   "minSpeechMs": 120,
+   "onsetFrames": 2,
+   "absRms": 0.004,
+   "noiseRatio": 3,
+   "lagWarnS": 2,
+   "backlogS": 120
+  },
+  "load": {
+   "fetchMs": 689,
+   "loadMs": 290,
+   "from": "network, streamed to OPFS",
+   "base": "models/",
+   "adapter": "nvidia turing NVIDIA GeForce RTX 2080 Ti"
+  }
+ },
+ "steps": [
+  {
+   "t": 2,
+   "name": "start: 110M, Q4_0 (4-bit weights), jspi",
+   "detail": "session tsu77c; phone=1; cap 12 s; limits default; store opfs"
+  },
+  {
+   "t": 613,
+   "name": "WASM module ready",
+   "ms": 60.6,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 614,
+   "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 present; fallback=false"
+  },
+  {
+   "t": 614,
+   "name": "adapter limits: binding 2048 MiB, buffer 4096 MiB, 1024 invocations/workgroup, workgroup storage 49152 B, 16 storage buffers/stage",
+   "detail": "all at or above the WebGPU spec defaults, which is all this page needs"
+  },
+  {
+   "t": 615,
+   "name": "device probe ok: binding 128 MiB, buffer 256 MiB, 256 invocations",
+   "detail": "spec-default limits"
+  },
+  {
+   "t": 616,
+   "name": "shader path: f16"
+  },
+  {
+   "t": 616,
+   "name": "WebGPU limits: spec defaults, nothing raised (the default on iOS; limits=raised changes it)"
+  },
+  {
+   "t": 1360,
+   "name": "model file: 85260576 bytes on the server, 0 bytes stored in this browser (OPFS)"
+  },
+  {
+   "t": 1402,
+   "name": "download: 16777216 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1444,
+   "name": "download: 33554432 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1465,
+   "name": "download: 50331648 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1490,
+   "name": "download: 67108864 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1512,
+   "name": "download: 83886080 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1817,
+   "name": "download complete: 85260576 bytes in OPFS (sync access handle)"
+  },
+  {
+   "t": 1818,
+   "name": "storage path: OPFS sync access handle (the file stays on disk; tensors are read one at a time)"
+  },
+  {
+   "t": 1819,
+   "name": "loading the model into the backend: WASM heap 32 MB before"
+  },
+  {
+   "t": 2110,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 688.6,
+   "detail": "81 MB from models/; storage path opfs-sync"
+  },
+  {
+   "t": 2110,
+   "name": "model loaded on WebGPU: WebGPU",
+   "ms": 290,
+   "detail": "WASM heap 32 MB, 9.9 MB in use"
+  },
+  {
+   "t": 2110,
+   "name": "after load: GPU: weights 81.2 MiB (q4_0 53.8, f16 25.5, f32 2), working 1 MiB, 6 buffers · since load 6 buffers made, 0 destroyed · JS objects 165 made, 0 collected; JS buffers 6 live (82.3 MiB)",
+   "detail": "JS object counting on; collector nudge 32 MiB per pass (gc=0 turns it off)"
+  },
+  {
+   "t": 2111,
+   "name": "warm-up pass starting (1.5 s of noise: shaders compile here)"
+  },
+  {
+   "t": 2287,
+   "name": "warm-up pass (1.5 s of noise)",
+   "ms": 167,
+   "detail": "WASM heap 38 MB, 20.1 MB in use"
+  },
+  {
+   "t": 2287,
+   "name": "sizing pass starting (13 s of noise: the working buffer is made for the longest utterance)"
+  },
+  {
+   "t": 2359,
+   "name": "sizing pass (13 s of noise)",
+   "ms": 61.2,
+   "detail": "GPU: weights 81.2 MiB (q4_0 53.8, f16 25.5, f32 2), working 41 MiB, 7 buffers · since load 8 buffers made, 1 destroyed · JS objects 2555 made, 1342 collected; JS buffers 7 live (122.3 MiB)"
+  },
+  {
+   "t": 2555,
+   "name": "recording: context running at 44100 Hz -> 16000 Hz, track 48000 Hz, 1 ch, echoCancellation=false noiseSuppression=false autoGainControl=true"
+  },
+  {
+   "t": 2556,
+   "name": "microphone only: transcription is off for this recording (infer=0 / the checkbox under details)"
+  },
+  {
+   "t": 20999,
+   "name": "stopped after 18.4 s: 0 passes, 0 commits, max lag 0 s"
+  }
+ ],
+ "console": [],
+ "provisionalPassMs": null,
+ "finalPassMs": null,
+ "provisionalAudioS": null,
+ "finalAudioS": null,
+ "lagS": {
+  "n": 10,
+  "median": 0,
+  "p95": 0,
+  "max": 0
+ },
+ "maxLagS": 0,
+ "memoryAfterWarmup": {
+  "gpuMib": {
+   "first": 191,
+   "last": 194,
+   "min": 191,
+   "max": 194
+  },
+  "rendererRssMib": {
+   "first": 240,
+   "last": 244,
+   "min": 240,
+   "max": 244
+  },
+  "gpuProcRssMib": {
+   "first": 304,
+   "last": 304,
+   "min": 304,
+   "max": 304
+  },
+  "wasmHeapMb": {
+   "first": 0,
+   "last": 0,
+   "min": 0,
+   "max": 0
+  },
+  "jsHeapMb": {
+   "first": 5,
+   "last": 6,
+   "min": 5,
+   "max": 6
+  },
+  "gpuWorkingMb": {
+   "first": 41,
+   "last": 41,
+   "min": 41,
+   "max": 41
+  },
+  "gpuBuffers": {
+   "first": 7,
+   "last": 7,
+   "min": 7,
+   "max": 7
+  },
+  "gpuBuffersMade": {
+   "first": 8,
+   "last": 8,
+   "min": 8,
+   "max": 8
+  }
+ },
+ "gpuAtLoad": {
+  "weightsMb": 81.2,
+  "workingMb": 1,
+  "computeMb": 0,
+  "stagingMb": 1,
+  "liveMb": 82.3,
+  "buffers": 6,
+  "byType": {
+   "f32": 2,
+   "q4_0": 53.8,
+   "f16": 25.5
+  },
+  "created": 6,
+  "destroyed": 0,
+  "createdMb": 82.3,
+  "poolHits": 0,
+  "poolMisses": 0,
+  "pipelines": 1,
+  "layouts": 1,
+  "bindGroups": 0,
+  "encoders": 78,
+  "submits": 78,
+  "writes": 685,
+  "maps": 78,
+  "js": {
+   "registry": true,
+   "objects": 165,
+   "collected": 0,
+   "buffers": 6,
+   "buffersDestroyed": 0,
+   "buffersCollected": 0,
+   "bufferLiveMb": 82.3,
+   "bindGroups": 0,
+   "bindGroupsCollected": 0,
+   "layouts": 1,
+   "encoders": 78,
+   "commandBuffers": 78,
+   "commandBuffersCollected": 0,
+   "pipelines": 1,
+   "shaderModules": 1
+  }
+ },
+ "gpuAfterWarmup": {
+  "weightsMb": 81.2,
+  "workingMb": 41,
+  "computeMb": 40,
+  "stagingMb": 1,
+  "liveMb": 122.3,
+  "buffers": 7,
+  "byType": {
+   "f32": 2,
+   "q4_0": 53.8,
+   "f16": 25.5
+  },
+  "created": 8,
+  "destroyed": 1,
+  "createdMb": 126.2,
+  "poolHits": 0,
+  "poolMisses": 1,
+  "pipelines": 19,
+  "layouts": 19,
+  "bindGroups": 2222,
+  "encoders": 116,
+  "submits": 116,
+  "writes": 793,
+  "maps": 80,
+  "js": {
+   "registry": true,
+   "objects": 2555,
+   "collected": 1342,
+   "buffers": 8,
+   "buffersDestroyed": 1,
+   "buffersCollected": 0,
+   "bufferLiveMb": 122.3,
+   "bindGroups": 2222,
+   "bindGroupsCollected": 1111,
+   "layouts": 19,
+   "encoders": 116,
+   "commandBuffers": 116,
+   "commandBuffersCollected": 97,
+   "pipelines": 19,
+   "shaderModules": 19
+  }
+ },
+ "gpuEnd": {
+  "weightsMb": 81.2,
+  "workingMb": 41,
+  "computeMb": 40,
+  "stagingMb": 1,
+  "liveMb": 122.3,
+  "buffers": 7,
+  "byType": {
+   "f32": 2,
+   "q4_0": 53.8,
+   "f16": 25.5
+  },
+  "created": 8,
+  "destroyed": 1,
+  "createdMb": 126.2,
+  "poolHits": 0,
+  "poolMisses": 1,
+  "pipelines": 19,
+  "layouts": 19,
+  "bindGroups": 2222,
+  "encoders": 116,
+  "submits": 116,
+  "writes": 793,
+  "maps": 80,
+  "js": {
+   "registry": true,
+   "objects": 2555,
+   "collected": 1342,
+   "buffers": 8,
+   "buffersDestroyed": 1,
+   "buffersCollected": 0,
+   "bufferLiveMb": 122.3,
+   "bindGroups": 2222,
+   "bindGroupsCollected": 1111,
+   "layouts": 19,
+   "encoders": 116,
+   "commandBuffers": 116,
+   "commandBuffersCollected": 97,
+   "pipelines": 19,
+   "shaderModules": 19
+  }
+ },
+ "series": [
+  {
+   "t": 0,
+   "gpuMib": 199,
+   "rendererRssMib": 233,
+   "gpuProcRssMib": 302,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 4,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 2555,
+   "jsGpuCollected": 1342,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 2,
+   "gpuMib": 198,
+   "rendererRssMib": 239,
+   "gpuProcRssMib": 303,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 2555,
+   "jsGpuCollected": 1342,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 4,
+   "gpuMib": 194,
+   "rendererRssMib": 240,
+   "gpuProcRssMib": 303,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 2555,
+   "jsGpuCollected": 1342,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 6,
+   "gpuMib": 191,
+   "rendererRssMib": 240,
+   "gpuProcRssMib": 304,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 2555,
+   "jsGpuCollected": 1342,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 8,
+   "gpuMib": 191,
+   "rendererRssMib": 241,
+   "gpuProcRssMib": 304,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 2555,
+   "jsGpuCollected": 1342,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 10,
+   "gpuMib": 191,
+   "rendererRssMib": 242,
+   "gpuProcRssMib": 304,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 2555,
+   "jsGpuCollected": 1342,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 12,
+   "gpuMib": 191,
+   "rendererRssMib": 242,
+   "gpuProcRssMib": 304,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 2555,
+   "jsGpuCollected": 1342,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 14,
+   "gpuMib": 191,
+   "rendererRssMib": 243,
+   "gpuProcRssMib": 304,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 2555,
+   "jsGpuCollected": 1342,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 16,
+   "gpuMib": 191,
+   "rendererRssMib": 244,
+   "gpuProcRssMib": 304,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 2555,
+   "jsGpuCollected": 1342,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 18,
+   "gpuMib": 194,
+   "rendererRssMib": 244,
+   "gpuProcRssMib": 304,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 2555,
+   "jsGpuCollected": 1342,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  }
+ ],
+ "passes": [],
+ "offline": {
+  "text": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards",
+  "ms": 330.7000000476837,
+  "seconds": 19.69
+ },
+ "vsOffline": {
+  "exact": false,
+  "raw": {
+   "differing": 43,
+   "words": 42,
+   "spans": [
+    " [going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards -> ]"
+   ]
+  },
+  "normalized": {
+   "differing": 42,
+   "words": 42,
+   "spans": [
+    " [going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight he'll have to put in an appearance at some place of worship on sunday morning and he can come to us immediately afterwards -> ]"
+   ]
+  }
+ },
+ "vsExpected": {
+  "exact": false,
+  "raw": {
+   "differing": 43,
+   "words": 42,
+   "spans": [
+    " [going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards -> ]"
+   ]
+  },
+  "normalized": {
+   "differing": 42,
+   "words": 42,
+   "spans": [
+    " [going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight he'll have to put in an appearance at some place of worship on sunday morning and he can come to us immediately afterwards -> ]"
+   ]
+  }
+ },
+ "loadavgEnd": "6.26 8.42 8.67 3/2305 2397775"
+}

@@ -82,6 +82,7 @@
 <section class="more" id="more">
   <h2>Settings</h2>
   <label><input type="checkbox" id="proc"> <span>Browser echo cancellation and noise suppression (off by default: the model gets the raw microphone). Applies from the next recording.</span></label>
+  <label><input type="checkbox" id="miconly"> <span>Microphone only: record, resample and show the level, but run no transcription (to tell the audio half of this page from the model half when a tab dies). Applies from the next recording; <code>infer=0</code> in the address does the same.</span></label>
   <p id="env"></p>
   <p>Offline model, re-run on the current utterance several times a second (grey text); an utterance is committed on a pause or when it reaches the length cap, and its audio is dropped. The model file is fetched once and kept in this browser.</p>
   <p id="diagnote"></p>

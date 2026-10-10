@@ -1,0 +1,122 @@
+From c555c9d4b8cc43abd649c3c2413682c558a0b1c7 Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 10:04:28 -0700
+Subject: [PATCH] wasm builds: no giant functions (inlining limits for the
+ WebGPU and CPU backends and at link), function names kept
+
+At -O3 two WASM functions came out enormous: ggml_backend_webgpu_graph_compute
+(every op encoder inlined by clang: 161k lines of WASM text, 528 locals) and
+ggml_graph_compute_thread (every CPU op inlined by binaryen at link, which
+inlines any function with a single caller whatever its size: 264k lines). Both
+are hot in a browser: the first once per encoder run with a loop over ~1100
+nodes, the second once per decoder token.
+
+JavaScriptCore's optimizing WASM tier (OMG) does not cope with functions that
+size. Measured in simulator Safari (iOS 18.3, CPU backend, soak of 250 passes):
+the web content process went to 4.4 GiB within 20 s and kept a compiler thread
+busy for minutes after the page was idle (3m48s of CPU for 60 s of work;
+sampled in JSC::Wasm::OMGPlan -> B3::Air::allocateStackByGraphColoring). In the
+jsc shell of macOS 26.6 the same build is harmless only because that JSC refuses
+OMG for such functions (maximumOMGCandidateCost=100000); with that limit lifted
+it costs +0.9 GiB and +50 s of CPU. On an iPhone the live page's tab was killed
+at the 2 GiB process limit 8-20 s into use.
+
+Now: -fno-inline-functions for ggml-webgpu.cpp and the ggml-cpu sources in
+Emscripten builds (functions marked inline, i.e. the per-element helpers and
+vector kernels, are still inlined), and binaryen's single-caller inlining
+capped at 30 IR nodes for pk-web (PK_WEB_ONE_CALLER_INLINE_MAX). Largest
+functions on the parakeet path afterwards: ggml_backend_sched_split_graph 13.7k
+lines, ggml_compute_forward (the dispatch switch) 8.2k, ggml_webgpu_encode 4.3k,
+ggml_backend_webgpu_graph_compute 3.1k, ggml_graph_compute_thread 0.6k. Two
+intermediate settings were worse in the 18.3 simulator and are why both parts
+are needed: with only the link limit at 200 a pass failed with 'Maximum call
+stack size exceeded' in ggml_graph_compute_thread once the decoder turned hot,
+and with the CPU sources un-inlined but the limit still 200 binaryen folded the
+small op wrappers into a 22k-line dispatch switch that sent OMG's register
+allocator away for minutes again. Same simulator soak with this commit: 250 of
+250 passes, 979 MiB peak (the CPU path keeps the weights in the heap), 76 s of
+CPU.
+
+pk-web also keeps its function names (--profiling-funcs, +0.6 MB), so a stack
+reported from a device names functions.
+
+Text unchanged on a07/a14/a56 for 110m Q8_0 and Q4_0 in Chrome; encoder time
+unchanged, decode about 10% slower on the 56 s clip (110 ms against 97-101).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ examples/web/CMakeLists.txt         | 15 +++++++++++++++
+ ggml/src/ggml-cpu/CMakeLists.txt    |  6 +++++-
+ ggml/src/ggml-webgpu/CMakeLists.txt | 13 +++++++++++++
+ 3 files changed, 33 insertions(+), 1 deletion(-)
+
+diff --git a/examples/web/CMakeLists.txt b/examples/web/CMakeLists.txt
+index 22e76590..def195d6 100644
+--- a/examples/web/CMakeLists.txt
++++ b/examples/web/CMakeLists.txt
+@@ -18,6 +18,21 @@ if(GGML_WEBGPU_JSPI)
+ else()
+     target_link_options(pk-web PRIVATE "-sASYNCIFY" "-fexceptions" "-sASYNCIFY_STACK_SIZE=65536" "-sASYNCIFY_EXPORTS=${PK_ASYNC_EXPORTS}")
+ endif()
++# binaryen (wasm-opt, run by the link at -O2 and above) inlines every function that has a
++# single caller, whatever its size. That folded all of ggml's CPU ops into
++# ggml_graph_compute_thread (264k lines of WASM text) and would fold the WebGPU op
++# encoders back into ggml_backend_webgpu_graph_compute. Functions that size make
++# JavaScriptCore's optimizing tier use gigabytes of memory and minutes of CPU when they
++# turn hot (see ggml/src/ggml-webgpu/CMakeLists.txt). The limit is in binaryen IR nodes.
++set(PK_WEB_ONE_CALLER_INLINE_MAX "30" CACHE STRING "binaryen: largest single-caller function that is still inlined (-1: no limit)")
++target_link_options(pk-web PRIVATE "-sBINARYEN_EXTRA_PASSES=--one-caller-inline-max-function-size=${PK_WEB_ONE_CALLER_INLINE_MAX}")
++# Function names stay in the .wasm (about 0.4 MB): a stack a browser reports then names
++# functions instead of wasm-function[1751]. This is the only way to read a failure on a
++# device that cannot be debugged from here.
++option(PK_WEB_FUNCTION_NAMES "pk-web: keep WASM function names (--profiling-funcs)" ON)
++if(PK_WEB_FUNCTION_NAMES)
++    target_link_options(pk-web PRIVATE "--profiling-funcs")
++endif()
+ target_link_options(pk-web PRIVATE
+     "-sMODULARIZE=1" "-sEXPORT_ES6=1" "-sEXPORT_NAME=createPk" "-sENVIRONMENT=web,worker"
+     "-sSTACK_SIZE=5MB" ${PK_WEB_MEMORY_FLAGS}
+diff --git a/ggml/src/ggml-cpu/CMakeLists.txt b/ggml/src/ggml-cpu/CMakeLists.txt
+index 9b9236b7..4984fd7b 100644
+--- a/ggml/src/ggml-cpu/CMakeLists.txt
++++ b/ggml/src/ggml-cpu/CMakeLists.txt
+@@ -676,7 +676,11 @@ function(ggml_add_cpu_backend_variant_impl tag_name)
+     target_compile_definitions(${GGML_CPU_NAME} PRIVATE ${ARCH_DEFINITIONS})
+ 
+     if (EMSCRIPTEN)
+-        set_target_properties(${GGML_CPU_NAME} PROPERTIES COMPILE_FLAGS "-msimd128")
++        # -fno-inline-functions: only functions marked inline are inlined (the per-element helpers and
++        # vector kernels are). At -O3 the per-type variants of an op otherwise all land in one function
++        # (ggml_compute_forward_dup: 18k lines of WASM text); JavaScriptCore's optimizing tier handles
++        # functions that size badly (see ggml-webgpu/CMakeLists.txt).
++        set_target_properties(${GGML_CPU_NAME} PROPERTIES COMPILE_FLAGS "-msimd128 -fno-inline-functions")
+     endif()
+ 
+   if (CMAKE_C_COMPILER_ID STREQUAL "IntelLLVM" OR CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM")
+diff --git a/ggml/src/ggml-webgpu/CMakeLists.txt b/ggml/src/ggml-webgpu/CMakeLists.txt
+index 2eacca7f..b4c35b37 100644
+--- a/ggml/src/ggml-webgpu/CMakeLists.txt
++++ b/ggml/src/ggml-webgpu/CMakeLists.txt
+@@ -42,6 +42,19 @@ add_dependencies(ggml-webgpu generate_shaders)
+ # Dawn needs C++20 (https://dawn.googlesource.com/dawn/+/refs/heads/main/docs/quickstart-cmake.md#prerequisites)
+ target_compile_features(ggml-webgpu PRIVATE cxx_std_20)
+ 
++if(EMSCRIPTEN)
++    # Every op encoder is a static function with one caller, so at -O3 they all
++    # end up inside ggml_backend_webgpu_graph_compute: one WASM function of
++    # 161k lines of text with 528 locals. JavaScriptCore's optimizing WASM tier
++    # (OMG) needs gigabytes and minutes for a function that size (its stack
++    # allocation is a graph coloring over the function's spill slots), which on
++    # an iPhone gets the tab killed at the 2 GiB process limit a few seconds
++    # after the function turns hot. Only functions marked inline are inlined in
++    # this file; the encoders stay functions of their own. (The link step needs
++    # the matching binaryen limit, see examples/web/CMakeLists.txt.)
++    target_compile_options(ggml-webgpu PRIVATE "-fno-inline-functions")
++endif()
++
+ # Disable C++20 module scanning since emscan-deps fails to find webgpu_cpp.h
+ set_target_properties(ggml-webgpu PROPERTIES CXX_SCAN_FOR_MODULES OFF)
+ 
+-- 
+2.53.0
+

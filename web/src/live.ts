@@ -30,8 +30,6 @@ const P = {
 };
 
 interface LiveConfig { model: string; variant: "jspi" | "asyncify"; f16: boolean; cpu: boolean; store: string; verbose: boolean; base: string | null; limits: string; env: Record<string, string>; gpuwatch: boolean; gcMb: number }
-// Every iOS browser is WebKit; so is desktop Safari. There the JS collector is nudged after each pass (worker.ts, gc=).
-const webkit = device.ios || (/Safari\//.test(navigator.userAgent) && !/Chrome|Chromium|Android/.test(navigator.userAgent));
 const MODEL_KEY = "pkggml:live-model", PROC_KEY = "pkggml:live-proc";
 const lsGet = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } };
@@ -54,7 +52,7 @@ function readConfig(): LiveConfig {
     limits: env.GGML_WEBGPU_LIMITS ?? (params.get("limits") === "raised" ? "" : params.get("limits") === "default" || device.ios ? "default" : ""),
     env,
     gpuwatch: params.get("gpuwatch") !== "0", // count WebGPU objects from the JS side as well (created, destroyed, collected)
-    gcMb: Math.max(0, num("gc", webkit ? 32 : 0)), // MiB of throw-away ArrayBuffers after each pass, so the JS collector runs (0 = off)
+    gcMb: Math.max(0, num("gc", 0)), // MiB of throw-away ArrayBuffers after each pass, so the JS collector runs; off unless asked for (it cost 300 MiB of peak in simulator Safari)
   };
 }
 const cfg = readConfig();
@@ -325,8 +323,11 @@ function endDrop(at: number) {
   if (m) m.wait = false, m.text = `[${Math.round((at - droppedFrom) / SR)} s of audio skipped: transcription is slower than real time here]`;
   pk.droppedS += (at - droppedFrom) / SR;
 }
+// Microphone only (infer=0 or the checkbox): capture, resampling and the level meter run, nothing is buffered or transcribed.
+let micOnly = false;
 function onPcm(pcm: Float32Array) {
   captured += pcm.length;
+  if (micOnly) { speechNow = false; return; }
   if (dropping) {
     if (backlogS() > P.backlogS / 2) return;
     endDrop(captured - pcm.length);
@@ -449,7 +450,7 @@ function setStats() {
   pk.lagS = r1(lagS); pk.bufferS = r1((nFrames * FRAME) / SR);
   if (recording && lagS > pk.maxLagS) pk.maxLagS = r1(lagS);
   $("s-pass").textContent = last ? fmtMs(last.ms) : "-";
-  $("s-buf").textContent = recording || nFrames ? `${((hasSpeech ? nFrames * FRAME : 0) / SR).toFixed(1)} s${finals.length ? ` +${finals.length}` : ""}` : "-";
+  $("s-buf").textContent = recording && micOnly ? `mic only ${(captured / SR).toFixed(0)} s` : recording || nFrames ? `${((hasSpeech ? nFrames * FRAME : 0) / SR).toFixed(1)} s${finals.length ? ` +${finals.length}` : ""}` : "-";
   $("s-rtf").textContent = last ? `${last.audioS * 1000 / last.ms >= 10 ? Math.round((last.audioS * 1000) / last.ms) : ((last.audioS * 1000) / last.ms).toFixed(1)}x` : "-";
   const lagging = lagS > P.lagWarnS || dropping;
   $("s-lag").textContent = recording || finals.length ? `${lagS.toFixed(1)} s${dropping ? ", skipping audio" : lagging ? ", lagging" : ""}` : "-";
@@ -515,6 +516,7 @@ async function startRecording() {
     const set = s.getAudioTracks()[0]?.getSettings?.() ?? {};
     // fresh utterance state; the committed transcript is kept
     nFrames = 0; bufAbs = 0; captured = 0; coveredAbs = 0; provEndAbs = 0; noiseFloor = 0.001; dropping = false; resetUtterance();
+    micOnly = ($("miconly") as HTMLInputElement).checked;
     recording = true; starting = false; recStart = performance.now(); sawSignal = false;
     pk.recording = true; pk.inputRate = c.sampleRate;
     $("rec").classList.add("on"); $("rec").setAttribute("aria-pressed", "true"); $("rec").setAttribute("aria-label", "Stop");
@@ -522,6 +524,7 @@ async function startRecording() {
     micMessage(null);
     diag.send("recording", { contextState: c.state, contextSampleRate: c.sampleRate, baseLatency: c.baseLatency ?? null, trackSettings: { ...set, deviceId: undefined, groupId: undefined }, trackLabelPresent: !!track?.label, processing: proc });
     step(`recording: context ${c.state} at ${c.sampleRate} Hz -> 16000 Hz, track ${set.sampleRate ?? "?"} Hz, ${set.channelCount ?? "?"} ch, echoCancellation=${set.echoCancellation} noiseSuppression=${set.noiseSuppression} autoGainControl=${set.autoGainControl}`);
+    if (micOnly) step("microphone only: transcription is off for this recording (infer=0 / the checkbox under details)");
     void acquireWake();
     render();
   } catch (e: any) {
@@ -638,6 +641,7 @@ function init() {
   const proc = $("proc") as HTMLInputElement;
   proc.checked = lsGet(PROC_KEY) === "1";
   proc.addEventListener("change", () => lsSet(PROC_KEY, proc.checked ? "1" : "0"));
+  ($("miconly") as HTMLInputElement).checked = params.get("infer") === "0";
   $("rec").addEventListener("click", () => (recording ? stopRecording() : void startRecording()));
   $("soakgo").addEventListener("click", () => void runSoak(Math.max(1, Number(($("soakn") as HTMLInputElement).value) | 0 || 300)));
   $("soakstop").addEventListener("click", () => { soakStop = true; });
@@ -681,7 +685,7 @@ function init() {
   setInterval(() => {
     if (!recording && !busy && modelState !== "loading" && !soaking) return;
     diag.send("heartbeat", { phase: pk.phase, recording, heapMb: pk.heapMb, jsHeapMb: (performance as any).memory ? Math.round((performance as any).memory.usedJSHeapSize / 2 ** 20) : null, passes: pk.passCount, lagS: pk.lagS, bufferS: pk.bufferS,
-      backlogS: r1(backlogS()), audioContext: ctx?.state ?? null, visibility: document.visibilityState, gpu: gpuDiag(pk.gpu) });
+      backlogS: r1(backlogS()), audioContext: ctx?.state ?? null, visibility: document.visibilityState, gpu: gpuDiag(pk.gpu), micOnly: recording && micOnly, capturedS: recording ? r1(captured / SR) : undefined });
   }, 5000);
   setStats();
   setNote();
