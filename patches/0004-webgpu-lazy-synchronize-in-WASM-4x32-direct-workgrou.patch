@@ -1,8 +1,8 @@
 From c5a43d4f8e8d368c6f34625230ab49e7e6079a6d Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 02:42:20 -0700
-Subject: [PATCH 4/9] webgpu: lazy synchronize in WASM, 4x32 direct workgroup,
- WASM scheduler split budget, heap probes
+Subject: [PATCH 04/11] webgpu: lazy synchronize in WASM, 4x32 direct
+ workgroup, WASM scheduler split budget, heap probes
 
 - ggml_backend_webgpu_synchronize is a no-op in WASM builds (GGML_WEBGPU_LAZY_SYNC
   overrides): a read already waits for its staging-buffer map, so the extra

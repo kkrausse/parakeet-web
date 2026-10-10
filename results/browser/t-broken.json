@@ -1,0 +1,418 @@
+{
+ "name": "t-broken",
+ "url": "http://127.0.0.1:8791/?model=s8&clip=a07&runs=1&env=GGML_WEBGPU_BREAK_SHADER=soft_max&auto=1",
+ "chromeArgs": [
+  "--enable-dawn-features=vulkan_enable_f16_on_nvidia"
+ ],
+ "machineAtStart": {
+  "loadavg": "3.89 3.01 3.29 16/2027 3995989",
+  "cpuPressure": "some avg10=0.73 avg60=0.93 avg300=0.60 total=10129408840"
+ },
+ "chrome": "154.0.8037.97",
+ "error": "Error: the GPU device reported 67 error line(s) (see the GPU ERROR steps); results above are not trustworthy",
+ "memory": {
+  "gpuProcessGpuMibAfterLoad": 200,
+  "gpuProcessGpuMibPeak": 226,
+  "rendererRssMibAfterLoad": 215,
+  "rendererRssMibPeak": 282,
+  "gpuProcessRssMibAfterLoad": 295,
+  "gpuProcessRssMibPeak": 309
+ },
+ "pids": {
+  "gpu": 3995626,
+  "renderers": [
+   3996072,
+   3995848,
+   3995794
+  ]
+ },
+ "page": {
+  "config": {
+   "model": "s8",
+   "clip": "a07",
+   "runs": 1,
+   "threads": 1,
+   "store": "opfs",
+   "f16": true,
+   "flash": false,
+   "variant": "jspi",
+   "verbose": false,
+   "base": "models/",
+   "env": {
+    "GGML_WEBGPU_BREAK_SHADER": "soft_max"
+   }
+  },
+  "model": {
+   "label": "110M, Q8_0 (8-bit weights)",
+   "file": "parakeet-tdt_ctc-110m-Q8_0.gguf",
+   "mb": 129,
+   "family": "110m"
+  },
+  "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "crossOriginIsolated": true,
+  "clips": [
+   {
+    "clip": "a07",
+    "seconds": 7,
+    "firstInPage": true,
+    "firstRunMs": {
+     "pre": 12,
+     "enc": 138.1,
+     "dec": 48.9,
+     "total": 199
+    },
+    "startToFirstTranscriptMs": 3248,
+    "decSteps": 0,
+    "text": "",
+    "matchesNative": false,
+    "warmRuns": 1,
+    "preMs": {
+     "median": 9.1,
+     "worst": 9.1,
+     "best": 9.1
+    },
+    "encMs": {
+     "median": 34.9,
+     "worst": 34.9,
+     "best": 34.9
+    },
+    "decMs": {
+     "median": 16.4,
+     "worst": 16.4,
+     "best": 16.4
+    },
+    "totalMs": {
+     "median": 60.4,
+     "worst": 60.4,
+     "best": 60.4
+    },
+    "xRealTime": 115.9,
+    "textStable": true,
+    "wasmHeapMb": 32,
+    "wasmHeapUsedMb": 10.6
+   }
+  ],
+  "adapter": {
+   "available": true,
+   "vendor": "nvidia",
+   "architecture": "turing",
+   "device": "0x1e07",
+   "description": "NVIDIA GeForce RTX 2080 Ti",
+   "isFallbackAdapter": false,
+   "shaderF16": true,
+   "features": [
+    "bgra8unorm-storage",
+    "chromium-experimental-multi-draw-indirect",
+    "chromium-experimental-sampling-resource-table",
+    "chromium-experimental-subgroup-matrix",
+    "chromium-experimental-timestamp-query-inside-passes",
+    "clip-distances",
+    "core-features-and-limits",
+    "depth-clip-control",
+    "depth32float-stencil8",
+    "dual-source-blending",
+    "float32-blendable",
+    "float32-filterable",
+    "indirect-first-instance",
+    "primitive-index",
+    "rg11b10ufloat-renderable",
+    "shader-f16",
+    "subgroup-size-control",
+    "subgroups",
+    "texture-component-swizzle",
+    "texture-compression-bc",
+    "texture-compression-bc-sliced-3d",
+    "texture-compression-unaligned",
+    "texture-formats-tier1",
+    "texture-formats-tier2",
+    "timestamp-query"
+   ],
+   "wgslLanguageFeatures": [
+    "buffer_view",
+    "immediate_address_space",
+    "linear_indexing",
+    "packed_4x8_integer_dot_product",
+    "pointer_composite_access",
+    "readonly_and_readwrite_storage_textures",
+    "subgroup_id",
+    "subgroup_uniformity",
+    "swizzle_assignment",
+    "texture_and_sampler_let",
+    "texture_formats_tier1",
+    "uniform_buffer_standard_layout",
+    "unrestricted_pointer_parameters"
+   ],
+   "limits": {
+    "maxStorageBufferBindingSize": 2147483644,
+    "maxBufferSize": 4294967292,
+    "maxComputeInvocationsPerWorkgroup": 1024,
+    "maxComputeWorkgroupSizeX": 1024,
+    "maxComputeWorkgroupStorageSize": 49152,
+    "maxStorageBuffersPerShaderStage": 16,
+    "maxComputeWorkgroupsPerDimension": 65535,
+    "maxBindGroups": 4,
+    "minStorageBufferOffsetAlignment": 256,
+    "minUniformBufferOffsetAlignment": 256
+   },
+   "belowSpecDefault": [],
+   "requested": {
+    "requiredFeatures": [
+     "shader-f16"
+    ],
+    "requiredLimits": {
+     "maxStorageBufferBindingSize": 1073741824,
+     "maxBufferSize": 1073741824,
+     "maxComputeInvocationsPerWorkgroup": 256,
+     "maxComputeWorkgroupSizeX": 256
+    }
+   },
+   "deviceProbe": "ok: binding 1024 MiB, buffer 1024 MiB, 256 invocations",
+   "deviceError": null,
+   "maxBufferSizeMb": 4096,
+   "maxStorageBufferBindingSizeMb": 2048
+  },
+  "jspi": true,
+  "shaderF16Used": true,
+  "load": {
+   "fetchMs": 808,
+   "loadMs": 324,
+   "from": "network, streamed to OPFS",
+   "fileMb": 129.1,
+   "wasmHeapMb": 32,
+   "wasmHeapUsedMb": 9.9,
+   "backend": "WebGPU: WebGPU"
+  },
+  "session": {
+   "totalMs": 324
+  },
+  "startToLoadedMs": 1643,
+  "gpuErrors": [
+   "shader/pipeline 'soft_max_inplace' failed: Error while parsing WGSL: :160:32 error: unresolved value 'undefined_symbol_for_testing'",
+   "fn pk_broken() -> f32 { return undefined_symbol_for_testing; }",
+   "                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+   " - While calling [Device].CreateShaderModule([ShaderModuleDescriptor]).",
+   "device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error.",
+   " - While Validating GetBindGroupLayout (0) on [Invalid ComputePipeline \"soft_max_inplace\"]",
+   "device error (validation): [Invalid BindGroupLayout (unlabeled)] is invalid due to a previous error.",
+   " - While validating [BindGroupDescriptor \"\"soft_max_inplace\"\"] against [Invalid BindGroupLayout (unlabeled)]",
+   " - While calling [Device].CreateBindGroup([BindGroupDescriptor \"\"soft_max_inplace\"\"]).",
+   "device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error.",
+   " - While encoding [ComputePassEncoder (unlabeled)].SetPipeline([Invalid ComputePipeline \"soft_max_inplace\"]).",
+   " - While finishing [CommandEncoder (unlabeled)].",
+   "device error (validation): [Invalid CommandBuffer] is invalid due to a previous error.",
+   " - While calling [Queue].Submit([[Invalid CommandBuffer]])",
+   "device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error.",
+   " - While Validating GetBindGroupLayout (0) on [Invalid ComputePipeline \"soft_max_inplace\"]",
+   "device error (validation): [Invalid BindGroupLayout (unlabeled)] is invalid due to a previous error.",
+   " - While validating [BindGroupDescriptor \"\"soft_max_inplace\"\"] against [Invalid BindGroupLayout (unlabeled)]",
+   " - While calling [Device].CreateBindGroup([BindGroupDescriptor \"\"soft_max_inplace\"\"]).",
+   "device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error.",
+   " - While encoding [ComputePassEncoder (unlabeled)].SetPipeline([Invalid ComputePipeline \"soft_max_inplace\"]).",
+   " - While finishing [CommandEncoder (unlabeled)].",
+   "device error (validation): [Invalid CommandBuffer] is invalid due to a previous error.",
+   " - While calling [Queue].Submit([[Invalid CommandBuffer]])",
+   "device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error.",
+   " - While Validating GetBindGroupLayout (0) on [Invalid ComputePipeline \"soft_max_inplace\"]",
+   "device error (validation): [Invalid BindGroupLayout (unlabeled)] is invalid due to a previous error.",
+   " - While validating [BindGroupDescriptor \"\"soft_max_inplace\"\"] against [Invalid BindGroupLayout (unlabeled)]",
+   " - While calling [Device].CreateBindGroup([BindGroupDescriptor \"\"soft_max_inplace\"\"]).",
+   "device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error.",
+   " - While encoding [ComputePassEncoder (unlabeled)].SetPipeline([Invalid ComputePipeline \"soft_max_inplace\"]).",
+   " - While finishing [CommandEncoder (unlabeled)].",
+   "device error (validation): [Invalid CommandBuffer] is invalid due to a previous error.",
+   " - While calling [Queue].Submit([[Invalid CommandBuffer]])",
+   "device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error.",
+   " - While Validating GetBindGroupLayout (0) on [Invalid ComputePipeline \"soft_max_inplace\"]",
+   "device error (validation): [Invalid BindGroupLayout (unlabeled)] is invalid due to a previous error.",
+   " - While validating [BindGroupDescriptor \"\"soft_max_inplace\"\"] against [Invalid BindGroupLayout (unlabeled)]",
+   " - While calling [Device].CreateBindGroup([BindGroupDescriptor \"\"soft_max_inplace\"\"]).",
+   "device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error.",
+   " - While encoding [ComputePassEncoder (unlabeled)].SetPipeline([Invalid ComputePipeline \"soft_max_inplace\"]).",
+   " - While finishing [CommandEncoder (unlabeled)].",
+   "device error (validation): [Invalid CommandBuffer] is invalid due to a previous error.",
+   " - While calling [Queue].Submit([[Invalid CommandBuffer]])",
+   "device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error.",
+   " - While Validating GetBindGroupLayout (0) on [Invalid ComputePipeline \"soft_max_inplace\"]",
+   "device error (validation): [Invalid BindGroupLayout (unlabeled)] is invalid due to a previous error.",
+   " - While validating [BindGroupDescriptor \"\"soft_max_inplace\"\"] against [Invalid BindGroupLayout (unlabeled)]",
+   " - While calling [Device].CreateBindGroup([BindGroupDescriptor \"\"soft_max_inplace\"\"]).",
+   "device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error.",
+   " - While encoding [ComputePassEncoder (unlabeled)].SetPipeline([Invalid ComputePipeline \"soft_max_inplace\"]).",
+   " - While finishing [CommandEncoder (unlabeled)].",
+   "device error (validation): [Invalid CommandBuffer] is invalid due to a previous error.",
+   " - While calling [Queue].Submit([[Invalid CommandBuffer]])",
+   "device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error.",
+   " - While Validating GetBindGroupLayout (0) on [Invalid ComputePipeline \"soft_max_inplace\"]",
+   "device error (validation): [Invalid BindGroupLayout (unlabeled)] is invalid due to a previous error.",
+   " - While validating [BindGroupDescriptor \"\"soft_max_inplace\"\"] against [Invalid BindGroupLayout (unlabeled)]",
+   " - While calling [Device].CreateBindGroup([BindGroupDescriptor \"\"soft_max_inplace\"\"]).",
+   "device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error.",
+   " - While encoding [ComputePassEncoder (unlabeled)].SetPipeline([Invalid ComputePipeline \"soft_max_inplace\"]).",
+   " - While finishing [CommandEncoder (unlabeled)].",
+   "device error (validation): [Invalid CommandBuffer] is invalid due to a previous error.",
+   " - While calling [Queue].Submit([[Invalid CommandBuffer]])",
+   "device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error.",
+   " - While Validating GetBindGroupLayout (0) on [Invalid ComputePipeline \"soft_max_inplace\"]",
+   "(70 device errors in total; only the first 66 lines are kept)"
+  ]
+ },
+ "steps": [
+  {
+   "t": 0,
+   "name": "start: 110M, Q8_0 (8-bit weights), flash=off, store=opfs, jspi"
+  },
+  {
+   "t": 509,
+   "name": "WASM module ready",
+   "ms": 46.3,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 509,
+   "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 present; fallback=false"
+  },
+  {
+   "t": 509,
+   "name": "adapter limits: binding 2048 MiB, buffer 4096 MiB, 1024 invocations/workgroup, workgroup storage 49152 B, 16 storage buffers/stage",
+   "detail": "all at or above the WebGPU spec defaults, which is all this page needs"
+  },
+  {
+   "t": 509,
+   "name": "device probe ok: binding 1024 MiB, buffer 1024 MiB, 256 invocations",
+   "detail": "requested {\"maxStorageBufferBindingSize\":1073741824,\"maxBufferSize\":1073741824,\"maxComputeInvocationsPerWorkgroup\":256,\"maxComputeWorkgroupSizeX\":256} shader-f16"
+  },
+  {
+   "t": 509,
+   "name": "shader path: f16"
+  },
+  {
+   "t": 1642,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 807.7,
+   "detail": "129 MB"
+  },
+  {
+   "t": 1643,
+   "name": "model loaded on WebGPU: WebGPU",
+   "ms": 323.8,
+   "detail": "WASM heap 32 MB, 9.9 MB in use"
+  },
+  {
+   "t": 3247,
+   "name": "GPU ERROR (a07): shader/pipeline 'soft_max_inplace' failed: Error while parsing WGSL: :160:32 error: unresolved value 'undefined_symbol_for_testing'"
+  },
+  {
+   "t": 3247,
+   "name": "GPU ERROR (a07): fn pk_broken() -> f32 { return undefined_symbol_for_testing; }"
+  },
+  {
+   "t": 3247,
+   "name": "GPU ERROR (a07):                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+  },
+  {
+   "t": 3248,
+   "name": "GPU ERROR (a07):  - While calling [Device].CreateShaderModule([ShaderModuleDescriptor])."
+  },
+  {
+   "t": 3248,
+   "name": "GPU ERROR (a07): device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error."
+  },
+  {
+   "t": 3248,
+   "name": "GPU ERROR (a07):  - While Validating GetBindGroupLayout (0) on [Invalid ComputePipeline \"soft_max_inplace\"]"
+  },
+  {
+   "t": 3248,
+   "name": "GPU ERROR (a07): device error (validation): [Invalid BindGroupLayout (unlabeled)] is invalid due to a previous error."
+  },
+  {
+   "t": 3248,
+   "name": "GPU ERROR (a07):  - While validating [BindGroupDescriptor \"\"soft_max_inplace\"\"] against [Invalid BindGroupLayout (unlabeled)]"
+  },
+  {
+   "t": 3248,
+   "name": "GPU ERROR (a07):  - While calling [Device].CreateBindGroup([BindGroupDescriptor \"\"soft_max_inplace\"\"])."
+  },
+  {
+   "t": 3248,
+   "name": "GPU ERROR (a07): device error (validation): [Invalid ComputePipeline \"soft_max_inplace\"] is invalid due to a previous error."
+  },
+  {
+   "t": 3248,
+   "name": "GPU ERROR (a07):  - While encoding [ComputePassEncoder (unlabeled)].SetPipeline([Invalid ComputePipeline \"soft_max_inplace\"])."
+  },
+  {
+   "t": 3248,
+   "name": "GPU ERROR (a07):  - While finishing [CommandEncoder (unlabeled)]."
+  },
+  {
+   "t": 3248,
+   "name": "a07 (7.0 s) first run (cold)",
+   "ms": 199,
+   "detail": "mel 12 ms, encoder 138 ms, decode 48.9 ms, heap 32 MB (10.6 in use)"
+  },
+  {
+   "t": 3248,
+   "name": "a07 transcript DIFFERS from the reference",
+   "detail": ""
+  },
+  {
+   "t": 3369,
+   "name": "a07 warm x1",
+   "ms": 60.4,
+   "detail": "total median/worst 60.4 / 60.4 ms; encoder 34.9 / 34.9 ms; mel 9.1 ms; decode 16.4 ms; 115.9x real time; text stable=true"
+  },
+  {
+   "t": 3372,
+   "name": "ERROR: Error: the GPU device reported 67 error line(s) (see the GPU ERROR steps); results above are not trustworthy"
+  }
+ ],
+ "console": [],
+ "machineAtEnd": {
+  "loadavg": "3.90 3.02 3.29 6/2033 3998736",
+  "cpuPressure": "some avg10=1.11 avg60=1.00 avg300=0.61 total=10129483101"
+ },
+ "chromeGpu": {
+  "devices": [
+   {
+    "vendorId": 4318,
+    "deviceId": 7687,
+    "vendorString": "Google Inc. (NVIDIA)",
+    "deviceString": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+    "driverVendor": "NVIDIA",
+    "driverVersion": "580.178.4.0"
+   }
+  ],
+  "featureStatus": {
+   "2d_canvas": "enabled",
+   "direct_rendering_display_compositor": "disabled_off_ok",
+   "gpu_compositing": "enabled",
+   "multiple_raster_threads": "enabled_on",
+   "opengl": "enabled_on",
+   "rasterization": "enabled",
+   "raw_draw": "disabled_off_ok",
+   "skia_graphite": "disabled_off",
+   "trees_in_viz": "disabled_off",
+   "video_decode": "enabled",
+   "video_encode": "disabled_software",
+   "vulkan": "enabled_on",
+   "webgl": "enabled",
+   "webgpu": "enabled",
+   "webgpu_on_vk_via_gl_interop": "disabled_off",
+   "webnn": "disabled_off"
+  },
+  "auxAttributes": {
+   "directRenderingVersion": "",
+   "displayType": "ANGLE_VULKAN",
+   "glRenderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+   "glVendor": "Google Inc. (NVIDIA)",
+   "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "glWsVendor": "Google Inc. (NVIDIA)",
+   "glWsVersion": "1.5 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "hardwareSupportsVulkan": true,
+   "passthroughCmdDecoder": true,
+   "pixelShaderVersion": "3.00",
+   "vertexShaderVersion": "3.00"
+  }
+ }
+}

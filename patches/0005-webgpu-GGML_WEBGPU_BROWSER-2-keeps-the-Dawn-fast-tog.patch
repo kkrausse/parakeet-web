@@ -1,8 +1,8 @@
 From 961a0fd29d7c08f19fd53059323db2408cefc98e Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 02:58:58 -0700
-Subject: [PATCH 5/9] webgpu: GGML_WEBGPU_BROWSER=2 keeps the Dawn fast toggles
- (isolates robustness cost: ~2 ms of 51)
+Subject: [PATCH 05/11] webgpu: GGML_WEBGPU_BROWSER=2 keeps the Dawn fast
+ toggles (isolates robustness cost: ~2 ms of 51)
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ---

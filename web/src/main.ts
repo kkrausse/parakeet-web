@@ -113,24 +113,35 @@ async function run() {
 
   w.__pkb.phase = "init";
   startWorker();
-  const init = await call("init", { base: location.href, variant: cfg.variant });
+  const init = await call("init", { base: location.href, variant: cfg.variant, wantF16: cfg.f16, limits: cfg.env.GGML_WEBGPU_LIMITS ?? "" });
   result.adapter = init.adapter; result.jspi = init.jspi;
   const a = init.adapter;
   step("WASM module ready", init.ms, `heap ${init.heapMb} MB; JSPI ${init.jspi ? "available" : "absent"}`);
   step(a.available ? `adapter: ${a.vendor} ${a.architecture} ${a.description || a.device || ""}; shader-f16 ${a.shaderF16 ? "present" : "ABSENT"}; fallback=${a.isFallbackAdapter}` : `no WebGPU adapter: ${a.reason}`);
   $("env").textContent = envLine(a);
+  if (a.available) {
+    const L = a.limits, mib = (x: number) => Math.round(x / 2 ** 20);
+    step(`adapter limits: binding ${mib(L.maxStorageBufferBindingSize)} MiB, buffer ${mib(L.maxBufferSize)} MiB, ${L.maxComputeInvocationsPerWorkgroup} invocations/workgroup, workgroup storage ${L.maxComputeWorkgroupStorageSize} B, ${L.maxStorageBuffersPerShaderStage} storage buffers/stage`,
+      undefined, a.belowSpecDefault.length ? `BELOW THE WEBGPU SPEC DEFAULT: ${a.belowSpecDefault.join("; ")}` : "all at or above the WebGPU spec defaults, which is all this page needs");
+    for (const e of a.probeErrors ?? []) step(`device request FAILED: ${e}`);
+    if (!a.plan) throw new Error(`WebGPU is present but no device could be created, even with the spec-default limits and no features: ${a.deviceError}`);
+    step(`device probe ${a.deviceProbe}`, undefined, a.plan.limits === "default" ? "spec-default limits" : `requested ${JSON.stringify(a.requested.requiredLimits)} ${a.requested.requiredFeatures.join(",") || "no features"}`);
+    if (L.maxStorageBufferBindingSize < 2 ** 28) step(`note: tensors above ${mib(L.maxStorageBufferBindingSize)} MiB cannot be bound on this adapter; long clips may run partly on the CPU`);
+  } else step("WebGPU is unavailable: the model would run on one WASM thread (very slow)");
 
   w.__pkb.phase = "sessions";
   status("fetching and loading the model");
   // Without shader-f16 the backend compiles f32-only shaders; the two pointwise convs must then use an F32 im2col
   // (ggml_conv_2d's F16 one would bounce to the CPU). Flash attention needs F16 masks, so it is off on that path.
-  const useF16 = !!a.shaderF16 && cfg.f16;
+  const useF16 = !!a.shaderF16 && cfg.f16 && a.plan?.f16 !== false;
   result.shaderF16Used = useF16;
   const flash = cfg.flash && useF16;
   if (cfg.flash && !flash) step("flash attention needs shader-f16: using matmul + softmax attention instead");
-  step(useF16 ? "shader path: f16" : `shader path: f32 only (${a.shaderF16 ? "f16=0 requested" : "adapter has no shader-f16"})`);
+  step(useF16 ? "shader path: f16" : `shader path: f32 only (${!a.shaderF16 ? "adapter has no shader-f16" : cfg.f16 ? "the device was refused with shader-f16" : "f16=0 requested"})`);
   const env: Record<string, string> = { TRANSCRIBE_NO_FLASH: flash ? "" : "1", TRANSCRIBE_F32_MASK_CONCAT: flash ? "1" : "",
-    GGML_WEBGPU_NO_F16: useF16 ? "" : "1", TRANSCRIBE_F32_POINTWISE: useF16 ? "" : "1", ...cfg.env };
+    GGML_WEBGPU_NO_F16: useF16 ? "" : "1", TRANSCRIBE_F32_POINTWISE: useF16 ? "" : "1",
+    TRANSCRIBE_PRE_ENCODE_TILE: "128", // clips over 15 s: subsampling convs in 10 s time tiles (exact): their activations no longer grow with the clip
+    ...(a.plan?.limits === "default" ? { GGML_WEBGPU_LIMITS: "default" } : {}), ...cfg.env };
   const ld = await call("load", { url: new URL(cfg.base + model.file, location.href).href, name: model.file, store: cfg.store, env, threads: cfg.threads, verbose: cfg.verbose });
   result.load = { fetchMs: Math.round(ld.fetchMs), loadMs: Math.round(ld.loadMs), from: ld.from, fileMb: r1(ld.mb), wasmHeapMb: ld.heapMb, wasmHeapUsedMb: ld.heapUsedMb, backend: ld.backend };
   result.session = { totalMs: Math.round(ld.loadMs) };
@@ -138,6 +149,12 @@ async function run() {
   step(`model loaded on ${ld.backend}`, ld.loadMs, `WASM heap ${ld.heapMb} MB, ${ld.heapUsedMb} MB in use`);
   if (!/webgpu/i.test(ld.backend)) step(`WARNING: not on WebGPU (backend "${ld.backend}"). Everything runs on one WASM thread and the weights sit in the WASM heap.`);
   if (ld.log) step(`library log: ${ld.log.trim().slice(0, 600)}`);
+  const gpuFail = (where: string, errs: string[] | undefined) => {
+    if (!errs?.length) return;
+    for (const e of errs.slice(0, 12)) step(`GPU ERROR (${where}): ${e.slice(0, 700)}`);
+    result.gpuErrors = [...(result.gpuErrors ?? []), ...errs];
+  };
+  gpuFail("load", ld.gpuErrors);
   result.startToLoadedMs = Math.round(performance.now() - runStart);
   await new Promise((r) => setTimeout(r, 700)); // let the driver sample memory in a settled state
   w.__pkb.phase = "loaded";
@@ -150,6 +167,7 @@ async function run() {
     const seconds = audio.length / 16000;
     const once = async () => {
       const r = await call("run", { pcm: audio });
+      gpuFail(clip, r.gpuErrors);
       if (cfg.verbose && r.log) for (const l of String(r.log).split("\n")) if (/decoder:/.test(l)) step(`library: ${l.trim().slice(0, 300)}`);
       // encoder = until its output is on the CPU: with lazy synchronize the library's own encode_ms stops at submit
       return { pre: r.mel_ms as number, enc: (r.wallMs - r.mel_ms - r.decode_ms) as number, encSubmit: r.encode_ms as number, dec: r.decode_ms as number, total: r.wallMs as number, text: r.text as string, tokens: r.n_tokens as number, heapMb: r.heapMb as number, heapUsedMb: r.heapUsedMb as number };
@@ -181,6 +199,7 @@ async function run() {
   }
   if (params.get("trim") === "1") { await call("trim"); step("released the GPU compute buffer kept between runs (trim=1)"); await new Promise((r) => setTimeout(r, 1500)); w.__pkb.phase = "trimmed"; await new Promise((r) => setTimeout(r, 600)); }
   if (cfg.verbose) await call("free"); // a profiling build prints its summary when the backend is freed
+  if (result.gpuErrors?.length) throw new Error(`the GPU device reported ${result.gpuErrors.length} error line(s) (see the GPU ERROR steps); results above are not trustworthy`);
   step("done", performance.now() - runStart);
   current.done = true, persist();
   status("done");

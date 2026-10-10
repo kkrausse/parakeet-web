@@ -1,7 +1,7 @@
 From f9608c798a7db888bcba7179a5a4b44e4927b1b1 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 03:54:20 -0700
-Subject: [PATCH 9/9] ggml-webgpu: keep the last freed compute buffer for the
+Subject: [PATCH 09/11] ggml-webgpu: keep the last freed compute buffer for the
  next allocation; pk_trim
 
 transcribe.cpp frees its graph allocator after every run. Dawn releases a

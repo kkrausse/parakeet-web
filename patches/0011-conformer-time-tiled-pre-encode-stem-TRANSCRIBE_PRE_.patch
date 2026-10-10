@@ -1,0 +1,156 @@
+From 32a3a2d8685d5cac380994f6fab95078cd2949ed Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 04:50:34 -0700
+Subject: [PATCH 11/11] conformer: time-tiled pre-encode stem
+ (TRANSCRIBE_PRE_ENCODE_TILE=<encoder frames>)
+
+conv0's output (channels x F/2 x T/2 fp32) is 184 MB for a 56 s clip with
+128 mels: the largest tensor of the encoder by 4x, most of the per-clip
+compute buffer, and the first to exceed a spec-default 128 MiB WebGPU binding
+(the op then fell back to the CPU: 0.6b 56 s encoder 417 -> 1098 ms).
+The stem is local in time, so it runs on overlapping mel slices and the
+outputs are concatenated; frames whose receptive field touched a slice's own
+zero padding are dropped. Same text on every model and clip; GPU peak at 56 s
+native: 110m 295 -> 212 MiB, 0.6b Q4_0 693 -> 540 MiB; no change in speed.
+Offline, unmasked, single-utterance stems only.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ src/conformer/conformer.cpp | 92 ++++++++++++++++++++++++++++++++++---
+ 1 file changed, 85 insertions(+), 7 deletions(-)
+
+diff --git a/src/conformer/conformer.cpp b/src/conformer/conformer.cpp
+index 0fa35e8c..e87bedab 100644
+--- a/src/conformer/conformer.cpp
++++ b/src/conformer/conformer.cpp
+@@ -13,7 +13,9 @@
+ #include "transcribe-env.h"
+ #include "transcribe-log.h"
+ 
++#include <algorithm>
+ #include <cmath>
++#include <vector>
+ #include <cstdio>
+ #include <cstdlib>
+ #include <cstring>
+@@ -1191,6 +1193,8 @@ ggml_tensor * build_pre_encode(ggml_context *        ctx,
+         return t;
+     };
+ 
++    // The three stride-2 stages, from [F, T, 1, B] to [F/8, T/8, channels, B].
++    auto stem = [&](ggml_tensor * x) -> ggml_tensor * {
+     // conv0 (standard 2D conv: 1 in, channels out, k=3 s=2)
+     x = pad_causal(x);
+     if (policy.direct_conv0_in_pre_encode) {
+@@ -1287,6 +1291,76 @@ ggml_tensor * build_pre_encode(ggml_context *        ctx,
+     } else {
+         x = apply_valid_mask(x, valid_masks ? &valid_masks->mask_s3_extent : nullptr, "pre_encode.extent_mask.s3");
+     }
++        return x;
++    };
++
++    // Time tiling (TRANSCRIBE_PRE_ENCODE_TILE=<encoder frames per tile>, offline
++    // stems without masks only). conv0's output is channels x F/2 x T/2 fp32:
++    // 184 MB for a 56 s clip with 128 mels, the largest tensor of the whole
++    // encoder by 4x and the first to exceed a 128 MiB WebGPU binding. The stem
++    // is local in time (receptive field of one output frame: 15 mel frames), so
++    // it can run on overlapping slices of the mel and the slices' outputs be
++    // concatenated: each output frame is computed from the same inputs by the
++    // same ops, only frames whose receptive field touched a slice's artificial
++    // zero padding (the first one; two are dropped) are discarded. Peak
++    // activation memory is then set by the tile, not the clip.
++    const char *  tile_env   = std::getenv("TRANSCRIBE_PRE_ENCODE_TILE");
++    const int64_t tile_rows  = tile_env != nullptr ? std::atoll(tile_env) : 0;
++    const int64_t T_mel_full = x->ne[1];
++    auto          down       = [](int64_t n) { return (n - 1) / 2 + 1; };  // k=3 s=2 p=1
++    const int64_t T_enc_full = down(down(down(T_mel_full)));
++    ggml_tensor * tiled      = nullptr;  // [F', C, T_enc, 1] when tiling applied
++    if (tile_rows >= 8 && !causal_pe && valid_masks == nullptr && x->ne[2] == 1 && x->ne[3] == 1 &&
++        T_enc_full > tile_rows + tile_rows / 2) {
++        const int64_t              halo = 2;
++        std::vector<ggml_tensor *> parts;
++        bool                       ok = true;
++        for (int64_t r0 = 0; ok && r0 < T_enc_full;) {
++            int64_t r1 = r0 + tile_rows;
++            if (T_enc_full - r1 < tile_rows / 2) {
++                r1 = T_enc_full;  // no sliver at the end
++            }
++            const int64_t lo   = std::max<int64_t>(0, r0 - halo);
++            const int64_t m0   = lo * 8;
++            const bool    last = r1 == T_enc_full;
++            const int64_t m1   = last ? T_mel_full : (r1 + halo) * 8;
++            if (m1 > T_mel_full) {
++                ok = false;
++                break;
++            }
++            ggml_tensor * slice = ggml_view_4d(ctx, x, x->ne[0], m1 - m0, 1, 1, x->nb[1], x->nb[1] * (m1 - m0),
++                                               x->nb[1] * (m1 - m0), static_cast<size_t>(m0) * x->nb[1]);
++            ggml_tensor * y     = stem(slice);  // [F', t_loc, C, 1]; local row i is global row lo + i
++            const int64_t t_loc = y->ne[1];
++            const int64_t drop  = r0 - lo;
++            const int64_t n     = r1 - r0;
++            if (drop + n > t_loc || (last && lo + t_loc != T_enc_full)) {
++                ok = false;
++                break;
++            }
++            y = ggml_cont(ctx, ggml_permute(ctx, y, 0, 2, 1, 3));  // [F', C, t_loc, 1]: frames are contiguous
++            parts.push_back(ggml_view_4d(ctx, y, y->ne[0], y->ne[1], n, 1, y->nb[1], y->nb[2], y->nb[2] * n,
++                                         static_cast<size_t>(drop) * y->nb[2]));
++            r0 = r1;
++        }
++        // balanced concat tree along the frame axis
++        while (ok && parts.size() > 1) {
++            std::vector<ggml_tensor *> next;
++            for (size_t i = 0; i + 1 < parts.size(); i += 2) {
++                next.push_back(ggml_concat(ctx, parts[i], parts[i + 1], /*dim=*/2));
++            }
++            if (parts.size() % 2 == 1) {
++                next.push_back(parts.back());
++            }
++            parts.swap(next);
++        }
++        if (ok && parts.size() == 1) {
++            tiled = parts[0];
++        }
++    }
++    if (tiled == nullptr) {
++        x = stem(x);
++    }
+ 
+     // At this point ne = [F'=16, T_enc, channels=256, 1] where
+     // T_enc = floor(T_mel / 8). Flatten (F', C) into one feature axis
+@@ -1295,9 +1369,9 @@ ggml_tensor * build_pre_encode(ggml_context *        ctx,
+     // ggml ne is: permute F' to axis 0, C to axis 1, then collapse 0 and 1:
+     //   permute (0, 2, 1, 3): [F', T, C, 1] -> [F', C, T, 1]
+     //   ggml_cont; reshape -> [F'*C, T] = [pre_encode_in, T_enc]
+-    const int64_t F_prime       = x->ne[0];
+-    const int64_t T_enc         = x->ne[1];
+-    const int64_t C             = x->ne[2];
++    const int64_t F_prime       = tiled != nullptr ? tiled->ne[0] : x->ne[0];
++    const int64_t T_enc         = tiled != nullptr ? tiled->ne[2] : x->ne[1];
++    const int64_t C             = tiled != nullptr ? tiled->ne[1] : x->ne[2];
+     // Utterance batch rides the conv "N" axis (ne[3]) through the stem; the
+     // flatten + linear below land it on ne[2] == B for the conformer blocks.
+     const int64_t B             = x->ne[3];
+@@ -1313,10 +1387,14 @@ ggml_tensor * build_pre_encode(ggml_context *        ctx,
+         return nullptr;
+     }
+ 
+-    x = ggml_permute(ctx, x, /*axis0=*/0, /*axis1=*/2,
+-                     /*axis2=*/1, /*axis3=*/3);
+-    x = name_prefixed(x, name_prefix, "permuted");
+-    x = ggml_cont(ctx, x);
++    if (tiled != nullptr) {
++        x = ggml_cont(ctx, tiled);  // already [F', C, T_enc, 1]
++    } else {
++        x = ggml_permute(ctx, x, /*axis0=*/0, /*axis1=*/2,
++                         /*axis2=*/1, /*axis3=*/3);
++        x = name_prefixed(x, name_prefix, "permuted");
++        x = ggml_cont(ctx, x);
++    }
+     x = name_prefixed(x, name_prefix, "flat_pre");
+     // [F', C, T_enc, B] -> [F'*C, T_enc, B]. B at ne[2] after the collapse.
+     x = ggml_reshape_3d(ctx, x, pre_encode_in, T_enc, B);
+-- 
+2.53.0
+

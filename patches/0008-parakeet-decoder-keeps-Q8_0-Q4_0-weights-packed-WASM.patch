@@ -1,7 +1,7 @@
 From cc456b60b11f89c4f6108c9634149a60ac8c15d1 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 03:43:25 -0700
-Subject: [PATCH 8/9] parakeet decoder keeps Q8_0/Q4_0 weights packed; WASM
+Subject: [PATCH 08/11] parakeet decoder keeps Q8_0/Q4_0 weights packed; WASM
  builds compile the SIMD quant kernels
 
 The TDT decode loop is mat-vecs over the LSTM and joint matrices, which as

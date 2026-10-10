@@ -1,0 +1,439 @@
+From f2673d860e74b8cb8b5384a856a48ab9513c15c7 Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 04:39:40 -0700
+Subject: [PATCH 10/11] ggml-webgpu: request only the limits in use, report
+ shader/device errors instead of aborting in WASM
+
+The device was created with the adapter's whole limits struct: in a browser
+that sends every limit key emdawnwebgpu knows (a browser that does not know
+one rejects requestDevice) and asks for far more than is used. Now only
+maxStorageBufferBindingSize and maxBufferSize are raised (each at most 1 GiB
+and at most what the adapter has); the 1-D workgroup size is capped at 256,
+the spec default, which is also faster than 1024 here (110m 56 s encoder
+91.7 -> 82.3 ms native browser-like). Limits are read back from the device,
+so alignments are the device's. GGML_WEBGPU_LIMITS=default requests nothing
+(a spec-default device): every model gives the same text there.
+
+Buffers are split at 256 MiB (GGML_WEBGPU_CHUNK_MB), the default
+maxBufferSize; the compute buffer cache keeps several chunks.
+
+Every pipeline is created inside a validation error scope; a failure is
+recorded with the pipeline label, the message and getCompilationInfo lines.
+In WASM uncaptured errors and device loss are recorded, not aborted on:
+ggml_backend_webgpu_last_error() / pk_gpu_errors(). GGML_WEBGPU_DUMP_SHADERS
+writes each preprocessed WGSL source; GGML_WEBGPU_BREAK_SHADER=<label> breaks one
+to exercise the report.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ examples/web/pk_web.cpp                       |  15 +-
+ .../ggml-webgpu/ggml-webgpu-shader-lib.hpp    |  22 +-
+ ggml/src/ggml-webgpu/ggml-webgpu.cpp          | 218 +++++++++++++++---
+ 3 files changed, 207 insertions(+), 48 deletions(-)
+
+diff --git a/examples/web/pk_web.cpp b/examples/web/pk_web.cpp
+index 7a3db17a..4b3d658f 100644
+--- a/examples/web/pk_web.cpp
++++ b/examples/web/pk_web.cpp
+@@ -9,6 +9,7 @@
+ //   pk_run(pcm, n)             0 on success; then pk_text() / pk_json()
+ //   pk_json()                  {"text","mel_ms","encode_ms","decode_ms","load_ms","n_tokens","backend"}
+ //   pk_trim()                  drop the GPU compute buffer kept between runs
++//   pk_gpu_errors()            device errors so far (shader compilation, validation, device lost)
+ //   pk_log()                   library log lines since the last call (errors, backend notes)
+ 
+ #include "transcribe.h"
+@@ -56,7 +57,9 @@ std::string json_escape(const char * s) {
+ }
+ }  // namespace
+ 
+-extern "C" void ggml_backend_webgpu_trim(void);
++extern "C" void         ggml_backend_webgpu_trim(void);
++extern "C" const char * ggml_backend_webgpu_last_error(void);
++extern "C" int          ggml_backend_webgpu_error_count(void);
+ 
+ extern "C" {
+ 
+@@ -126,6 +129,16 @@ EMSCRIPTEN_KEEPALIVE void pk_trim(void) {
+     ggml_backend_webgpu_trim();
+ }
+ 
++// Device errors since the module started: validation and out-of-memory errors,
++// shaders the browser's WGSL compiler rejected (with its messages), device loss.
++EMSCRIPTEN_KEEPALIVE const char * pk_gpu_errors(void) {
++    return ggml_backend_webgpu_last_error();
++}
++
++EMSCRIPTEN_KEEPALIVE int pk_gpu_error_count(void) {
++    return ggml_backend_webgpu_error_count();
++}
++
+ EMSCRIPTEN_KEEPALIVE const char * pk_json(void) {
+     return g_json.c_str();
+ }
+diff --git a/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp b/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
+index 03aa41ec..23aab71f 100644
+--- a/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
++++ b/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
+@@ -104,6 +104,13 @@ struct webgpu_pipeline {
+     std::shared_ptr<void> context = nullptr;
+ };
+ 
++// Defined in ggml-webgpu.cpp: creates the module and pipeline inside an error
++// scope so a shader the browser's WGSL compiler rejects is reported by name.
++webgpu_pipeline ggml_webgpu_create_checked_pipeline(wgpu::Device &                           device,
++                                                    const char *                             shader_code,
++                                                    const char *                             label,
++                                                    const std::vector<wgpu::ConstantEntry> & constants);
++
+ struct ggml_webgpu_generic_shader_decisions {
+     uint32_t wg_size = 0;
+     bool     inplace = false;
+@@ -3525,20 +3532,7 @@ class ggml_webgpu_shader_lib {
+     static webgpu_pipeline ggml_webgpu_create_pipeline(wgpu::Device & device,
+                                                        std::string    shader_code,
+                                                        std::string    label) {
+-        wgpu::ShaderSourceWGSL shader_source;
+-        shader_source.code = shader_code.c_str();
+-
+-        wgpu::ShaderModuleDescriptor shader_desc;
+-        shader_desc.nextInChain = &shader_source;
+-
+-        wgpu::ShaderModule shader_module = device.CreateShaderModule(&shader_desc);
+-
+-        wgpu::ComputePipelineDescriptor pipeline_desc;
+-        pipeline_desc.label              = label.c_str();
+-        pipeline_desc.compute.module     = shader_module;
+-        pipeline_desc.compute.entryPoint = "main";   // Entry point in the WGSL code
+-        pipeline_desc.layout             = nullptr;  // nullptr means auto layout
+-        return { device.CreateComputePipeline(&pipeline_desc), label };
++        return ggml_webgpu_create_checked_pipeline(device, shader_code.c_str(), label.c_str(), {});
+     }
+ };
+ 
+diff --git a/ggml/src/ggml-webgpu/ggml-webgpu.cpp b/ggml/src/ggml-webgpu/ggml-webgpu.cpp
+index 12ed1f52..0204e782 100644
+--- a/ggml/src/ggml-webgpu/ggml-webgpu.cpp
++++ b/ggml/src/ggml-webgpu/ggml-webgpu.cpp
+@@ -90,6 +90,10 @@ static inline uint32_t ggml_webgpu_u32_from_f32(float value) {
+ #define WEBGPU_NUM_PARAM_SLOT_SAFETY_MARGIN      10u
+ #define WEBGPU_RUNTIME_WAIT_TIMEOUT_MS           30000u
+ #define WEBGPU_RUNTIME_WAIT_TIMEOUT_NS           (WEBGPU_RUNTIME_WAIT_TIMEOUT_MS * 1e6)
++// 256 is the WebGPU default maxComputeInvocationsPerWorkgroup, and faster here than 1024 for the element-wise shaders
++#define WEBGPU_DEFAULT_WG_SIZE_CAP                 256u
++// Allocations larger than this are split into several GPU buffers (a single larger tensor still gets its own)
++#define WEBGPU_DEFAULT_CHUNK_BYTES                 (256ull << 20)
+ #define WEBGPU_PARAMS_BUF_SIZE_BYTES             128  // enough for 32 parameters
+ #define WEBGPU_SET_ROWS_ERROR_BUF_SIZE_BYTES     4
+ #define WEBGPU_STORAGE_BUF_BINDING_MULT          4    // a storage buffer binding size must be a multiple of 4
+@@ -222,14 +226,19 @@ struct webgpu_global_context_struct {
+     wgpu::Buffer debug_dev_buf;
+ #endif
+ 
+-    // The most recently freed compute buffer, kept for the next allocation
+-    // (see ggml_backend_webgpu_buffer_free_buffer).
+-    wgpu::Buffer cached_compute_buf;
++    // The most recently freed compute buffers (one allocation can be several
++    // chunks), kept for the next allocation (see ggml_backend_webgpu_buffer_free_buffer).
++    std::vector<wgpu::Buffer> cached_compute_bufs;
+ 
+-    ~webgpu_global_context_struct() {
+-        if (this->cached_compute_buf) {
+-            this->cached_compute_buf.Destroy();
++    void drop_cached_compute_bufs() {
++        for (wgpu::Buffer & b : this->cached_compute_bufs) {
++            b.Destroy();
+         }
++        this->cached_compute_bufs.clear();
++    }
++
++    ~webgpu_global_context_struct() {
++        this->drop_cached_compute_bufs();
+         if (this->get_tensor_staging_buf) {
+             this->get_tensor_staging_buf.Destroy();
+             this->get_tensor_staging_buf = nullptr;
+@@ -341,16 +350,58 @@ struct ggml_backend_webgpu_buffer_context {
+ 
+ /* WebGPU object initializations */
+ 
+-static webgpu_pipeline ggml_webgpu_create_pipeline(wgpu::Device &                           device,
+-                                                   const char *                             shader_code,
+-                                                   const char *                             label,
+-                                                   const std::vector<wgpu::ConstantEntry> & constants = {}) {
++// Errors the device reported (validation, out of memory, shader compilation,
++// device lost). In a browser these must reach the page instead of aborting the
++// module, so they are logged, counted and kept for ggml_backend_webgpu_last_error().
++static std::string g_webgpu_errors;
++static int         g_webgpu_error_count = 0;
++
++static void ggml_webgpu_record_error(const std::string & msg) {
++    g_webgpu_error_count++;
++    if (g_webgpu_errors.size() < 6000) {
++        g_webgpu_errors += msg;
++        g_webgpu_errors += '\n';
++    }
++    GGML_LOG_ERROR("ggml_webgpu: %s\n", msg.c_str());
++}
++
++webgpu_pipeline ggml_webgpu_create_checked_pipeline(wgpu::Device &                           device,
++                                                    const char *                             shader_code,
++                                                    const char *                             label,
++                                                    const std::vector<wgpu::ConstantEntry> & constants) {
++    // GGML_WEBGPU_BREAK_SHADER=<label substring>: make that shader invalid, to
++    // check that a compiler rejection is reported the way a real one would be.
++    std::string  broken;
++    const char * break_env = std::getenv("GGML_WEBGPU_BREAK_SHADER");
++    if (break_env != nullptr && std::strstr(label, break_env) != nullptr) {
++        broken      = std::string(shader_code) + "\nfn pk_broken() -> f32 { return undefined_symbol_for_testing; }\n";
++        shader_code = broken.c_str();
++    }
++
+     wgpu::ShaderSourceWGSL shader_source;
+     shader_source.code = shader_code;
+ 
+     wgpu::ShaderModuleDescriptor shader_desc;
+     shader_desc.nextInChain = &shader_source;
+ 
++    // GGML_WEBGPU_DUMP_SHADERS=<dir>: write every WGSL source that reaches the
++    // device (after preprocessing), to run them through other WGSL compilers.
++    if (const char * dump_dir = std::getenv("GGML_WEBGPU_DUMP_SHADERS")) {
++        static int  n_dumped = 0;
++        std::string path     = std::string(dump_dir) + "/" + std::to_string(n_dumped++) + "_" + label + ".wgsl";
++        if (FILE * f = std::fopen(path.c_str(), "w")) {
++            for (const auto & c : constants) {
++                std::fprintf(f, "// override %s = %.0f\n", std::string(c.key).c_str(), c.value);
++            }
++            std::fputs(shader_code, f);
++            std::fclose(f);
++        }
++    }
++
++    // A shader another WGSL compiler rejects must be named, with the compiler's
++    // message and line: the error scope catches the failure without blocking
++    // (the callbacks run on a later wait), instead of an anonymous uncaptured error.
++    device.PushErrorScope(wgpu::ErrorFilter::Validation);
+     wgpu::ShaderModule shader_module = device.CreateShaderModule(&shader_desc);
+ 
+     wgpu::ComputePipelineDescriptor pipeline_desc;
+@@ -362,7 +413,38 @@ static webgpu_pipeline ggml_webgpu_create_pipeline(wgpu::Device &
+         pipeline_desc.compute.constants     = constants.data();
+         pipeline_desc.compute.constantCount = constants.size();
+     }
+-    return { device.CreateComputePipeline(&pipeline_desc), label };
++    wgpu::ComputePipeline pipeline = device.CreateComputePipeline(&pipeline_desc);
++    std::string           name     = label;
++    device.PopErrorScope(wgpu::CallbackMode::AllowSpontaneous,
++                         [name, shader_module](wgpu::PopErrorScopeStatus status, wgpu::ErrorType type,
++                                               wgpu::StringView message) {
++                             if (status != wgpu::PopErrorScopeStatus::Success || type == wgpu::ErrorType::NoError) {
++                                 return;
++                             }
++                             ggml_webgpu_record_error("shader/pipeline '" + name + "' failed: " + std::string(message));
++                             shader_module.GetCompilationInfo(
++                                 wgpu::CallbackMode::AllowSpontaneous,
++                                 [name](wgpu::CompilationInfoRequestStatus st, const wgpu::CompilationInfo * info) {
++                                     if (st != wgpu::CompilationInfoRequestStatus::Success || info == nullptr) {
++                                         return;
++                                     }
++                                     for (size_t i = 0; i < info->messageCount && i < 4; i++) {
++                                         const wgpu::CompilationMessage & m = info->messages[i];
++                                         ggml_webgpu_record_error("  WGSL '" + name + "' line " +
++                                                                  std::to_string(m.lineNum) + ":" +
++                                                                  std::to_string(m.linePos) + ": " +
++                                                                  std::string(m.message));
++                                     }
++                                 });
++                         });
++    return { pipeline, label };
++}
++
++static webgpu_pipeline ggml_webgpu_create_pipeline(wgpu::Device &                           device,
++                                                   const char *                             shader_code,
++                                                   const char *                             label,
++                                                   const std::vector<wgpu::ConstantEntry> & constants = {}) {
++    return ggml_webgpu_create_checked_pipeline(device, shader_code, label, constants);
+ }
+ 
+ static void ggml_webgpu_create_buffer(wgpu::Device &    device,
+@@ -3789,13 +3871,14 @@ static void ggml_backend_webgpu_buffer_free_buffer(ggml_backend_buffer_t buffer)
+                                       std::getenv("GGML_WEBGPU_BUFFER_CACHE")[0] != '0';
+         static const bool log_alloc = std::getenv("GGML_WEBGPU_LOG_ALLOC") != nullptr;
+         if (cache_on && buffer->usage == GGML_BACKEND_BUFFER_USAGE_COMPUTE && ctx->global_ctx != nullptr) {
+-            wgpu::Buffer & slot = ctx->global_ctx->cached_compute_buf;
+-            if (slot) {
+-                slot.Destroy();
++            std::vector<wgpu::Buffer> & pool = ctx->global_ctx->cached_compute_bufs;
++            if (pool.size() >= 8) {
++                pool.front().Destroy();
++                pool.erase(pool.begin());
+             }
+-            slot = ctx->buffer;
++            pool.push_back(ctx->buffer);
+             if (log_alloc) {
+-                GGML_LOG_INFO("ggml_webgpu: cached %.1f MiB\n", slot.GetSize() / 1048576.0);
++                GGML_LOG_INFO("ggml_webgpu: cached %.1f MiB\n", ctx->buffer.GetSize() / 1048576.0);
+             }
+         } else {
+             if (log_alloc) {
+@@ -3979,20 +4062,27 @@ static ggml_backend_buffer_t ggml_backend_webgpu_buffer_type_alloc_buffer(ggml_b
+     ggml_backend_webgpu_device_context * ctx = static_cast<ggml_backend_webgpu_device_context *>(buft->device->context);
+     wgpu::Buffer                         buf;
+     const size_t                         want   = ROUNDUP_POW2(size, WEBGPU_STORAGE_BUF_BINDING_MULT);
+-    wgpu::Buffer &                       cached = ctx->webgpu_global_ctx->cached_compute_buf;
+-    if (cached) {
+-        // Reuse when it fits without wasting more than half of it; otherwise it
+-        // goes first so the two are not alive together longer than necessary.
+-        const size_t have = cached.GetSize();
+-        if (have >= want && have <= 2 * want + (16u << 20)) {
+-            buf = cached;
++    std::vector<wgpu::Buffer> &          pool   = ctx->webgpu_global_ctx->cached_compute_bufs;
++    if (!pool.empty()) {
++        // Reuse the smallest cached buffer that fits without wasting more than
++        // half of it; if none does, they all go first so old and new are not
++        // alive together longer than necessary.
++        size_t best = pool.size();
++        for (size_t i = 0; i < pool.size(); i++) {
++            const size_t have = pool[i].GetSize();
++            if (have >= want && have <= 2 * want + (16u << 20) && (best == pool.size() || have < pool[best].GetSize())) {
++                best = i;
++            }
++        }
++        if (best < pool.size()) {
++            buf = pool[best];
++            pool.erase(pool.begin() + best);
+             if (log_alloc) {
+-                GGML_LOG_INFO("ggml_webgpu: reused the cached %.1f MiB buffer\n", have / 1048576.0);
++                GGML_LOG_INFO("ggml_webgpu: reused a cached %.1f MiB buffer\n", buf.GetSize() / 1048576.0);
+             }
+         } else {
+-            cached.Destroy();
++            ctx->webgpu_global_ctx->drop_cached_compute_bufs();
+         }
+-        cached = nullptr;
+     }
+     if (!buf) {
+         ggml_webgpu_create_buffer(ctx->webgpu_global_ctx->device, buf, want,
+@@ -4017,7 +4107,10 @@ static size_t ggml_backend_webgpu_buffer_type_get_alignment(ggml_backend_buffer_
+ static size_t ggml_backend_webgpu_buffer_type_get_max_size(ggml_backend_buffer_type_t buft) {
+     ggml_backend_webgpu_device_context * dev_ctx =
+         static_cast<ggml_backend_webgpu_device_context *>(buft->device->context);
+-    return dev_ctx->webgpu_global_ctx->capabilities.limits.maxStorageBufferBindingSize;
++    // GGML_WEBGPU_CHUNK_MB: cap on one GPU buffer (weights and compute buffers are split above it).
++    static const uint64_t chunk_bytes =
++        std::getenv("GGML_WEBGPU_CHUNK_MB") ? ((uint64_t) std::atoll(std::getenv("GGML_WEBGPU_CHUNK_MB")) << 20) : WEBGPU_DEFAULT_CHUNK_BYTES;
++    return std::min<uint64_t>(dev_ctx->webgpu_global_ctx->capabilities.limits.maxStorageBufferBindingSize, chunk_bytes);
+ }
+ 
+ static size_t ggml_backend_webgpu_buffer_type_get_alloc_size(ggml_backend_buffer_type_t buft,
+@@ -4301,8 +4394,32 @@ static void create_webgpu_device(ggml_backend_webgpu_reg_context * ctx) {
+     required_features.push_back(wgpu::FeatureName::TimestampQuery);
+ #endif
+ 
++    // Ask only for the limits the backend uses, each at most what the adapter
++    // offers; every other limit stays undefined (the spec default). Passing the
++    // adapter's whole limits struct sends keys another browser may not know
++    // (requestDevice then rejects) and asks for far more than is used.
++    // GGML_WEBGPU_LIMITS=default requests nothing: a device with exactly the
++    // WebGPU spec defaults (128 MiB bindings, 256 MiB buffers, 256 invocations),
++    // which is what a constrained phone adapter can look like.
++    const wgpu::Limits adapter_limits = ctx->webgpu_global_ctx->capabilities.limits;
++    wgpu::Limits       required{};
++    const char *       limits_env     = std::getenv("GGML_WEBGPU_LIMITS");
++    const bool         default_limits = limits_env != nullptr && std::strcmp(limits_env, "default") == 0;
++    if (!default_limits) {
++        // 1 GiB per buffer / binding is enough for every tensor here; larger
++        // allocations are split into several buffers by ggml's allocators.
++        const uint64_t max_bytes             = 1ull << 30;
++        required.maxStorageBufferBindingSize = std::min<uint64_t>(adapter_limits.maxStorageBufferBindingSize, max_bytes);
++        required.maxBufferSize               = std::min<uint64_t>(adapter_limits.maxBufferSize, max_bytes);
++        // GGML_WEBGPU_WG_SIZE: cap on the 1-D workgroup size of the element-wise shaders.
++        const uint32_t wg_cap = std::getenv("GGML_WEBGPU_WG_SIZE") ? (uint32_t) std::atoi(std::getenv("GGML_WEBGPU_WG_SIZE")) : WEBGPU_DEFAULT_WG_SIZE_CAP;
++        required.maxComputeInvocationsPerWorkgroup =
++            std::min<uint32_t>(adapter_limits.maxComputeInvocationsPerWorkgroup, wg_cap);
++        required.maxComputeWorkgroupSizeX = std::min<uint32_t>(adapter_limits.maxComputeWorkgroupSizeX, wg_cap);
++    }
++
+     wgpu::DeviceDescriptor dev_desc;
+-    dev_desc.requiredLimits       = &ctx->webgpu_global_ctx->capabilities.limits;
++    dev_desc.requiredLimits       = &required;
+     dev_desc.requiredFeatures     = required_features.data();
+     dev_desc.requiredFeatureCount = required_features.size();
+     dev_desc.SetDeviceLostCallback(
+@@ -4312,14 +4429,23 @@ static void create_webgpu_device(ggml_backend_webgpu_reg_context * ctx) {
+                 return;
+             }
+             GGML_UNUSED(device);
+-            GGML_LOG_ERROR("ggml_webgpu: Device lost! Reason: %d, Message: %s\n", static_cast<int>(reason),
+-                           std::string(message).c_str());
++            ggml_webgpu_record_error("device lost (reason " + std::to_string(static_cast<int>(reason)) +
++                                     "): " + std::string(message));
+         });
+     dev_desc.SetUncapturedErrorCallback(
+         [](const wgpu::Device & device, wgpu::ErrorType reason, wgpu::StringView message) {
+             GGML_UNUSED(device);
++#ifdef __EMSCRIPTEN__
++            // A browser tab cannot be debugged from an abort: keep going, the
++            // caller reads ggml_backend_webgpu_last_error() after the run.
++            static const char * const kinds[] = { "?", "no error", "validation", "out of memory", "internal", "unknown" };
++            const int                 k       = static_cast<int>(reason);
++            ggml_webgpu_record_error(std::string("device error (") + (k >= 0 && k < 6 ? kinds[k] : "?") +
++                                     "): " + std::string(message));
++#else
+             GGML_ABORT("ggml_webgpu: Device error! Reason: %d, Message: %s\n", static_cast<int>(reason),
+                        std::string(message).c_str());
++#endif
+         });
+ 
+ #ifndef __EMSCRIPTEN__
+@@ -4352,6 +4478,24 @@ static void create_webgpu_device(ggml_backend_webgpu_reg_context * ctx) {
+         UINT64_MAX);
+     GGML_ASSERT(ctx->webgpu_global_ctx->device != nullptr);
+ 
++    // From here on the limits are the device's, not the adapter's (alignments
++    // included: a default device has 256-byte offsets whatever the adapter offers).
++    ctx->webgpu_global_ctx->device.GetLimits(&ctx->webgpu_global_ctx->capabilities.limits);
++    {
++        wgpu::Limits & l = ctx->webgpu_global_ctx->capabilities.limits;
++        // every 1-D shader uses @workgroup_size(maxComputeInvocationsPerWorkgroup)
++        l.maxComputeInvocationsPerWorkgroup =
++            std::min(l.maxComputeInvocationsPerWorkgroup, l.maxComputeWorkgroupSizeX);
++        GGML_LOG_INFO("ggml_webgpu: device limits%s: binding %llu MiB (adapter %llu), buffer %llu MiB (adapter %llu), "
++                      "invocations %u, workgroup storage %u, storage buffers/stage %u, offset alignment %u (requested: binding and buffer size only)\n",
++                      default_limits ? " (spec defaults requested)" : "",
++                      (unsigned long long) (l.maxStorageBufferBindingSize >> 20),
++                      (unsigned long long) (adapter_limits.maxStorageBufferBindingSize >> 20),
++                      (unsigned long long) (l.maxBufferSize >> 20), (unsigned long long) (adapter_limits.maxBufferSize >> 20),
++                      l.maxComputeInvocationsPerWorkgroup, l.maxComputeWorkgroupStorageSize,
++                      l.maxStorageBuffersPerShaderStage, l.minStorageBufferOffsetAlignment);
++    }
++
+     ggml_webgpu_init_memset_pipeline(ctx->webgpu_global_ctx);
+     ggml_webgpu_create_buffer(ctx->webgpu_global_ctx->device, ctx->webgpu_global_ctx->memset_params_buf,
+                               WEBGPU_PARAMS_BUF_SIZE_BYTES, wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform,
+@@ -5029,12 +5173,20 @@ ggml_backend_reg_t ggml_backend_webgpu_reg() {
+     return &reg;
+ }
+ 
++// Device errors seen so far (see ggml_webgpu_record_error); empty if none.
++extern "C" const char * ggml_backend_webgpu_last_error(void) {
++    return g_webgpu_errors.c_str();
++}
++
++extern "C" int ggml_backend_webgpu_error_count(void) {
++    return g_webgpu_error_count;
++}
++
+ void ggml_backend_webgpu_trim(void) {
+     ggml_backend_reg_t reg = ggml_backend_webgpu_reg();
+     auto *             ctx = static_cast<ggml_backend_webgpu_reg_context *>(reg->context);
+-    if (ctx != nullptr && ctx->webgpu_global_ctx != nullptr && ctx->webgpu_global_ctx->cached_compute_buf) {
+-        ctx->webgpu_global_ctx->cached_compute_buf.Destroy();
+-        ctx->webgpu_global_ctx->cached_compute_buf = nullptr;
++    if (ctx != nullptr && ctx->webgpu_global_ctx != nullptr) {
++        ctx->webgpu_global_ctx->drop_cached_compute_bufs();
+     }
+ }
+ 
+-- 
+2.53.0
+

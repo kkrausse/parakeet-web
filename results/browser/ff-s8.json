@@ -1,0 +1,134 @@
+{
+ "name": "ff-s8",
+ "version": "157.0",
+ "console": [
+  "warning: [JavaScript Warning: \"The WebAssembly exception handling 'try' instruction is deprecated and should no longer be used. Please recompile to use the 'try_table' instruction instead.\"]"
+ ],
+ "url": "http://127.0.0.1:8791/?model=s8&clip=a07&runs=3&auto=1",
+ "result": {
+  "config": {
+   "model": "s8",
+   "clip": "a07",
+   "runs": 3,
+   "threads": 1,
+   "store": "opfs",
+   "f16": true,
+   "flash": false,
+   "variant": "jspi",
+   "verbose": false,
+   "base": "models/",
+   "env": {}
+  },
+  "model": {
+   "label": "110M, Q8_0 (8-bit weights)",
+   "file": "parakeet-tdt_ctc-110m-Q8_0.gguf",
+   "mb": 129,
+   "family": "110m"
+  },
+  "ua": "Mozilla/5.0 (X11; Linux x86_64; rv:157.0) Gecko/20100101 Firefox/157.0",
+  "crossOriginIsolated": true,
+  "clips": [],
+  "adapter": {
+   "available": true,
+   "vendor": "",
+   "architecture": "",
+   "device": "",
+   "description": "",
+   "isFallbackAdapter": false,
+   "shaderF16": true,
+   "features": [
+    "bgra8unorm-storage",
+    "core-features-and-limits",
+    "depth-clip-control",
+    "depth32float-stencil8",
+    "dual-source-blending",
+    "float32-filterable",
+    "indirect-first-instance",
+    "rg11b10ufloat-renderable",
+    "shader-f16",
+    "texture-compression-bc",
+    "texture-compression-bc-sliced-3d",
+    "timestamp-query"
+   ],
+   "wgslLanguageFeatures": [
+    "packed_4x8_integer_dot_product",
+    "pointer_composite_access",
+    "readonly_and_readwrite_storage_textures"
+   ],
+   "limits": {
+    "maxStorageBufferBindingSize": 2147483644,
+    "maxBufferSize": 2147483644,
+    "maxComputeInvocationsPerWorkgroup": 1024,
+    "maxComputeWorkgroupSizeX": 1024,
+    "maxComputeWorkgroupStorageSize": 49152,
+    "maxStorageBuffersPerShaderStage": 64,
+    "maxComputeWorkgroupsPerDimension": 65535,
+    "maxBindGroups": 8,
+    "minStorageBufferOffsetAlignment": 32,
+    "minUniformBufferOffsetAlignment": 64
+   },
+   "belowSpecDefault": [],
+   "requested": {
+    "requiredFeatures": [
+     "shader-f16"
+    ],
+    "requiredLimits": {
+     "maxStorageBufferBindingSize": 1073741824,
+     "maxBufferSize": 1073741824,
+     "maxComputeInvocationsPerWorkgroup": 256,
+     "maxComputeWorkgroupSizeX": 256
+    }
+   },
+   "deviceProbe": null,
+   "deviceError": "requestDevice({}) -> OperationError: Not enough memory left.",
+   "probeErrors": [
+    "requestDevice({\"requiredFeatures\":[\"shader-f16\"],\"requiredLimits\":{\"maxStorageBufferBindingSize\":1073741824,\"maxBufferSize\":1073741824,\"maxComputeInvocationsPerWorkgroup\":256,\"maxComputeWorkgroupSizeX\":256}}) -> OperationError: Not enough memory left.",
+    "requestDevice({\"requiredFeatures\":[\"shader-f16\"]}) -> OperationError: Not enough memory left.",
+    "requestDevice({}) -> OperationError: Not enough memory left."
+   ],
+   "plan": null,
+   "maxBufferSizeMb": 2048,
+   "maxStorageBufferBindingSizeMb": 2048
+  },
+  "jspi": true
+ },
+ "steps": [
+  {
+   "t": 0,
+   "name": "start: 110M, Q8_0 (8-bit weights), flash=off, store=opfs, jspi"
+  },
+  {
+   "t": 853,
+   "name": "WASM module ready",
+   "ms": 127.2,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 853,
+   "name": "adapter:   ; shader-f16 present; fallback=false"
+  },
+  {
+   "t": 853,
+   "name": "adapter limits: binding 2048 MiB, buffer 2048 MiB, 1024 invocations/workgroup, workgroup storage 49152 B, 64 storage buffers/stage",
+   "detail": "all at or above the WebGPU spec defaults, which is all this page needs"
+  },
+  {
+   "t": 853,
+   "name": "device request FAILED: requestDevice({\"requiredFeatures\":[\"shader-f16\"],\"requiredLimits\":{\"maxStorageBufferBindingSize\":1073741824,\"maxBufferSize\":1073741824,\"maxComputeInvocationsPerWorkgroup\":256,\"maxComputeWorkgroupSizeX\":256}}) -> OperationError: Not enough memory left."
+  },
+  {
+   "t": 853,
+   "name": "device request FAILED: requestDevice({\"requiredFeatures\":[\"shader-f16\"]}) -> OperationError: Not enough memory left."
+  },
+  {
+   "t": 853,
+   "name": "device request FAILED: requestDevice({}) -> OperationError: Not enough memory left."
+  },
+  {
+   "t": 853,
+   "name": "ERROR: Error: WebGPU is present but no device could be created, even with the spec-default limits and no features: requestDevice({}) -> OperationError: Not enough memory left."
+  }
+ ],
+ "error": "Error: WebGPU is present but no device could be created, even with the spec-default limits and no features: requestDevice({}) -> OperationError: Not enough memory left.",
+ "gpuPage": "adapter: {\"vendor\":\"\",\"arch\":\"\",\"desc\":\"\"}"
+}
