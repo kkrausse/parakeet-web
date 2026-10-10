@@ -5,8 +5,8 @@
   "--enable-dawn-features=vulkan_enable_f16_on_nvidia"
  ],
  "machineAtStart": {
-  "loadavg": "2.90 3.53 3.80 9/1992 2416798",
-  "cpuPressure": "some avg10=0.36 avg60=0.81 avg300=0.77 total=10037301736"
+  "loadavg": "3.02 3.97 3.94 8/1995 3170298",
+  "cpuPressure": "some avg10=0.02 avg60=0.62 avg300=1.14 total=10049498233"
  },
  "chrome": "154.0.8037.97",
  "error": null,
@@ -14,16 +14,16 @@
   "gpuProcessGpuMibAfterLoad": 502,
   "gpuProcessGpuMibPeak": 541,
   "rendererRssMibAfterLoad": 247,
-  "rendererRssMibPeak": 355,
-  "gpuProcessRssMibAfterLoad": 312,
-  "gpuProcessRssMibPeak": 354
+  "rendererRssMibPeak": 346,
+  "gpuProcessRssMibAfterLoad": 300,
+  "gpuProcessRssMibPeak": 334
  },
  "pids": {
-  "gpu": 2416640,
+  "gpu": 3170222,
   "renderers": [
-   2416735,
-   2416737,
-   2416711
+   3170269,
+   3170271,
+   3170260
   ]
  },
  "page": {
@@ -52,37 +52,37 @@
     "seconds": 7,
     "firstInPage": true,
     "firstRunMs": {
-     "pre": 13.2,
-     "enc": 494.8,
-     "dec": 116.7,
-     "total": 624.7
+     "pre": 13.6,
+     "enc": 193.7,
+     "dec": 129.4,
+     "total": 336.7
     },
-    "startToFirstTranscriptMs": 12135,
+    "startToFirstTranscriptMs": 10382,
     "decSteps": 47,
     "text": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight.",
     "matchesNative": true,
     "warmRuns": 3,
     "preMs": {
-     "median": 6.3,
-     "worst": 6.6,
-     "best": 6
+     "median": 6.7,
+     "worst": 6.8,
+     "best": 6.2
     },
     "encMs": {
-     "median": 71.4,
-     "worst": 71.4,
-     "best": 71.2
+     "median": 62.6,
+     "worst": 72,
+     "best": 61.9
     },
     "decMs": {
-     "median": 87.3,
-     "worst": 96.6,
-     "best": 81.9
+     "median": 88.6,
+     "worst": 103.8,
+     "best": 88.3
     },
     "totalMs": {
-     "median": 164.5,
-     "worst": 174.3,
-     "best": 159.9
+     "median": 166.5,
+     "worst": 172.4,
+     "best": 158
     },
-    "xRealTime": 42.6,
+    "xRealTime": 42,
     "textStable": true,
     "wasmHeapMb": 62,
     "wasmHeapUsedMb": 37.4
@@ -128,8 +128,8 @@
   },
   "jspi": true,
   "load": {
-   "fetchMs": 8769,
-   "loadMs": 892,
+   "fetchMs": 7349,
+   "loadMs": 821,
    "from": "network, streamed to OPFS",
    "fileMb": 437.5,
    "wasmHeapMb": 62,
@@ -137,9 +137,9 @@
    "backend": "WebGPU: WebGPU"
   },
   "session": {
-   "totalMs": 892
+   "totalMs": 821
   },
-  "startToLoadedMs": 10079
+  "startToLoadedMs": 8625
  },
  "steps": [
   {
@@ -147,54 +147,54 @@
    "name": "start: Q4_0 (4-bit weights), flash=off, store=opfs, jspi"
   },
   {
-   "t": 416,
+   "t": 453,
    "name": "WASM module ready",
-   "ms": 108.6,
+   "ms": 101.1,
    "detail": "heap 32 MB; JSPI available"
   },
   {
-   "t": 416,
+   "t": 453,
    "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 present; fallback=false"
   },
   {
-   "t": 10079,
+   "t": 8625,
    "name": "model file ready (network, streamed to OPFS)",
-   "ms": 8768.7,
+   "ms": 7349.2,
    "detail": "438 MB"
   },
   {
-   "t": 10079,
+   "t": 8625,
    "name": "model loaded on WebGPU: WebGPU",
-   "ms": 892.2,
+   "ms": 820.9,
    "detail": "WASM heap 62 MB, 36 MB in use"
   },
   {
-   "t": 12135,
+   "t": 10382,
    "name": "a07 (7.0 s) first run (cold)",
-   "ms": 624.7,
-   "detail": "mel 13.2 ms, encoder 495 ms, decode 117 ms, heap 62 MB (37.4 in use)"
+   "ms": 336.7,
+   "detail": "mel 13.6 ms, encoder 194 ms, decode 129 ms, heap 62 MB (37.4 in use)"
   },
   {
-   "t": 12135,
+   "t": 10382,
    "name": "a07 transcript matches the native one",
    "detail": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day ..."
   },
   {
-   "t": 12796,
+   "t": 11056,
    "name": "a07 warm x3",
-   "ms": 164.5,
-   "detail": "total median/worst 164.5 / 174.3 ms; encoder 71.4 / 71.4 ms; mel 6.3 ms; decode 87.3 ms; 42.6x real time; text stable=true"
+   "ms": 166.5,
+   "detail": "total median/worst 166.5 / 172.4 ms; encoder 62.6 / 72 ms; mel 6.7 ms; decode 88.6 ms; 42x real time; text stable=true"
   },
   {
-   "t": 12797,
+   "t": 11057,
    "name": "done",
-   "ms": 12796.7
+   "ms": 11056.6
   }
  ],
  "console": [],
  "machineAtEnd": {
-  "loadavg": "3.37 3.61 3.82 4/2007 2429479",
-  "cpuPressure": "some avg10=1.47 avg60=1.07 avg300=0.84 total=10037652950"
+  "loadavg": "3.34 4.01 3.95 5/2023 3181170",
+  "cpuPressure": "some avg10=1.79 avg60=1.01 avg300=1.21 total=10049882169"
  },
  "chromeGpu": {
   "devices": [

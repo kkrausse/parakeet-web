@@ -1,0 +1,89 @@
+From 3c610d4cb1ff372cc5ba347b2b96c378dae9fd2d Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 03:05:35 -0700
+Subject: [PATCH 6/6] ggml-webgpu: flash attention honours per-head masks
+ (mask->ne[2] == n_heads)
+
+flash_attn.wgsl and flash_attn_tile.wgsl computed the mask offset from the batch
+index and the query row only, so every head read head 0's mask. The CPU backend
+indexes (head % mask->ne[2]) * mask->nb[2]. Parakeet's relative-position bias is a
+per-head mask, which is why the flash path produced wrong text on WebGPU. New
+trailing param stride_mask2 (0 for a shared mask). The vec/split shaders are
+untouched (they have their own params and are not reached with T_q > 1).
+
+With TRANSCRIBE_F32_MASK_CONCAT=1 (CONCAT has no F16 variant on WebGPU) the flash
+encoder now gives byte-identical text to the matmul+softmax path on the 7, 13.7 and
+56 s clips for Q4_0 and Q8_0. It is slower on the non-subgroup-matrix path
+(7 s: 57 vs 51 ms Q8_0; 56 s: 556 vs 380 ms) and the GPU peak is unchanged, so the
+page keeps it off.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ ggml/src/ggml-webgpu/ggml-webgpu.cpp                    | 3 ++-
+ ggml/src/ggml-webgpu/wgsl-shaders/flash_attn.wgsl       | 4 +++-
+ ggml/src/ggml-webgpu/wgsl-shaders/flash_attn_decls.tmpl | 4 ++++
+ ggml/src/ggml-webgpu/wgsl-shaders/flash_attn_tile.wgsl  | 4 +++-
+ 4 files changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/ggml/src/ggml-webgpu/ggml-webgpu.cpp b/ggml/src/ggml-webgpu/ggml-webgpu.cpp
+index de8eece9..0c42cf28 100644
+--- a/ggml/src/ggml-webgpu/ggml-webgpu.cpp
++++ b/ggml/src/ggml-webgpu/ggml-webgpu.cpp
+@@ -2077,7 +2077,8 @@ static ggml_webgpu_flash_attn_op ggml_webgpu_flash_attn_prepare(webgpu_context &
+         ggml_webgpu_u32_from_f32(logit_softcap),
+         ggml_webgpu_u32_from_f32(n_head_log2),
+         ggml_webgpu_u32_from_f32(m0),
+-        ggml_webgpu_u32_from_f32(m1)
++        ggml_webgpu_u32_from_f32(m1),
++        (op.has_mask && mask->ne[2] > 1) ? (uint32_t) (mask->nb[2] / ggml_type_size(mask->type)) : 0  // stride of mask dim 2
+     };
+     op.entries = {
+         ggml_webgpu_make_tensor_bind_group_entry(ctx, 0, Q),
+diff --git a/ggml/src/ggml-webgpu/wgsl-shaders/flash_attn.wgsl b/ggml/src/ggml-webgpu/wgsl-shaders/flash_attn.wgsl
+index a7dee651..1bfd4c55 100644
+--- a/ggml/src/ggml-webgpu/wgsl-shaders/flash_attn.wgsl
++++ b/ggml/src/ggml-webgpu/wgsl-shaders/flash_attn.wgsl
+@@ -116,7 +116,9 @@ fn main(@builtin(workgroup_id) wg_id: vec3<u32>,
+ 
+ #ifdef MASK
+     // mask offset
+-    let mask_global_offset = params.offset_mask + batch_idx * params.stride_mask3 + q_row_start * params.seq_len_kv;
++    // per-head masks (mask->ne[2] == n_heads, e.g. a relative-position bias) need the head term;
++    // the CPU backend indexes (head % mask->ne[2]) * mask->nb[2].
++    let mask_global_offset = params.offset_mask + batch_idx * params.stride_mask3 + head_idx * params.stride_mask2 + q_row_start * params.seq_len_kv;
+ #endif
+ 
+     // note that the output is permuted, the layout is [head_dim_v, n_heads, seq_len_q, batch_size]
+diff --git a/ggml/src/ggml-webgpu/wgsl-shaders/flash_attn_decls.tmpl b/ggml/src/ggml-webgpu/wgsl-shaders/flash_attn_decls.tmpl
+index 48a79b6c..c3f9cf62 100644
+--- a/ggml/src/ggml-webgpu/wgsl-shaders/flash_attn_decls.tmpl
++++ b/ggml/src/ggml-webgpu/wgsl-shaders/flash_attn_decls.tmpl
+@@ -76,6 +76,10 @@ struct Params {
+     n_head_log2: f32,
+     m0: f32,
+     m1: f32,
++#ifndef FLASH_ATTN_VEC_SPLIT
++    // stride of mask dim 2 (0 when the mask is shared by all heads)
++    stride_mask2: u32,
++#endif
+ 
+ #ifdef FLASH_ATTN_VEC_SPLIT
+ #ifdef BLK
+diff --git a/ggml/src/ggml-webgpu/wgsl-shaders/flash_attn_tile.wgsl b/ggml/src/ggml-webgpu/wgsl-shaders/flash_attn_tile.wgsl
+index 7edca84f..e0e6d885 100644
+--- a/ggml/src/ggml-webgpu/wgsl-shaders/flash_attn_tile.wgsl
++++ b/ggml/src/ggml-webgpu/wgsl-shaders/flash_attn_tile.wgsl
+@@ -65,7 +65,9 @@ fn main(@builtin(workgroup_id) wg_id: vec3<u32>,
+     let row_active = subgroup_id < Q_TILE && global_q_row < params.seq_len_q;
+ 
+ #ifdef MASK
+-    let mask_global_offset = params.offset_mask + batch_idx * params.stride_mask3 + q_row_start * params.seq_len_kv;
++    // per-head masks (mask->ne[2] == n_heads, e.g. a relative-position bias) need the head term;
++    // the CPU backend indexes (head % mask->ne[2]) * mask->nb[2].
++    let mask_global_offset = params.offset_mask + batch_idx * params.stride_mask3 + head_idx * params.stride_mask2 + q_row_start * params.seq_len_kv;
+ #endif
+ 
+     let dst_global_offset = dst_batch_offset + q_row_start * dst2_stride + head_idx * HEAD_DIM_V;
+-- 
+2.53.0
+

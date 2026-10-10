@@ -28,6 +28,8 @@ Pass of 10 Oct 02:59-03:01, load average about 4, CPU pressure under 1.2% (`resu
 | **ggml WebGPU, Q4_0** (JSPI build) | 56 / 71 | 144 / 161 | 85 / 92 | 244 / 272 | 440 / 443 | 1022 / 1050 | 55 |
 | **ggml WebGPU, Q8_0** | 64 / 82 | 146 / 196 | 87 / 94 | 247 / 263 | 404 / 417 | 979 / 1011 | 57 |
 | **ggml WebGPU, F16** | 78 / 85 | 162 / 197 | 94 / 96 | 260 / 280 | 515 / 517 | 1096 / 1121 | 51 |
+| ggml WebGPU, Q4_0, flash attention on (`flash=1`, after the fix below) | 74 / 82 | 154 / 176 | 97 / 100 | 250 / 273 | 620 / 624 | 1172 / 1218 | 48 |
+| ggml WebGPU, Q8_0, flash attention on | 64 / 80 | 158 / 175 | 99 / 102 | 265 / 287 | 582 / 586 | 1151 / 1205 | 49 |
 | ggml WebGPU, Q4_0, ASYNCIFY build | 63 / 76 | 158 / 191 | 87 / 91 | 247 / 267 | 444 / 447 | 1019 / 1041 | 55 |
 | ORT-web WebGPU, fp16 encoder, decoder on WASM (9-10 Oct, other README) | 67 / 113 | 145 / 210 | 95 / 127 | 225 / 248 | 232 / 240 | 753 / 830 | 75 |
 | ORT-web WebGPU, fp32 encoder | 90 / 145 | 173 / 263 | 108 / 149 | 262 / 296 | 314 / 339 | 897 / 1037 | 63 |
@@ -44,7 +46,7 @@ Pass of 10 Oct 02:59-03:01, load average about 4, CPU pressure under 1.2% (`resu
 | ORT-web WebGPU fp32 | 6.7 s | 661 ms (544) | 16.7 s | 2423 / 2771 MiB | renderer peak 4375 MiB | 1734 MiB | |
 | ORT-web WASM int8, 1 thread | 3.6 s | 2086 ms (1972) | 7.7-9.5 s | none | renderer peak 2341 MiB | 255 MiB | |
 
-Peaks are over all three clips; the 56 s clip sets them (+470 MiB of GPU compute buffers, WASM heap
+Peaks are over all three clips; the 56 s clip sets them (+470 MiB of GPU memory, WASM heap
 62 -> 107 MB). For the 7 s clip alone Q4_0 peaks at 541 MiB GPU and 355 MiB renderer RSS
 (`published-q4.json`). A blank page with the worker and module loaded is about 145-175 MiB of
 renderer RSS and 57 MiB of GPU memory, so the model costs roughly 100 MiB of renderer memory.
@@ -105,7 +107,15 @@ as `patches/000*.patch` (apply on `c63b18e2` with `git am`).
 4. `GGML_WEBGPU_BROWSER=1` (native only): no subgroup-matrix, no Dawn "fast" toggles, so the
    native binary runs the kernels a browser gets and can be profiled with timestamp queries.
 5. Lazy `synchronize` in WASM (one GPU-process round trip less per transcribe, about 7 ms).
-6. `ggml_backend_sched_new`: 256-split budget in WASM. It malloc'ed 165 MB for split-input copies;
+6. **Flash attention fixed** (`flash_attn.wgsl`, `flash_attn_tile.wgsl`): the hypothesis was right.
+   The mask offset used the batch index and query row only, so every head read head 0's mask; the
+   CPU backend indexes `(head % mask->ne[2]) * mask->nb[2]`. New trailing param `stride_mask2`.
+   The F16 `CONCAT` is still avoided with `TRANSCRIBE_F32_MASK_CONCAT=1` (the page sets it for
+   `flash=1`). Native and Chrome: byte-identical text to the matmul+softmax path on all three clips
+   for Q4_0 and Q8_0. **It is not faster and not smaller here**, so it stays off: without
+   subgroup-matrix the flash kernel is slower (native 7 s 57 vs 51 ms, 56 s 556 vs 380 ms; Chrome
+   rows above) and the GPU peak is the same to the MiB (native Q4_0 56 s: 923 vs 923).
+7. `ggml_backend_sched_new`: 256-split budget in WASM. It malloc'ed 165 MB for split-input copies;
    native never touches it, the WASM heap grew from 64 to 182 MB on the first run.
 
 ## Attempt log (encoder, 7 s clip unless noted)
@@ -210,7 +220,7 @@ Chrome on this box needs `--enable-dawn-features=vulkan_enable_f16_on_nvidia` (t
 ## Not measured, not done
 
 - Any phone, Safari, Firefox; a second visit (model already in OPFS, warm shader cache); WER.
-- **Flash attention on WebGPU is still broken and off** (`flash=1` gives wrong text). See Next.
+- The flash vec/split shaders (`T_q == 1` paths) still ignore the head in the mask offset; not reached here.
 - The `shader-f16` dependency was not removed.
 - Threads for the decoder; streaming; the smaller model.
 - The machine was shared (load average about 4); CPU-bound numbers (decode, mel, load, worst cases) are the soft ones.
@@ -219,10 +229,10 @@ Chrome on this box needs `--enable-dawn-features=vulkan_enable_f16_on_nvidia` (t
 
 In the order I would take them:
 
-1. **Flash attention** (backlog 4). Verify the `flash_attn.wgsl:119` mask-offset hypothesis natively
-   against the CPU backend (`TRANSCRIBE_F32_MASK_CONCAT=1`, no `TRANSCRIBE_NO_FLASH`), fix, confirm
-   identical text on the three clips. Its payoff is mostly memory and long clips: the 56 s clip
-   holds +470 MiB of GPU compute buffers on the matmul+softmax path.
+1. **Long-clip GPU memory.** The +430-470 MiB at 56 s is not attention (flash on or off peaks the
+   same). Not traced further; the suspects are the subsampling convolutions' activations
+   (256 channels x T/2 x 64, about 184 MB per tensor at 56 s). Chunking long audio (the library's
+   streaming/longform paths) is the likely answer for a phone, and it was not tried in the browser.
 2. **`shader-f16`** (backlog 6): decides whether the page starts at all where the feature is missing.
    Looks tractable for quantized models with f32 activations: make the feature optional, strip
    `enable f16;` and map `f16` to `f32` in the shader preprocessor when it is absent, read F16

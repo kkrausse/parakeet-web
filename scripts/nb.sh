@@ -5,7 +5,7 @@ cmake -S transcribe.cpp -B build-webgpu > /dev/null 2>&1
 nice make -C build-webgpu -j6 transcribe-bench transcribe-cli > out/build-native.log 2>&1 || { grep -E "error" -A4 out/build-native.log | head -30; exit 1; }
 EXP="going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight."
 for q in ${QUANTS:-Q8_0 Q4_0 F16}; do
-  env GGML_WEBGPU_BROWSER=1 TRANSCRIBE_NO_FLASH=1 "$@" build-webgpu/bin/transcribe-bench --model gguf/parakeet-tdt-0.6b-v2-$q.gguf --sample audio/${CLIP:-a07}.wav --iters ${ITERS:-10} --warmup 2 --quiet --threads 4 > out/nb-$q.json 2> out/nb-$q.err < /dev/null || true
+  env GGML_WEBGPU_BROWSER=1 ${FLASH:+TRANSCRIBE_F32_MASK_CONCAT=1} ${FLASH:-TRANSCRIBE_NO_FLASH=1} "$@" build-webgpu/bin/transcribe-bench --model gguf/parakeet-tdt-0.6b-v2-$q.gguf --sample audio/${CLIP:-a07}.wav --iters ${ITERS:-10} --warmup 2 --quiet --threads 4 > out/nb-$q.json 2> out/nb-$q.err < /dev/null || true
   python3 - out/nb-$q.json $q "$EXP" ${CLIP:-a07} <<'PY'
 import json,sys
 try: d=json.load(open(sys.argv[1]))
