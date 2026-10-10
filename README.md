@@ -7,7 +7,7 @@ blocks directly. The encoder runs on WebGPU, mel and the TDT decoder on one WASM
 NVIDIA `parakeet-tdt_ctc-110m` (the page default) and `parakeet-tdt-0.6b-v2`. The comparison is the
 onnxruntime-web page in `../parakeet-webgpu-bench/` (same clips, same driver, same metrics).
 
-**Live microphone page** (10 Oct 06:40-08:30, section "Live demo" below):
+**Live microphone page** (10 Oct 06:40-07:40, section "Live demo" below):
 https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-live/ re-transcribes the current utterance
 about four times a second and commits it on a pause or at 24 s. Chrome on this box, fake microphone,
 110m Q8_0: a pass on a 12 s buffer takes 105-111 ms, text trails speech by 0.1 s (0.7 s at worst),
@@ -710,7 +710,10 @@ a56 (2.3 min); `g5` is the `l5` sequence with 2-4 s of silence between parts (4.
 the committed text against one offline pass over the same samples through the same worker (single
 shot up to 60 s, chunked 30+4 above), "vs references" against the fixtures' reference texts joined;
 both as differing words (insertions + deletions) after dropping case and punctuation. 10 Oct
-07:40-08:25, load average 2.6-5.8 (12 for the `t14` row).
+07:15-07:37, load average 3.0-6.0 (12 for the first `t14` row). The `g5`, `g2`, stock, ASYNCIFY, 0.6b
+and CPU rows are one build before the last one; what changed after them (GPU errors stop the passes,
+the Blob fallback without OPFS, a label, the order the model directory is probed in) is outside the
+audio and commit path.
 
 | Run | Passes | Provisional pass ms, median / p95 / max | on (median s) | Commits (pause, cap; no final pass) | Lag s, median / max | vs offline | vs references | GPU MiB | Renderer RSS MiB | WASM heap MB |
 | --- | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -739,7 +742,7 @@ clips), sampled every 2 s.
   "Cork Quid Quill" / "CorkidQuill", "drafty" / "draughty". A cap cut also leaves a sentence without
   its full stop when the cut falls on a sentence boundary ("... trading strategies Delve into ...").
   With 0.6b Q4_0 the differences are formatting: the live segments say "B three", "E three" where
-  the one-shot pass writes "B3", "E3" (and the reverse for "U3").
+  the one-shot pass writes "B3", "E3" (also "U3 Unifund" / "U3Unifund", "M3Mover" / "M3 Mover").
 - **The committed text of one clip is not byte-stable between runs**: `t14` gave "drafty" in some
   runs and "draughty" in others. The fake microphone starts at a slightly different offset each
   time and the pass that ends up supplying the final text sees a different amount of trailing silence.
