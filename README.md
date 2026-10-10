@@ -233,6 +233,9 @@ Second pass (10 Oct, 03:12-04:00). Native = `nb.sh` / `deccmp.sh` / `gpupeak.sh`
 | same, 110m Q8_0 | 438 | 295 | yes |
 | Chrome GPU peak over the three clips, 0.6b Q4_0 / 110m Q8_0 | 969 / 490 MiB | 799 / 347-386 MiB | yes |
 | Buffer cache, encoder time | 418 ms (56 s, native) | 419 ms | no speed effect |
+| `-msimd128` for every source (transcribe.cpp too, not just ggml-cpu), Chrome: mel / decode / total, 110m 56 s | 45.4 / 172 / 319 | 49.3 / 173 / 325 (0.6b: 48.7 -> 51.8 mel, 784 -> 785 total) | no (reverted; same text) |
+| `trim=1`: GPU memory 2 s after dropping the cached buffer, Chrome, 110m / 0.6b at 56 s | 351 / 743 MiB peak | 347 / 738 MiB | knob kept, **no effect seen** |
+| same with a trivial queue write + submit after the destroy | 347 | 347 | no (reverted) |
 
 Findings worth keeping:
 
@@ -257,8 +260,15 @@ Findings worth keeping:
   still awaiting deletion. Inside the 230 MiB the scheduler dump shows the first subsampling conv's
   output at 175 MB (256 channels x T/2 x 64 fp32), then 43 MB after the stride-2 depthwise conv;
   attention is not it.
-- The decoder is mostly the LSTM: native 56 s, 0.6b, packed, 4 threads: enc_proj 7.7 ms, pred 45,
-  joint 8.7, confidence 3.8 (the library's own debug line; `verbose=1` shows it in the page).
+- The decoder is mostly the LSTM. The library's own debug line (`verbose=1` shows it in the page),
+  56 s clip, Chrome, one WASM thread, packed weights: 110m Q8_0 enc_proj 19 ms, pred 100, joint 50,
+  confidence 3 (292 tokens, 482 joint steps); 0.6b Q4_0 enc_proj 35, pred 227, joint 41, confidence 4
+  (312 tokens). Both work out to 9-10 G multiply-adds/s for the Q8_0 dot kernel
+  (`ggml_vec_dot_q8_0_q8_0`, WASM SIMD), which re-extends the same activation block to i16 for every
+  one of the 2560 gate rows. Native, 4 threads, 0.6b: enc_proj 7.7, pred 45, joint 8.7.
+- Chrome does not hand a destroyed buffer's memory back while the page is idle: 2 s after `pk_trim`
+  nvidia-smi still shows the peak, with or without a follow-up submit. So "GPU peak" in these tables
+  is also what the tab holds afterwards; whether it shrinks later was not watched.
 - A zsh trap that cost a wrong reading: `scripts/nb.sh $e` with `e="A=1 B=1"` passes one argument
   (zsh does not word-split), so the second variable was silently not set.
 
@@ -274,8 +284,9 @@ when the adapter has no `shader-f16`. No threads, so no COOP/COEP headers and no
 
 Verified from Chrome on diesel2 against the published link, **stock Chrome with no Dawn flag**:
 the default (110m Q8_0) loads from the Pi, runs on WebGPU with f32-only shaders and gives the
-reference text (7 s total 70 ms, GPU peak 227 MiB; `results/browser/published-default-stock.json`);
-0.6b Q4_0 the same way before the decoder work (178 ms, `published-q4-stock.json`).
+reference text on all three clips (7 s total 68 ms, 56 s 335 ms, GPU 199 MiB after load, 349 peak,
+renderer RSS peak 309 MiB; `results/browser/published-default-stock.json`); 0.6b Q4_0 the same way
+(7 s total 108 ms, GPU peak 541 MiB; `published-q4-stock.json`). The model download from the Pi was 2.3 s.
 
 **Nothing was run on a phone, Safari or Firefox.** What bears on it, from documentation only:
 
@@ -336,8 +347,8 @@ Environment knobs added in this pass: `GGML_WEBGPU_NO_F16`, `TRANSCRIBE_F32_POIN
 
 - Any phone, Safari, Firefox; WebKit's WGSL compiler on the f32-only shaders; a second visit (model
   already in OPFS, warm shader cache); WER (three clips only: "identical text" means these three).
-- 110m F32 / F16 in the browser (native F32 only); 110m with flash attention; `trim=1` memory after
-  the release (the knob is wired and builds, its effect was not sampled).
+- 110m F32 / F16 in the browser (native F32 only); 110m with flash attention; whether GPU memory
+  ever drops after `trim=1` beyond the 2 s that were watched.
 - Why the f32-only path costs 9% on the 56 s encoder (suspects: f32 workgroup staging in
   `mul_mat_reg_tile` for attention, the F32 im2col of the pointwise convs).
 - Decoder threads (pthreads, COOP/COEP); relaxed-SIMD dot kernels; streaming.
@@ -351,8 +362,10 @@ In the order I would take them:
 1. **Decoder, long clips** (172 of 319 ms for 110m at 56 s; 300 of 784 for 0.6b). Not tried:
    `enc_proj` (T x d_enc x joint_h fp32 GEMM on one WASM thread, 460 M multiply-adds for 0.6b at
    56 s) as a last node of the encoder graph on the GPU, so only the projection is read back;
-   caching `pred_w @ pred_out` across blank steps; `-msimd128` for the transcribe.cpp sources
-   themselves (only ggml-cpu gets it; mel is 45 ms at 56 s); pthreads if a COOP/COEP path is acceptable.
+   caching `pred_w @ pred_out` across blank steps (190 of 482 joint steps at 56 s for 110m); a
+   mat-vec routine for the Q8_0 LSTM matrices that extends the activation once instead of per row;
+   a faster FFT for mel (45 ms at 56 s, 14% of the 110m total; `-msimd128` on its own did nothing);
+   pthreads if a COOP/COEP path is acceptable.
 2. **The 230 MiB compute buffer** for long clips: it is the first subsampling conv's output
    (175 MB at 56 s for 0.6b, 110 MB for 110m). Running conv0 -> ReLU -> depthwise conv2 in time
    tiles inside the graph would be exact and cap it; chunked encoding would not be exact.

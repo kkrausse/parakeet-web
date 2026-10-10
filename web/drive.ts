@@ -83,6 +83,7 @@ try {
       if (phase === "sessions") p = await pids();
     }
     if (state.phase === "loaded" && !sawLoaded) sawLoaded = true, mem.gpuProcessGpuMibAfterLoad = g, mem.rendererRssMibAfterLoad = rss, mem.gpuProcessRssMibAfterLoad = grss;
+    if (state.phase === "trimmed") (mem as any).gpuProcessGpuMibAfterTrim = g;
     if (state.done) break;
     if (performance.now() - t0 > timeoutMin * 60e3) { state.error = `driver timeout after ${timeoutMin} min in phase ${phase}`; break; }
     await Bun.sleep(150);

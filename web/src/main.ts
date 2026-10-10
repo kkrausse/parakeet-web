@@ -150,6 +150,7 @@ async function run() {
     const seconds = audio.length / 16000;
     const once = async () => {
       const r = await call("run", { pcm: audio });
+      if (cfg.verbose && r.log) for (const l of String(r.log).split("\n")) if (/decoder:/.test(l)) step(`library: ${l.trim().slice(0, 300)}`);
       // encoder = until its output is on the CPU: with lazy synchronize the library's own encode_ms stops at submit
       return { pre: r.mel_ms as number, enc: (r.wallMs - r.mel_ms - r.decode_ms) as number, encSubmit: r.encode_ms as number, dec: r.decode_ms as number, total: r.wallMs as number, text: r.text as string, tokens: r.n_tokens as number, heapMb: r.heapMb as number, heapUsedMb: r.heapUsedMb as number };
     };
@@ -178,7 +179,7 @@ async function run() {
     }
     render(result);
   }
-  if (params.get("trim") === "1") { await call("trim"); step("released the GPU compute buffer kept between runs (trim=1)"); await new Promise((r) => setTimeout(r, 1500)); }
+  if (params.get("trim") === "1") { await call("trim"); step("released the GPU compute buffer kept between runs (trim=1)"); await new Promise((r) => setTimeout(r, 1500)); w.__pkb.phase = "trimmed"; await new Promise((r) => setTimeout(r, 600)); }
   if (cfg.verbose) await call("free"); // a profiling build prints its summary when the backend is freed
   step("done", performance.now() - runStart);
   current.done = true, persist();

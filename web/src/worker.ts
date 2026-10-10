@@ -131,7 +131,7 @@ self.onmessage = async (e: MessageEvent) => {
   const msg = e.data;
   try {
     const out = msg.type === "init" ? await init(msg) : msg.type === "load" ? await load(msg) : msg.type === "run" ? await run(msg)
-      : msg.type === "trim" ? await M.ccall("pk_trim", null, [], [], { async: true })
+      : msg.type === "trim" ? M.ccall("pk_trim", null, [], [])
       : msg.type === "free" ? await M.ccall("pk_free", null, [], [], { async: true }) : null;
     post({ type: "result", id: msg.id, out });
   } catch (err: any) {
