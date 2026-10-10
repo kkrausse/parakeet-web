@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:,">
+<title>Parakeet live</title>
+<style>
+  :root { color-scheme: light dark; --bg: #fafaf8; --fg: #1c1c1a; --mut: #6b6b66; --line: #d9d9d3; --card: #fff; --bad: #b3261e; --rec: #d93025; --ok: #2e7d4f; --prov: #8a8a84; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #161615; --fg: #ecece8; --mut: #9c9c95; --line: #33332f; --card: #1f1f1d; --bad: #ff8a80; --rec: #f2554a; --ok: #6fcf97; --prov: #8f8f88; } }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 system-ui, sans-serif; overflow-x: hidden; }
+  .app { height: 100vh; height: 100dvh; display: flex; flex-direction: column; max-width: 860px; margin-inline: auto; padding: 10px max(14px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  h1 { font-size: 16px; margin: 0; flex: 1 1 auto; white-space: nowrap; }
+  header a, .more a { color: var(--mut); font-size: 13px; }
+  select, button, input { font: inherit; color: inherit; }
+  select { padding: 7px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); max-width: 100%; min-width: 0; flex: 1 1 100%; }
+  .load { flex: 1 1 100%; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--mut); min-height: 20px; }
+  .load .track { flex: 0 0 90px; height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+  .load .track i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .2s; }
+  .load.ready .track { display: none; }
+  #mstatus { min-width: 0; overflow-wrap: anywhere; }
+  .notice { margin-top: 8px; padding: 8px 10px; border: 1px solid var(--bad); border-radius: 8px; color: var(--bad); font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 30vh; overflow-y: auto; }
+  .notice.warn { border-color: var(--line); color: var(--fg); }
+  .notice button { margin-top: 6px; padding: 6px 10px; border: 1px solid currentColor; border-radius: 8px; background: none; }
+  [hidden] { display: none !important; }
+  #transcript { flex: 1 1 0; min-height: 0; overflow-y: auto; margin: 10px 0; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); font-size: 19px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; -webkit-overflow-scrolling: touch; }
+  #prov { color: var(--prov); font-style: italic; }
+  #hint { color: var(--mut); font-size: 15px; }
+  .meter { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 100%; transform-origin: left; transform: scaleX(0); background: var(--mut); }
+  .meter.speech i { background: var(--ok); }
+  .controls { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin-top: 10px; }
+  .controls .side { padding: 12px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); min-height: 48px; }
+  .controls .side:first-child { justify-self: end; min-width: 84px; } .controls .side:last-child { justify-self: start; min-width: 84px; }
+  #rec { width: 84px; height: 84px; border-radius: 50%; border: 3px solid var(--fg); background: var(--card); display: grid; place-items: center; padding: 0; touch-action: manipulation; cursor: pointer; }
+  #rec i { display: block; width: 52px; height: 52px; border-radius: 50%; background: var(--rec); transition: all .12s; }
+  #rec.on i { width: 30px; height: 30px; border-radius: 6px; }
+  #rec.on { border-color: var(--rec); }
+  #reclabel { text-align: center; font-size: 13px; color: var(--mut); margin-top: 4px; min-height: 19px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px 8px; margin: 6px 0 0; font-size: 12px; color: var(--mut); }
+  .stats div { min-width: 0; } .stats b { display: block; color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stats .wide { grid-column: 1 / -1; } .stats .wide b { white-space: normal; overflow-wrap: anywhere; font-weight: 500; }
+  .stats .lagging b { color: var(--bad); }
+  .more { max-width: 860px; margin-inline: auto; padding: 8px 14px 40px; font-size: 13px; }
+  .more h2 { font-size: 14px; margin: 18px 0 6px; }
+  .more label { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; }
+  .more p { margin: 6px 0; color: var(--mut); }
+  pre { white-space: pre-wrap; word-break: break-word; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: 12px/1.45 ui-monospace, Menlo, monospace; margin: 6px 0; }
+  summary { cursor: pointer; padding: 4px 0; } .bad { color: var(--bad); }
+  .more button { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+</style>
+<div class="app">
+  <header>
+    <h1>Parakeet live</h1>
+    <a id="bench" href="./">benchmark page</a>
+    <a href="#more">details</a>
+    <select id="model" aria-label="Model"></select>
+    <div class="load" id="load"><span class="track"><i id="mbar"></i></span><span id="mstatus">starting</span></div>
+  </header>
+  <div class="notice warn" id="warn" hidden></div>
+  <div class="notice" id="errors" hidden></div>
+  <div id="transcript" aria-live="polite"><span id="committed"></span><span id="prov"></span><span id="hint">Tap the red button and speak. Text in grey is still being revised; it turns solid when you pause.</span></div>
+  <div class="meter" id="meter" aria-hidden="true"><i id="level"></i></div>
+  <div class="controls">
+    <button class="side" id="copy">Copy</button>
+    <button id="rec" aria-label="Record" aria-pressed="false"><i></i></button>
+    <button class="side" id="clear">Clear</button>
+  </div>
+  <div id="reclabel">Record</div>
+  <div class="stats">
+    <div>last pass<b id="s-pass">-</b></div>
+    <div>buffer<b id="s-buf">-</b></div>
+    <div>x real time<b id="s-rtf">-</b></div>
+    <div id="lagcell">lag<b id="s-lag">-</b></div>
+    <div class="wide"><b id="s-backend">backend: not loaded yet</b></div>
+  </div>
+</div>
+<section class="more" id="more">
+  <h2>Settings</h2>
+  <label><input type="checkbox" id="proc"> <span>Browser echo cancellation and noise suppression (off by default: the model gets the raw microphone). Applies from the next recording.</span></label>
+  <p id="env"></p>
+  <p>Offline model, re-run on the current utterance several times a second (grey text); an utterance is committed on a pause or when it reaches the length cap, and its audio is dropped. The model file is fetched once and kept in this browser.</p>
+  <h2>This session</h2>
+  <pre id="steps"></pre>
+  <h2>Earlier sessions in this browser</h2>
+  <div id="history"></div>
+  <p><button id="forget">Clear stored sessions and stored model files</button></p>
+</section>
+<script type="module" src="live.js"></script>
+</html>

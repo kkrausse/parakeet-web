@@ -1,0 +1,772 @@
+{
+ "name": "f16-t14",
+ "wav": "/home/kkrausse/devfs/cache/parakeet-ggml-webgpu/audio/live/t14.wav",
+ "wavSeconds": 19.69,
+ "recordSeconds": 17,
+ "chromeArgs": [
+  "--enable-dawn-features=vulkan_enable_f16_on_nvidia"
+ ],
+ "noWebgpu": false,
+ "loadavgStart": "12.36 6.93 4.59 19/2323 1391942",
+ "chrome": "154.0.8037.97",
+ "url": "http://127.0.0.1:8791/live.html",
+ "readyMs": 2323,
+ "beforeRecording": {
+  "t": 0,
+  "gpuMib": 206,
+  "rendererRssMib": 253,
+  "gpuProcRssMib": 306,
+  "wasmHeapMb": 0,
+  "jsHeapMb": 3,
+  "lagS": 0,
+  "bufferS": 0,
+  "passes": 0,
+  "words": 0,
+  "vad": {
+   "noiseFloor": 0.001,
+   "hasSpeech": false,
+   "lastRms": 0
+  }
+ },
+ "drainMs": 1458,
+ "live": {
+  "committed": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards.",
+  "provisional": "",
+  "segments": [
+   {
+    "startS": 0,
+    "endS": 14,
+    "reason": "pause",
+    "ms": 0,
+    "reused": true,
+    "text": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards."
+   }
+  ],
+  "passCount": 52,
+  "finalCount": 1,
+  "reusedCount": 1,
+  "staleCount": 1,
+  "maxLagS": 0.4,
+  "droppedS": 0,
+  "inputRate": 44100,
+  "backend": "WebGPU: WebGPU",
+  "webgpu": true,
+  "shaderF16": true,
+  "variant": "jspi",
+  "errors": [],
+  "params": {
+   "gapMs": 250,
+   "hangMs": 700,
+   "preRollMs": 300,
+   "tailMs": 300,
+   "capS": 24,
+   "cutLookbackS": 10,
+   "minSpeechMs": 120,
+   "onsetFrames": 2,
+   "absRms": 0.004,
+   "noiseRatio": 3,
+   "lagWarnS": 2,
+   "backlogS": 120
+  },
+  "load": {
+   "fetchMs": 954,
+   "loadMs": 354,
+   "from": "network, streamed to OPFS",
+   "base": "models/",
+   "adapter": "nvidia turing NVIDIA GeForce RTX 2080 Ti"
+  }
+ },
+ "steps": [
+  {
+   "t": 1,
+   "name": "start: 110M, Q8_0 (8-bit weights), jspi"
+  },
+  {
+   "t": 580,
+   "name": "WASM module ready",
+   "ms": 49.7,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 580,
+   "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 present; fallback=false"
+  },
+  {
+   "t": 580,
+   "name": "adapter limits: binding 2048 MiB, buffer 4096 MiB, 1024 invocations/workgroup, workgroup storage 49152 B, 16 storage buffers/stage",
+   "detail": "all at or above the WebGPU spec defaults, which is all this page needs"
+  },
+  {
+   "t": 580,
+   "name": "device probe ok: binding 1024 MiB, buffer 1024 MiB, 256 invocations",
+   "detail": "requested {\"maxStorageBufferBindingSize\":1073741824,\"maxBufferSize\":1073741824,\"maxComputeInvocationsPerWorkgroup\":256,\"maxComputeWorkgroupSizeX\":256} shader-f16"
+  },
+  {
+   "t": 580,
+   "name": "shader path: f16"
+  },
+  {
+   "t": 1907,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 954.1,
+   "detail": "129 MB from models/"
+  },
+  {
+   "t": 1907,
+   "name": "model loaded on WebGPU: WebGPU",
+   "ms": 354,
+   "detail": "WASM heap 32 MB, 9.9 MB in use"
+  },
+  {
+   "t": 2162,
+   "name": "warm-up pass (1.5 s of noise)",
+   "ms": 245.8
+  },
+  {
+   "t": 2677,
+   "name": "recording: context 44100 Hz -> 16000 Hz, track 48000 Hz, 1 ch, echoCancellation=false noiseSuppression=false autoGainControl=true"
+  },
+  {
+   "t": 17187,
+   "name": "commit 1: 14.0 s of audio, pause",
+   "detail": "42 words; text of the last provisional pass"
+  },
+  {
+   "t": 20812,
+   "name": "stopped after 18.1 s: 52 passes, 1 commits, max lag 0.4 s"
+  }
+ ],
+ "console": [],
+ "provisionalPassMs": {
+  "n": 52,
+  "median": 90,
+  "p95": 117.9,
+  "max": 133.4
+ },
+ "finalPassMs": null,
+ "provisionalAudioS": {
+  "n": 52,
+  "median": 7.4,
+  "p95": 13.8,
+  "max": 14.4
+ },
+ "finalAudioS": null,
+ "lagS": {
+  "n": 10,
+  "median": 0.1,
+  "p95": 0.2,
+  "max": 0.2
+ },
+ "maxLagS": 0.4,
+ "memoryAfterWarmup": {
+  "gpuMib": {
+   "first": 216,
+   "last": 244,
+   "min": 216,
+   "max": 244
+  },
+  "rendererRssMib": {
+   "first": 253,
+   "last": 262,
+   "min": 253,
+   "max": 272
+  },
+  "gpuProcRssMib": {
+   "first": 325,
+   "last": 325,
+   "min": 325,
+   "max": 325
+  },
+  "wasmHeapMb": {
+   "first": 39,
+   "last": 46,
+   "min": 39,
+   "max": 46
+  },
+  "jsHeapMb": {
+   "first": 9,
+   "last": 10,
+   "min": 8,
+   "max": 21
+  }
+ },
+ "series": [
+  {
+   "t": 0,
+   "gpuMib": 207,
+   "rendererRssMib": 246,
+   "gpuProcRssMib": 306,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 4,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 2,
+   "gpuMib": 212,
+   "rendererRssMib": 239,
+   "gpuProcRssMib": 317,
+   "wasmHeapMb": 39,
+   "jsHeapMb": 5,
+   "lagS": 0,
+   "bufferS": 1.6,
+   "passes": 6,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.0007,
+    "hasSpeech": true,
+    "lastRms": 0.11134
+   }
+  },
+  {
+   "t": 4,
+   "gpuMib": 214,
+   "rendererRssMib": 248,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 39,
+   "jsHeapMb": 6,
+   "lagS": 0.1,
+   "bufferS": 3.6,
+   "passes": 13,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00116,
+    "hasSpeech": true,
+    "lastRms": 0.02869
+   }
+  },
+  {
+   "t": 6,
+   "gpuMib": 216,
+   "rendererRssMib": 253,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 39,
+   "jsHeapMb": 9,
+   "lagS": 0.1,
+   "bufferS": 5.8,
+   "passes": 21,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00129,
+    "hasSpeech": true,
+    "lastRms": 0.02301
+   }
+  },
+  {
+   "t": 8,
+   "gpuMib": 221,
+   "rendererRssMib": 259,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 12,
+   "lagS": 0.1,
+   "bufferS": 7.8,
+   "passes": 28,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00102,
+    "hasSpeech": true,
+    "lastRms": 0.01892
+   }
+  },
+  {
+   "t": 10,
+   "gpuMib": 226,
+   "rendererRssMib": 265,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 16,
+   "lagS": 0.2,
+   "bufferS": 9.8,
+   "passes": 35,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00109,
+    "hasSpeech": true,
+    "lastRms": 0.0555
+   }
+  },
+  {
+   "t": 12,
+   "gpuMib": 231,
+   "rendererRssMib": 272,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 21,
+   "lagS": 0.2,
+   "bufferS": 11.8,
+   "passes": 42,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.0013,
+    "hasSpeech": true,
+    "lastRms": 0.11782
+   }
+  },
+  {
+   "t": 14,
+   "gpuMib": 236,
+   "rendererRssMib": 267,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 8,
+   "lagS": 0.1,
+   "bufferS": 13.9,
+   "passes": 50,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00001,
+    "hasSpeech": true,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 16,
+   "gpuMib": 244,
+   "rendererRssMib": 267,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 10,
+   "lagS": 0,
+   "bufferS": 0.3,
+   "passes": 52,
+   "words": 42,
+   "vad": {
+    "noiseFloor": 0,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 18,
+   "gpuMib": 244,
+   "rendererRssMib": 262,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 10,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 52,
+   "words": 42,
+   "vad": {
+    "noiseFloor": 0,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  }
+ ],
+ "passes": [
+  [
+   74.5,
+   0.1,
+   0,
+   0.1,
+   0.7
+  ],
+  [
+   37.3,
+   0.4,
+   0,
+   0.3,
+   3.2
+  ],
+  [
+   35,
+   0.7,
+   0,
+   0.6,
+   2.5
+  ],
+  [
+   33.1,
+   1,
+   0,
+   0.5,
+   4.6
+  ],
+  [
+   56.3,
+   1.2,
+   0,
+   1,
+   6.9
+  ],
+  [
+   65.9,
+   1.5,
+   0,
+   1.1,
+   5.2
+  ],
+  [
+   35.7,
+   1.8,
+   0,
+   1.3,
+   5.3
+  ],
+  [
+   36,
+   2.1,
+   0,
+   1.1,
+   5.8
+  ],
+  [
+   90.2,
+   2.4,
+   0,
+   1.2,
+   5.5
+  ],
+  [
+   56.1,
+   2.6,
+   0,
+   1.4,
+   9.6
+  ],
+  [
+   61.5,
+   2.9,
+   0,
+   1.6,
+   8.2
+  ],
+  [
+   61.9,
+   3.2,
+   0,
+   1.9,
+   9.8
+  ],
+  [
+   60.5,
+   3.5,
+   0,
+   1.6,
+   9.4
+  ],
+  [
+   60.4,
+   3.8,
+   0,
+   1.7,
+   8.5
+  ],
+  [
+   66.7,
+   4,
+   0,
+   2.8,
+   9.6
+  ],
+  [
+   67.8,
+   4.3,
+   0,
+   2.1,
+   10.2
+  ],
+  [
+   79.5,
+   4.6,
+   0,
+   3.3,
+   14.2
+  ],
+  [
+   78.2,
+   4.9,
+   0,
+   3.1,
+   12.6
+  ],
+  [
+   76.8,
+   5.2,
+   0,
+   2.6,
+   13.8
+  ],
+  [
+   85,
+   5.4,
+   0,
+   3,
+   17.2
+  ],
+  [
+   81.8,
+   5.7,
+   0,
+   3.2,
+   13.8
+  ],
+  [
+   87,
+   6,
+   0,
+   2.7,
+   16.1
+  ],
+  [
+   113,
+   6.3,
+   0,
+   5,
+   19.5
+  ],
+  [
+   85,
+   6.6,
+   0,
+   3.3,
+   19.8
+  ],
+  [
+   84.8,
+   6.8,
+   0,
+   4.2,
+   19
+  ],
+  [
+   82.1,
+   7.1,
+   0,
+   3.7,
+   16
+  ],
+  [
+   84.5,
+   7.4,
+   0,
+   4.7,
+   18.5
+  ],
+  [
+   90,
+   7.7,
+   0,
+   6.7,
+   18.1
+  ],
+  [
+   86,
+   8,
+   0,
+   4.8,
+   19.2
+  ],
+  [
+   94.5,
+   8.2,
+   0,
+   4.2,
+   18
+  ],
+  [
+   104.1,
+   8.5,
+   0,
+   4.5,
+   23.3
+  ],
+  [
+   106.3,
+   8.8,
+   0,
+   6,
+   24.9
+  ],
+  [
+   133.4,
+   9.1,
+   0,
+   5.7,
+   26.2
+  ],
+  [
+   91.2,
+   9.4,
+   0,
+   6.5,
+   19.9
+  ],
+  [
+   95,
+   9.6,
+   0,
+   4.9,
+   23.2
+  ],
+  [
+   114.4,
+   9.9,
+   0,
+   9.6,
+   19.7
+  ],
+  [
+   94.4,
+   10.2,
+   0,
+   4.6,
+   24.5
+  ],
+  [
+   119.5,
+   10.5,
+   0,
+   4.8,
+   47.8
+  ],
+  [
+   100.4,
+   10.8,
+   0,
+   6.6,
+   24.6
+  ],
+  [
+   117.9,
+   11,
+   0,
+   8.1,
+   27
+  ],
+  [
+   113.2,
+   11.3,
+   0,
+   7.2,
+   24.5
+  ],
+  [
+   103.4,
+   11.6,
+   0,
+   5.4,
+   22.7
+  ],
+  [
+   106.6,
+   11.9,
+   0,
+   6.2,
+   25.3
+  ],
+  [
+   111.3,
+   12.2,
+   0,
+   6.4,
+   25.2
+  ],
+  [
+   103.9,
+   12.4,
+   0,
+   6.7,
+   23.7
+  ],
+  [
+   108.7,
+   12.7,
+   0,
+   7.4,
+   28.1
+  ],
+  [
+   108.5,
+   13,
+   0,
+   6.6,
+   27
+  ],
+  [
+   115.3,
+   13.3,
+   0,
+   6.6,
+   27.6
+  ],
+  [
+   112,
+   13.6,
+   0,
+   6.2,
+   27.7
+  ],
+  [
+   112.4,
+   13.8,
+   0,
+   6.9,
+   26.2
+  ],
+  [
+   114.6,
+   14.1,
+   0,
+   7.8,
+   27.7
+  ],
+  [
+   116,
+   14.4,
+   0,
+   7.3,
+   27
+  ]
+ ],
+ "offline": {
+  "text": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards.",
+  "ms": 229.10000002384186,
+  "seconds": 19.69
+ },
+ "vsOffline": {
+  "exact": false,
+  "raw": {
+   "differing": 2,
+   "words": 42,
+   "spans": [
+    "in [draughty -> drafty]"
+   ]
+  },
+  "normalized": {
+   "differing": 2,
+   "words": 42,
+   "spans": [
+    "in [draughty -> drafty]"
+   ]
+  }
+ },
+ "vsExpected": {
+  "exact": false,
+  "raw": {
+   "differing": 4,
+   "words": 42,
+   "spans": [
+    "in [draughty -> drafty]",
+    "immediately [afterwards -> afterwards.]"
+   ]
+  },
+  "normalized": {
+   "differing": 2,
+   "words": 42,
+   "spans": [
+    "in [draughty -> drafty]"
+   ]
+  }
+ },
+ "loadavgEnd": "10.67 6.92 4.63 3/2365 1413678"
+}

@@ -34,7 +34,7 @@ for (const k of Object.keys(models)) for (const c of LONG) {
 
 rmSync(dist, { recursive: true, force: true });
 const out = await Bun.build({
-  entrypoints: [join(here, "src/main.ts"), join(here, "src/worker.ts")], outdir: dist, target: "browser", format: "esm", minify: false,
+  entrypoints: [join(here, "src/main.ts"), join(here, "src/worker.ts"), join(here, "src/live.ts"), join(here, "src/live-worklet.ts")], outdir: dist, target: "browser", format: "esm", minify: false,
   define: { MODELS: JSON.stringify(models), EXPECTED_LONG: JSON.stringify(expectedLong) },
 });
 if (!out.success) throw new AggregateError(out.logs, "build failed");
@@ -47,6 +47,7 @@ const place = (from: string, to: string, link = false) => {
   copyFileSync(from, dest);
 };
 place(join(here, "index.html"), "index.html");
+place(join(here, "live.html"), "live.html");
 for (const [dir, suffix] of [["build-web", ""], ["build-web-asyncify", "-asyncify"], ["build-web-prof", "-prof"]]) {
   // the asyncify build is linked as pk-web too; it is renamed here, and so is the .wasm it asks for
   const js = join(cache, dir, "bin/pk-web.js");
@@ -56,4 +57,12 @@ for (const [dir, suffix] of [["build-web", ""], ["build-web-asyncify", "-asyncif
 }
 for (const c of ["a07", "a14", "a56", ...LONG]) place(join(cache, `audio/${c}.f32`), `audio/${c}.f32`);
 for (const [k, , path] of candidates) if (models[k]) place(path, `models/${models[k].file}`, true);
+
+// dist-live/: the live page alone as its own site (short link). It has no models/ of its own: when published it
+// reads them from the benchmark deployment on the same origin (../parakeet-ggml-browser/models/).
+const live = join(here, "dist-live");
+rmSync(live, { recursive: true, force: true });
+mkdirSync(live);
+copyFileSync(join(dist, "live.html"), join(live, "index.html"));
+for (const f of ["live.js", "live-worklet.js", "worker.js", "pk-web.js", "pk-web.wasm", "pk-web-asyncify.js", "pk-web-asyncify.wasm"]) if (existsSync(join(dist, f))) copyFileSync(join(dist, f), join(live, f));
 console.log(`built ${dist}: models ${Object.keys(models).join(", ")}`);

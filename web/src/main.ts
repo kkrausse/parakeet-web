@@ -1,7 +1,7 @@
 // Parakeet (TDT 0.6b v2 and tdt_ctc-110m) in the browser on transcribe.cpp + ggml's WebGPU backend (WASM). One page,
 // no framework. Everything heavy happens in src/worker.ts; this file is configuration, the step
 // trail (screen + localStorage, so a killed tab leaves one) and the benchmark loop.
-export {};
+import { adapterSteps, backendEnv, createRpc, esc, fmtMs, historyStore, r1, stepLine, wordDiff, type Rpc, type RunLog as RunLogOf, type Step } from "./common";
 // Reference text per model family: 0.6b = native transcribe.cpp F16; 110m = onnx-asr / ONNX Runtime fp32
 // (../parakeet-webgpu-bench/results/110m/reference-ort-cpu-fp32.jsonl).
 const EXPECTED_06B: Record<string, string> = {
@@ -52,17 +52,13 @@ function readConfig(): Config {
 const cfg = readConfig();
 
 // ---------- persistent step log ----------
-interface Step { t: number; name: string; ms?: number; detail?: string }
-interface RunLog { id: string; started: string; config: Config; ua: string; steps: Step[]; done: boolean; error?: string }
+type RunLog = RunLogOf<Config>;
 const HISTORY_KEY = "pkggml:runs";
-function loadHistory(): RunLog[] { try { return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]"); } catch { return []; } }
-let history = loadHistory();
+const store = historyStore<Config>(HISTORY_KEY);
+let history = store.load();
 let current: RunLog | null = null;
-function persist() { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-8))); } catch { /* private mode or full */ } }
+function persist() { store.save(history); }
 const $ = (id: string) => document.getElementById(id)!;
-const r1 = (x: number) => Math.round(x * 10) / 10;
-function fmtMs(ms: number) { return ms >= 10000 ? `${(ms / 1000).toFixed(1)} s` : ms >= 100 ? `${Math.round(ms)} ms` : `${r1(ms)} ms`; }
-function stepLine(s: Step) { return `${(s.t / 1000).toFixed(1).padStart(6)}s  ${s.name}${s.ms !== undefined ? `: ${fmtMs(s.ms)}` : ""}${s.detail ? `  (${s.detail})` : ""}`; }
 let runStart = 0;
 /** Record a completed step: on screen and in localStorage, before anything else happens. */
 function step(name: string, ms?: number, detail?: string) {
@@ -73,44 +69,21 @@ function step(name: string, ms?: number, detail?: string) {
   (window as any).__pkb.steps = current?.steps;
 }
 function status(text: string) { $("status").textContent = text; }
-/** Words of `a` and `b` outside their longest common subsequence (insertions + deletions), for the long clips. */
-function wordDiff(a: string, b: string) {
-  const x = a.split(/\s+/), y = b.split(/\s+/);
-  let prev = new Uint16Array(y.length + 1);
-  for (let i = 1; i <= x.length; i++) {
-    const cur = new Uint16Array(y.length + 1);
-    for (let j = 1; j <= y.length; j++) cur[j] = x[i - 1] === y[j - 1] ? prev[j - 1] + 1 : Math.max(prev[j], cur[j - 1]);
-    prev = cur;
-  }
-  return { differing: x.length + y.length - 2 * prev[y.length], words: x.length };
-}
 function stats(xs: number[]) {
   const s = [...xs].sort((a, b) => a - b);
   return { median: r1(s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2), worst: r1(s[s.length - 1]), best: r1(s[0]) };
 }
 
 // ---------- worker RPC ----------
-let worker: Worker | null = null;
-let nextId = 1;
-const pending = new Map<number, { resolve: (v: any) => void; reject: (e: Error) => void }>();
-function call<T = any>(type: string, body: Record<string, unknown> = {}, transfer: Transferable[] = []): Promise<T> {
-  const id = nextId++;
-  return new Promise<T>((resolve, reject) => { pending.set(id, { resolve, reject }); worker!.postMessage({ type, id, ...body }, transfer); });
-}
+let rpc: Rpc | null = null;
+const call = <T = any>(type: string, body: Record<string, unknown> = {}, transfer: Transferable[] = []) => rpc!.call<T>(type, body, transfer);
 function startWorker() {
-  worker = new Worker(new URL("worker.js", location.href), { type: "module" });
-  worker.onmessage = (e) => {
-    const m = e.data;
+  rpc = createRpc((m) => {
     if (m.type === "progress") return status(`downloading model: ${Math.round(m.got / 2 ** 20)} / ${Math.round(m.total / 2 ** 20)} MB`);
     if (m.type === "stdout") { if (cfg.verbose) step(`wasm: ${String(m.line).slice(0, 400)}`); return; }
     if (m.type === "stderr") { if (cfg.verbose || /error|abort|fail/i.test(m.line)) step(`wasm: ${String(m.line).slice(0, 400)}`); return; }
-    const p = pending.get(m.id);
-    if (!p) return;
-    pending.delete(m.id);
-    if (m.error && cfg.verbose && m.stack) step(`stack: ${String(m.stack).slice(0, 2500)}`);
-    m.error ? p.reject(new Error(m.error)) : p.resolve(m.out);
-  };
-  worker.onerror = (e) => { for (const p of pending.values()) p.reject(new Error(`worker error: ${e.message}`)); pending.clear(); };
+    if (m.type === "stack" && cfg.verbose) step(`stack: ${String(m.stack).slice(0, 2500)}`);
+  });
 }
 
 // ---------- the run ----------
@@ -132,35 +105,15 @@ async function run() {
   result.adapter = init.adapter; result.jspi = init.jspi;
   const a = init.adapter;
   step("WASM module ready", init.ms, `heap ${init.heapMb} MB; JSPI ${init.jspi ? "available" : "absent"}`);
-  step(a.available ? `adapter: ${a.vendor} ${a.architecture} ${a.description || a.device || ""}; shader-f16 ${a.shaderF16 ? "present" : "ABSENT"}; fallback=${a.isFallbackAdapter}` : `no WebGPU adapter: ${a.reason}`);
   $("env").textContent = envLine(a);
-  if (a.available) {
-    const L = a.limits, mib = (x: number) => Math.round(x / 2 ** 20);
-    step(`adapter limits: binding ${mib(L.maxStorageBufferBindingSize)} MiB, buffer ${mib(L.maxBufferSize)} MiB, ${L.maxComputeInvocationsPerWorkgroup} invocations/workgroup, workgroup storage ${L.maxComputeWorkgroupStorageSize} B, ${L.maxStorageBuffersPerShaderStage} storage buffers/stage`,
-      undefined, a.belowSpecDefault.length ? `BELOW THE WEBGPU SPEC DEFAULT: ${a.belowSpecDefault.join("; ")}` : "all at or above the WebGPU spec defaults, which is all this page needs");
-    for (const e of a.probeErrors ?? []) step(`device request FAILED: ${e}`);
-    if (!a.plan) throw new Error(`WebGPU is present but no device could be created, even with the spec-default limits and no features: ${a.deviceError}`);
-    step(`device probe ${a.deviceProbe}`, undefined, a.plan.limits === "default" ? "spec-default limits" : `requested ${JSON.stringify(a.requested.requiredLimits)} ${a.requested.requiredFeatures.join(",") || "no features"}`);
-    if (L.maxStorageBufferBindingSize < 2 ** 28) step(`note: tensors above ${mib(L.maxStorageBufferBindingSize)} MiB cannot be bound on this adapter; long clips may run partly on the CPU`);
-  } else step("WebGPU is unavailable: the model would run on one WASM thread (very slow)");
+  adapterSteps(a, step);
 
   w.__pkb.phase = "sessions";
   status("fetching and loading the model");
-  // Without shader-f16 the backend compiles f32-only shaders; the two pointwise convs must then use an F32 im2col
-  // (ggml_conv_2d's F16 one would bounce to the CPU). Flash attention needs F16 masks, so it is off on that path.
-  const useF16 = !!a.shaderF16 && cfg.f16 && a.plan?.f16 !== false;
+  const { useF16, flash, pathLine, env } = backendEnv(a, { f16: cfg.f16, flash: cfg.flash, extra: cfg.env });
   result.shaderF16Used = useF16;
-  const flash = cfg.flash && useF16;
   if (cfg.flash && !flash) step("flash attention needs shader-f16: using matmul + softmax attention instead");
-  step(useF16 ? "shader path: f16" : `shader path: f32 only (${!a.shaderF16 ? "adapter has no shader-f16" : cfg.f16 ? "the device was refused with shader-f16" : "f16=0 requested"})`);
-  const env: Record<string, string> = { TRANSCRIBE_NO_FLASH: flash ? "" : "1", TRANSCRIBE_F32_MASK_CONCAT: flash ? "1" : "",
-    GGML_WEBGPU_NO_F16: useF16 ? "" : "1", TRANSCRIBE_F32_POINTWISE: useF16 ? "" : "1",
-    TRANSCRIBE_PRE_ENCODE_TILE: "128", // clips over 15 s: subsampling convs in 10 s time tiles (exact): their activations no longer grow with the clip
-    TRANSCRIBE_ENC_PROJ_GPU: "1", // the joint's encoder projection as the last encoder node; only it is read back
-    // clips over 60 s: encoder in 30 s windows with 4 s of audio either side, stitched and decoded once, so GPU memory is that of one window
-    TRANSCRIBE_MEL_REAL_FFT: "1", // STFT through a half-size complex FFT (the frame is real); same text on every clip checked
-    TRANSCRIBE_PARAKEET_CHUNK_S: "30", TRANSCRIBE_PARAKEET_CHUNK_HALO_S: "4", TRANSCRIBE_PARAKEET_CHUNK_MIN_S: "60",
-    ...(a.plan?.limits === "default" ? { GGML_WEBGPU_LIMITS: "default" } : {}), ...cfg.env };
+  step(pathLine);
   const ld = await call("load", { url: new URL(cfg.base + model.file, location.href).href, name: model.file, store: cfg.store, env, threads: cfg.threads, verbose: cfg.verbose });
   result.load = { fetchMs: Math.round(ld.fetchMs), loadMs: Math.round(ld.loadMs), from: ld.from, fileMb: r1(ld.mb), wasmHeapMb: ld.heapMb, wasmHeapUsedMb: ld.heapUsedMb, backend: ld.backend };
   result.session = { totalMs: Math.round(ld.loadMs) };
@@ -235,7 +188,6 @@ function envLine(a: any) {
   const gpu = !a ? ("gpu" in navigator ? "navigator.gpu present" : "navigator.gpu ABSENT") : a.available ? `${a.vendor} ${a.architecture} ${a.description || ""} · shader-f16 ${a.shaderF16 ? (cfg.f16 ? "present" : "present, not used (f16=0)") : "absent (f32-only shaders)"}` : `no adapter (${a.reason})`;
   return `${gpu} · JSPI ${"Suspending" in WebAssembly ? "available" : "absent (ASYNCIFY build)"} · crossOriginIsolated=${crossOriginIsolated}`;
 }
-function esc(s: string) { return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!); }
 function render(result: any) {
   $("result").textContent = JSON.stringify(result, null, 1);
   const rows = result.clips.map((c: any) => `<tr><td>${c.clip} ${c.seconds} s</td><td>${fmtMs(c.firstRunMs.total)}</td>
@@ -286,7 +238,7 @@ function init() {
   $("env").textContent = envLine(null);
   $("go").addEventListener("click", start);
   $("clear").addEventListener("click", async () => {
-    localStorage.removeItem(HISTORY_KEY), history = [];
+    store.clear(), history = [];
     try { await (await navigator.storage.getDirectory()).removeEntry("pk-models", { recursive: true }); } catch { /* nothing stored */ }
     renderHistory();
     status("cleared stored runs and stored model files");

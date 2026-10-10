@@ -1,0 +1,561 @@
+{
+ "name": "nogpu-t14",
+ "wav": "/home/kkrausse/devfs/cache/parakeet-ggml-webgpu/audio/live/t14.wav",
+ "wavSeconds": 19.69,
+ "recordSeconds": 17,
+ "chromeArgs": [],
+ "noWebgpu": true,
+ "loadavgStart": "4.57 3.55 3.21 12/2296 810730",
+ "chrome": "154.0.8037.97",
+ "url": "http://127.0.0.1:8791/live.html",
+ "readyMs": 1297,
+ "beforeRecording": {
+  "t": 0,
+  "gpuMib": 0,
+  "rendererRssMib": 462,
+  "gpuProcRssMib": 99,
+  "wasmHeapMb": 0,
+  "jsHeapMb": 3,
+  "lagS": 0,
+  "bufferS": 0,
+  "passes": 0,
+  "words": 0,
+  "vad": {
+   "noiseFloor": 0.001,
+   "hasSpeech": false,
+   "lastRms": 0
+  }
+ },
+ "drainMs": 1463,
+ "live": {
+  "committed": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight he'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards.",
+  "provisional": "",
+  "segments": [
+   {
+    "startS": 0,
+    "endS": 14,
+    "reason": "pause",
+    "ms": 2199.5,
+    "reused": false,
+    "text": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight he'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards."
+   }
+  ],
+  "passCount": 22,
+  "finalCount": 1,
+  "reusedCount": 0,
+  "staleCount": 1,
+  "maxLagS": 3.2,
+  "droppedS": 0,
+  "inputRate": 44100,
+  "backend": "CPU",
+  "webgpu": false,
+  "shaderF16": false,
+  "variant": "jspi",
+  "errors": [],
+  "params": {
+   "gapMs": 250,
+   "hangMs": 700,
+   "preRollMs": 300,
+   "tailMs": 300,
+   "capS": 24,
+   "cutLookbackS": 10,
+   "minSpeechMs": 120,
+   "onsetFrames": 2,
+   "absRms": 0.004,
+   "noiseRatio": 3,
+   "lagWarnS": 2,
+   "backlogS": 120
+  },
+  "load": {
+   "fetchMs": 632,
+   "loadMs": 197,
+   "from": "network, streamed to OPFS",
+   "base": "models/",
+   "adapter": null
+  }
+ },
+ "steps": [
+  {
+   "t": 0,
+   "name": "start: 110M, Q8_0 (8-bit weights), jspi"
+  },
+  {
+   "t": 77,
+   "name": "WASM module ready",
+   "ms": 48,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 78,
+   "name": "no WebGPU adapter: requestAdapter() returned null (no usable GPU, or the browser blocks this one)"
+  },
+  {
+   "t": 78,
+   "name": "WebGPU is unavailable: the model would run on one WASM thread (very slow)"
+  },
+  {
+   "t": 912,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 632.3,
+   "detail": "129 MB from models/"
+  },
+  {
+   "t": 912,
+   "name": "model loaded on CPU",
+   "ms": 196.8,
+   "detail": "WASM heap 239 MB, 189.9 MB in use"
+  },
+  {
+   "t": 912,
+   "name": "WARNING: not on WebGPU (backend \"CPU\"): requestAdapter() returned null (no usable GPU, or the browser blocks this one)"
+  },
+  {
+   "t": 1220,
+   "name": "warm-up pass (1.5 s of noise)",
+   "ms": 303.4
+  },
+  {
+   "t": 1432,
+   "name": "recording: context 44100 Hz -> 16000 Hz, track 48000 Hz, 1 ch, echoCancellation=false noiseSuppression=false autoGainControl=true"
+  },
+  {
+   "t": 18822,
+   "name": "commit 1: 14.0 s of audio, pause",
+   "ms": 2199.5,
+   "detail": "42 words"
+  },
+  {
+   "t": 19843,
+   "name": "stopped after 18.4 s: 22 passes, 1 commits, max lag 3.2 s"
+  }
+ ],
+ "console": [],
+ "provisionalPassMs": {
+  "n": 21,
+  "median": 467.8,
+  "p95": 1771.2,
+  "max": 2069.9
+ },
+ "finalPassMs": {
+  "n": 1,
+  "median": 2199.5,
+  "p95": 2199.5,
+  "max": 2199.5
+ },
+ "provisionalAudioS": {
+  "n": 21,
+  "median": 3.2,
+  "p95": 11.3,
+  "max": 13.1
+ },
+ "finalAudioS": {
+  "n": 1,
+  "median": 14,
+  "p95": 14,
+  "max": 14
+ },
+ "lagS": {
+  "n": 10,
+  "median": 1.6,
+  "p95": 2.7,
+  "max": 2.7
+ },
+ "maxLagS": 3.2,
+ "memoryAfterWarmup": {
+  "gpuMib": {
+   "first": 0,
+   "last": 0,
+   "min": 0,
+   "max": 0
+  },
+  "rendererRssMib": {
+   "first": 432,
+   "last": 475,
+   "min": 432,
+   "max": 475
+  },
+  "gpuProcRssMib": {
+   "first": 97,
+   "last": 98,
+   "min": 97,
+   "max": 98
+  },
+  "wasmHeapMb": {
+   "first": 287,
+   "last": 287,
+   "min": 287,
+   "max": 287
+  },
+  "jsHeapMb": {
+   "first": 7,
+   "last": 7,
+   "min": 7,
+   "max": 11
+  }
+ },
+ "series": [
+  {
+   "t": 0,
+   "gpuMib": 0,
+   "rendererRssMib": 482,
+   "gpuProcRssMib": 99,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 4,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 2,
+   "gpuMib": 0,
+   "rendererRssMib": 409,
+   "gpuProcRssMib": 99,
+   "wasmHeapMb": 287,
+   "jsHeapMb": 5,
+   "lagS": 0.3,
+   "bufferS": 1.8,
+   "passes": 6,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.0007,
+    "hasSpeech": true,
+    "lastRms": 0.04861
+   }
+  },
+  {
+   "t": 4,
+   "gpuMib": 0,
+   "rendererRssMib": 422,
+   "gpuProcRssMib": 99,
+   "wasmHeapMb": 287,
+   "jsHeapMb": 6,
+   "lagS": 0.6,
+   "bufferS": 3.8,
+   "passes": 11,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00116,
+    "hasSpeech": true,
+    "lastRms": 0.13419
+   }
+  },
+  {
+   "t": 6,
+   "gpuMib": 0,
+   "rendererRssMib": 432,
+   "gpuProcRssMib": 97,
+   "wasmHeapMb": 287,
+   "jsHeapMb": 7,
+   "lagS": 1.2,
+   "bufferS": 6,
+   "passes": 14,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00129,
+    "hasSpeech": true,
+    "lastRms": 0.10453
+   }
+  },
+  {
+   "t": 8,
+   "gpuMib": 0,
+   "rendererRssMib": 444,
+   "gpuProcRssMib": 97,
+   "wasmHeapMb": 287,
+   "jsHeapMb": 8,
+   "lagS": 1.7,
+   "bufferS": 8,
+   "passes": 16,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00109,
+    "hasSpeech": true,
+    "lastRms": 0.07626
+   }
+  },
+  {
+   "t": 10,
+   "gpuMib": 0,
+   "rendererRssMib": 456,
+   "gpuProcRssMib": 97,
+   "wasmHeapMb": 287,
+   "jsHeapMb": 9,
+   "lagS": 1.6,
+   "bufferS": 10,
+   "passes": 18,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00123,
+    "hasSpeech": true,
+    "lastRms": 0.0747
+   }
+  },
+  {
+   "t": 12,
+   "gpuMib": 0,
+   "rendererRssMib": 464,
+   "gpuProcRssMib": 98,
+   "wasmHeapMb": 287,
+   "jsHeapMb": 10,
+   "lagS": 2.2,
+   "bufferS": 12,
+   "passes": 19,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00138,
+    "hasSpeech": true,
+    "lastRms": 0.11269
+   }
+  },
+  {
+   "t": 14,
+   "gpuMib": 0,
+   "rendererRssMib": 472,
+   "gpuProcRssMib": 98,
+   "wasmHeapMb": 287,
+   "jsHeapMb": 11,
+   "lagS": 2.7,
+   "bufferS": 14,
+   "passes": 20,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0,
+    "hasSpeech": true,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 16,
+   "gpuMib": 0,
+   "rendererRssMib": 474,
+   "gpuProcRssMib": 98,
+   "wasmHeapMb": 287,
+   "jsHeapMb": 7,
+   "lagS": 2.7,
+   "bufferS": 0.3,
+   "passes": 21,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 18,
+   "gpuMib": 0,
+   "rendererRssMib": 475,
+   "gpuProcRssMib": 98,
+   "wasmHeapMb": 287,
+   "jsHeapMb": 7,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 22,
+   "words": 42,
+   "vad": {
+    "noiseFloor": 0,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  }
+ ],
+ "passes": [
+  [
+   27.8,
+   0.1,
+   0,
+   0.1,
+   0.3
+  ],
+  [
+   77.6,
+   0.4,
+   0,
+   0.3,
+   2.4
+  ],
+  [
+   119.1,
+   0.7,
+   0,
+   0.6,
+   3.4
+  ],
+  [
+   176.9,
+   1,
+   0,
+   0.5,
+   3.3
+  ],
+  [
+   193.7,
+   1.2,
+   0,
+   0.6,
+   3.7
+  ],
+  [
+   242.8,
+   1.5,
+   0,
+   1,
+   4
+  ],
+  [
+   278,
+   1.8,
+   0,
+   1.2,
+   5.1
+  ],
+  [
+   312.2,
+   2,
+   0,
+   1,
+   6.4
+  ],
+  [
+   357.1,
+   2.4,
+   0,
+   1.1,
+   6.7
+  ],
+  [
+   429.5,
+   2.7,
+   0,
+   1.7,
+   7
+  ],
+  [
+   467.8,
+   3.2,
+   0,
+   1.6,
+   7.4
+  ],
+  [
+   538.1,
+   3.6,
+   0,
+   1.5,
+   9.1
+  ],
+  [
+   633.8,
+   4.2,
+   0,
+   2.5,
+   10.2
+  ],
+  [
+   747.6,
+   4.8,
+   0,
+   2.3,
+   11.9
+  ],
+  [
+   826.8,
+   5.6,
+   0,
+   2.4,
+   12.4
+  ],
+  [
+   988.4,
+   6.4,
+   0,
+   2.9,
+   14.2
+  ],
+  [
+   1114.7,
+   7.4,
+   0,
+   3.5,
+   14.2
+  ],
+  [
+   1311.7,
+   8.5,
+   0,
+   4.4,
+   19.9
+  ],
+  [
+   1545.2,
+   9.8,
+   0,
+   4.3,
+   21.3
+  ],
+  [
+   1771.2,
+   11.3,
+   0,
+   5.6,
+   23.2
+  ],
+  [
+   2069.9,
+   13.1,
+   0,
+   6.8,
+   28
+  ],
+  [
+   2199.5,
+   14,
+   1,
+   6.4,
+   26.6
+  ]
+ ],
+ "offline": {
+  "text": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards.",
+  "ms": 3198.2000000476837,
+  "seconds": 19.69
+ },
+ "vsOffline": {
+  "exact": false,
+  "raw": {
+   "differing": 4,
+   "words": 42,
+   "spans": [
+    "a [fortnight. He'll -> fortnight he'll]"
+   ]
+  },
+  "normalized": {
+   "differing": 0,
+   "words": 42,
+   "spans": []
+  }
+ },
+ "vsExpected": {
+  "exact": false,
+  "raw": {
+   "differing": 6,
+   "words": 42,
+   "spans": [
+    "a [fortnight. He'll -> fortnight he'll]",
+    "immediately [afterwards -> afterwards.]"
+   ]
+  },
+  "normalized": {
+   "differing": 0,
+   "words": 42,
+   "spans": []
+  }
+ },
+ "loadavgEnd": "4.13 3.52 3.21 4/2324 834899"
+}

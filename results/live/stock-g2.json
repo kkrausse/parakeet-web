@@ -1,0 +1,4645 @@
+{
+ "name": "stock-g2",
+ "wav": "/home/kkrausse/devfs/cache/parakeet-ggml-webgpu/audio/live/g2.wav",
+ "wavSeconds": 137.898,
+ "recordSeconds": 135,
+ "chromeArgs": [],
+ "noWebgpu": false,
+ "loadavgStart": "4.15 3.64 3.27 10/2303 903178",
+ "chrome": "154.0.8037.97",
+ "url": "http://127.0.0.1:8791/live.html",
+ "readyMs": 2337,
+ "beforeRecording": {
+  "t": 0,
+  "gpuMib": 206,
+  "rendererRssMib": 258,
+  "gpuProcRssMib": 307,
+  "wasmHeapMb": 0,
+  "jsHeapMb": 3,
+  "lagS": 0,
+  "bufferS": 0,
+  "passes": 0,
+  "words": 0,
+  "vad": {
+   "noiseFloor": 0.001,
+   "hasSpeech": false,
+   "lastRms": 0
+  }
+ },
+ "drainMs": 91,
+ "live": {
+  "committed": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatro a unique investment portfolio Quadrant to the O three Omni, a platform for intricate derivative trading strategies Delve into unconventional bond markets with our B three Bond X and experience non standard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier, our forward thinking financial forecasting tool. Explore Venture Capital World with U three Unifund or move your money with the M three Mover, our sophisticated monetary transfer module. At CorkidQuill Inc. we turn complex finance into creative solutions. Join us in redefining financial services. going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight he'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards. Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatro a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies, Delve into unconventional bond markets with our B three Bond X and experience non standard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier, our forward thinking financial forecasting tool. Explore Venture Capital World with U three Unifund or move your money with the M three Mover our sophisticated monetary transfer module. At CorkidQuill Inc. we turn complex finance into creative solutions. Join us in redefining financial services.",
+  "provisional": "",
+  "segments": [
+   {
+    "startS": 1.7,
+    "endS": 19.9,
+    "reason": "cap",
+    "ms": 100.2,
+    "reused": false,
+    "text": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatro a unique investment portfolio Quadrant to the O three Omni, a platform for intricate derivative trading strategies"
+   },
+   {
+    "startS": 19.9,
+    "endS": 39,
+    "reason": "cap",
+    "ms": 90.4,
+    "reused": false,
+    "text": "Delve into unconventional bond markets with our B three Bond X and experience non standard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier, our forward thinking financial forecasting tool."
+   },
+   {
+    "startS": 39,
+    "endS": 56.2,
+    "reason": "pause",
+    "ms": 0,
+    "reused": true,
+    "text": "Explore Venture Capital World with U three Unifund or move your money with the M three Mover, our sophisticated monetary transfer module. At CorkidQuill Inc. we turn complex finance into creative solutions. Join us in redefining financial services."
+   },
+   {
+    "startS": 58.8,
+    "endS": 73.1,
+    "reason": "pause",
+    "ms": 0,
+    "reused": true,
+    "text": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight he'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards."
+   },
+   {
+    "startS": 77.5,
+    "endS": 95.7,
+    "reason": "cap",
+    "ms": 103.4,
+    "reused": false,
+    "text": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatro a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies,"
+   },
+   {
+    "startS": 95.7,
+    "endS": 114.8,
+    "reason": "cap",
+    "ms": 98,
+    "reused": false,
+    "text": "Delve into unconventional bond markets with our B three Bond X and experience non standard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier, our forward thinking financial forecasting tool."
+   },
+   {
+    "startS": 114.8,
+    "endS": 132,
+    "reason": "pause",
+    "ms": 0,
+    "reused": true,
+    "text": "Explore Venture Capital World with U three Unifund or move your money with the M three Mover our sophisticated monetary transfer module. At CorkidQuill Inc. we turn complex finance into creative solutions. Join us in redefining financial services."
+   }
+  ],
+  "passCount": 447,
+  "finalCount": 7,
+  "reusedCount": 3,
+  "staleCount": 3,
+  "maxLagS": 0.6,
+  "droppedS": 0,
+  "inputRate": 44100,
+  "backend": "WebGPU: WebGPU",
+  "webgpu": true,
+  "shaderF16": false,
+  "variant": "jspi",
+  "errors": [],
+  "params": {
+   "gapMs": 250,
+   "hangMs": 700,
+   "preRollMs": 300,
+   "tailMs": 300,
+   "capS": 24,
+   "cutLookbackS": 10,
+   "minSpeechMs": 120,
+   "onsetFrames": 2,
+   "absRms": 0.004,
+   "noiseRatio": 3,
+   "lagWarnS": 2,
+   "backlogS": 120
+  },
+  "load": {
+   "fetchMs": 939,
+   "loadMs": 498,
+   "from": "network, streamed to OPFS",
+   "base": "models/",
+   "adapter": "nvidia turing NVIDIA GeForce RTX 2080 Ti"
+  }
+ },
+ "steps": [
+  {
+   "t": 1,
+   "name": "start: 110M, Q8_0 (8-bit weights), jspi"
+  },
+  {
+   "t": 453,
+   "name": "WASM module ready",
+   "ms": 48.5,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 453,
+   "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 ABSENT; fallback=false"
+  },
+  {
+   "t": 453,
+   "name": "adapter limits: binding 2048 MiB, buffer 4096 MiB, 1024 invocations/workgroup, workgroup storage 49152 B, 16 storage buffers/stage",
+   "detail": "all at or above the WebGPU spec defaults, which is all this page needs"
+  },
+  {
+   "t": 453,
+   "name": "device probe ok: binding 1024 MiB, buffer 1024 MiB, 256 invocations",
+   "detail": "requested {\"maxStorageBufferBindingSize\":1073741824,\"maxBufferSize\":1073741824,\"maxComputeInvocationsPerWorkgroup\":256,\"maxComputeWorkgroupSizeX\":256} no features"
+  },
+  {
+   "t": 454,
+   "name": "shader path: f32 only (adapter has no shader-f16)"
+  },
+  {
+   "t": 1898,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 939.2,
+   "detail": "129 MB from models/"
+  },
+  {
+   "t": 1898,
+   "name": "model loaded on WebGPU: WebGPU",
+   "ms": 497.9,
+   "detail": "WASM heap 32 MB, 9.9 MB in use"
+  },
+  {
+   "t": 2220,
+   "name": "warm-up pass (1.5 s of noise)",
+   "ms": 314.2
+  },
+  {
+   "t": 2517,
+   "name": "recording: context 44100 Hz -> 16000 Hz, track 48000 Hz, 1 ch, echoCancellation=false noiseSuppression=false autoGainControl=true"
+  },
+  {
+   "t": 28291,
+   "name": "commit 1: 18.3 s of audio, cap",
+   "ms": 100.2,
+   "detail": "35 words"
+  },
+  {
+   "t": 46588,
+   "name": "commit 2: 19.1 s of audio, cap",
+   "ms": 90.4,
+   "detail": "45 words"
+  },
+  {
+   "t": 59100,
+   "name": "commit 3: 17.2 s of audio, pause",
+   "detail": "38 words; text of the last provisional pass"
+  },
+  {
+   "t": 76058,
+   "name": "commit 4: 14.3 s of audio, pause",
+   "detail": "42 words; text of the last provisional pass"
+  },
+  {
+   "t": 104084,
+   "name": "commit 5: 18.3 s of audio, cap",
+   "ms": 103.4,
+   "detail": "35 words"
+  },
+  {
+   "t": 122408,
+   "name": "commit 6: 19.1 s of audio, cap",
+   "ms": 98,
+   "detail": "45 words"
+  },
+  {
+   "t": 134899,
+   "name": "commit 7: 17.1 s of audio, pause",
+   "detail": "38 words; text of the last provisional pass"
+  },
+  {
+   "t": 137561,
+   "name": "stopped after 135.0 s: 447 passes, 7 commits, max lag 0.6 s"
+  }
+ ],
+ "console": [],
+ "provisionalPassMs": {
+  "n": 443,
+  "median": 105.3,
+  "p95": 126.5,
+  "max": 152.5
+ },
+ "finalPassMs": {
+  "n": 4,
+  "median": 100.2,
+  "p95": 103.4,
+  "max": 103.4
+ },
+ "provisionalAudioS": {
+  "n": 443,
+  "median": 12,
+  "p95": 22.5,
+  "max": 23.9
+ },
+ "finalAudioS": {
+  "n": 4,
+  "median": 19.1,
+  "p95": 19.1,
+  "max": 19.1
+ },
+ "lagS": {
+  "n": 67,
+  "median": 0.1,
+  "p95": 0.3,
+  "max": 0.4
+ },
+ "maxLagS": 0.6,
+ "memoryAfterWarmup": {
+  "gpuMib": {
+   "first": 242,
+   "last": 260,
+   "min": 207,
+   "max": 261
+  },
+  "rendererRssMib": {
+   "first": 274,
+   "last": 289,
+   "min": 268,
+   "max": 318
+  },
+  "gpuProcRssMib": {
+   "first": 324,
+   "last": 335,
+   "min": 324,
+   "max": 335
+  },
+  "wasmHeapMb": {
+   "first": 56,
+   "last": 56,
+   "min": 56,
+   "max": 56
+  },
+  "jsHeapMb": {
+   "first": 4,
+   "last": 15,
+   "min": 4,
+   "max": 27
+  }
+ },
+ "series": [
+  {
+   "t": 0,
+   "gpuMib": 207,
+   "rendererRssMib": 268,
+   "gpuProcRssMib": 307,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 4,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 2,
+   "gpuMib": 206,
+   "rendererRssMib": 237,
+   "gpuProcRssMib": 312,
+   "wasmHeapMb": 39,
+   "jsHeapMb": 5,
+   "lagS": 0,
+   "bufferS": 0.3,
+   "passes": 3,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00063,
+    "hasSpeech": true,
+    "lastRms": 0.39591
+   }
+  },
+  {
+   "t": 4,
+   "gpuMib": 214,
+   "rendererRssMib": 245,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 39,
+   "jsHeapMb": 6,
+   "lagS": 0,
+   "bufferS": 2.3,
+   "passes": 11,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00037,
+    "hasSpeech": true,
+    "lastRms": 0.09374
+   }
+  },
+  {
+   "t": 6,
+   "gpuMib": 212,
+   "rendererRssMib": 249,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 39,
+   "jsHeapMb": 7,
+   "lagS": 0,
+   "bufferS": 4.3,
+   "passes": 18,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": true,
+    "lastRms": 0.04268
+   }
+  },
+  {
+   "t": 8,
+   "gpuMib": 218,
+   "rendererRssMib": 250,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 5,
+   "lagS": 0.1,
+   "bufferS": 6.3,
+   "passes": 25,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00113,
+    "hasSpeech": true,
+    "lastRms": 0.00763
+   }
+  },
+  {
+   "t": 10,
+   "gpuMib": 223,
+   "rendererRssMib": 257,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 9,
+   "lagS": 0.1,
+   "bufferS": 8.3,
+   "passes": 32,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00009,
+    "hasSpeech": true,
+    "lastRms": 0.00006
+   }
+  },
+  {
+   "t": 12,
+   "gpuMib": 228,
+   "rendererRssMib": 261,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 13,
+   "lagS": 0.2,
+   "bufferS": 10.6,
+   "passes": 40,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00261,
+    "hasSpeech": true,
+    "lastRms": 0.03352
+   }
+  },
+  {
+   "t": 14,
+   "gpuMib": 233,
+   "rendererRssMib": 270,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 18,
+   "lagS": 0.2,
+   "bufferS": 12.6,
+   "passes": 47,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00097,
+    "hasSpeech": true,
+    "lastRms": 0.01401
+   }
+  },
+  {
+   "t": 16,
+   "gpuMib": 238,
+   "rendererRssMib": 281,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 25,
+   "lagS": 0.2,
+   "bufferS": 14.6,
+   "passes": 54,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00045,
+    "hasSpeech": true,
+    "lastRms": 0.05567
+   }
+  },
+  {
+   "t": 18,
+   "gpuMib": 240,
+   "rendererRssMib": 293,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 32,
+   "lagS": 0.1,
+   "bufferS": 16.7,
+   "passes": 62,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00056,
+    "hasSpeech": true,
+    "lastRms": 0.00323
+   }
+  },
+  {
+   "t": 20,
+   "gpuMib": 240,
+   "rendererRssMib": 304,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 40,
+   "lagS": 0.1,
+   "bufferS": 18.7,
+   "passes": 69,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00026,
+    "hasSpeech": true,
+    "lastRms": 0.02172
+   }
+  },
+  {
+   "t": 23,
+   "gpuMib": 240,
+   "rendererRssMib": 316,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 50,
+   "lagS": 0.1,
+   "bufferS": 20.6,
+   "passes": 76,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00061,
+    "hasSpeech": true,
+    "lastRms": 0.00511
+   }
+  },
+  {
+   "t": 25,
+   "gpuMib": 240,
+   "rendererRssMib": 282,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 10,
+   "lagS": 0.4,
+   "bufferS": 22.8,
+   "passes": 83,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00056,
+    "hasSpeech": true,
+    "lastRms": 0.00426
+   }
+  },
+  {
+   "t": 27,
+   "gpuMib": 247,
+   "rendererRssMib": 289,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 19,
+   "lagS": 0.2,
+   "bufferS": 6.5,
+   "passes": 91,
+   "words": 35,
+   "vad": {
+    "noiseFloor": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.018
+   }
+  },
+  {
+   "t": 29,
+   "gpuMib": 246,
+   "rendererRssMib": 280,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 7,
+   "lagS": 0.1,
+   "bufferS": 8.6,
+   "passes": 99,
+   "words": 35,
+   "vad": {
+    "noiseFloor": 0.0012,
+    "hasSpeech": true,
+    "lastRms": 0.09266
+   }
+  },
+  {
+   "t": 31,
+   "gpuMib": 242,
+   "rendererRssMib": 274,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 4,
+   "lagS": 0.1,
+   "bufferS": 10.6,
+   "passes": 106,
+   "words": 35,
+   "vad": {
+    "noiseFloor": 0.00013,
+    "hasSpeech": true,
+    "lastRms": 0.06466
+   }
+  },
+  {
+   "t": 33,
+   "gpuMib": 241,
+   "rendererRssMib": 289,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 10,
+   "lagS": 0.1,
+   "bufferS": 12.5,
+   "passes": 113,
+   "words": 35,
+   "vad": {
+    "noiseFloor": 0.00059,
+    "hasSpeech": true,
+    "lastRms": 0.00057
+   }
+  },
+  {
+   "t": 35,
+   "gpuMib": 241,
+   "rendererRssMib": 303,
+   "gpuProcRssMib": 324,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 16,
+   "lagS": 0.1,
+   "bufferS": 14.5,
+   "passes": 120,
+   "words": 35,
+   "vad": {
+    "noiseFloor": 0.0005,
+    "hasSpeech": true,
+    "lastRms": 0.10204
+   }
+  },
+  {
+   "t": 37,
+   "gpuMib": 241,
+   "rendererRssMib": 299,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 10,
+   "lagS": 0.1,
+   "bufferS": 16.8,
+   "passes": 128,
+   "words": 35,
+   "vad": {
+    "noiseFloor": 0.00133,
+    "hasSpeech": true,
+    "lastRms": 0.0026
+   }
+  },
+  {
+   "t": 39,
+   "gpuMib": 241,
+   "rendererRssMib": 298,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 18,
+   "lagS": 0.2,
+   "bufferS": 18.8,
+   "passes": 135,
+   "words": 35,
+   "vad": {
+    "noiseFloor": 0.00127,
+    "hasSpeech": true,
+    "lastRms": 0.0182
+   }
+  },
+  {
+   "t": 41,
+   "gpuMib": 241,
+   "rendererRssMib": 288,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 10,
+   "lagS": 0.2,
+   "bufferS": 20.8,
+   "passes": 142,
+   "words": 35,
+   "vad": {
+    "noiseFloor": 0.00053,
+    "hasSpeech": true,
+    "lastRms": 0.09994
+   }
+  },
+  {
+   "t": 43,
+   "gpuMib": 241,
+   "rendererRssMib": 298,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 19,
+   "lagS": 0.1,
+   "bufferS": 22.9,
+   "passes": 150,
+   "words": 35,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": true,
+    "lastRms": 0.05305
+   }
+  },
+  {
+   "t": 45,
+   "gpuMib": 247,
+   "rendererRssMib": 303,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 27,
+   "lagS": 0,
+   "bufferS": 5.8,
+   "passes": 158,
+   "words": 80,
+   "vad": {
+    "noiseFloor": 0.00102,
+    "hasSpeech": true,
+    "lastRms": 0.0007
+   }
+  },
+  {
+   "t": 47,
+   "gpuMib": 246,
+   "rendererRssMib": 283,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 6,
+   "lagS": 0.2,
+   "bufferS": 8,
+   "passes": 165,
+   "words": 80,
+   "vad": {
+    "noiseFloor": 0.00046,
+    "hasSpeech": true,
+    "lastRms": 0.01091
+   }
+  },
+  {
+   "t": 49,
+   "gpuMib": 242,
+   "rendererRssMib": 289,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 10,
+   "lagS": 0.2,
+   "bufferS": 10,
+   "passes": 172,
+   "words": 80,
+   "vad": {
+    "noiseFloor": 0.00054,
+    "hasSpeech": true,
+    "lastRms": 0.01191
+   }
+  },
+  {
+   "t": 51,
+   "gpuMib": 241,
+   "rendererRssMib": 295,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 15,
+   "lagS": 0.3,
+   "bufferS": 12,
+   "passes": 179,
+   "words": 80,
+   "vad": {
+    "noiseFloor": 0.00079,
+    "hasSpeech": true,
+    "lastRms": 0.06137
+   }
+  },
+  {
+   "t": 53,
+   "gpuMib": 241,
+   "rendererRssMib": 302,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 21,
+   "lagS": 0.1,
+   "bufferS": 14,
+   "passes": 187,
+   "words": 80,
+   "vad": {
+    "noiseFloor": 0.00081,
+    "hasSpeech": true,
+    "lastRms": 0.06535
+   }
+  },
+  {
+   "t": 55,
+   "gpuMib": 241,
+   "rendererRssMib": 280,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 7,
+   "lagS": 0.1,
+   "bufferS": 16,
+   "passes": 194,
+   "words": 80,
+   "vad": {
+    "noiseFloor": 0.00011,
+    "hasSpeech": true,
+    "lastRms": 0.01396
+   }
+  },
+  {
+   "t": 57,
+   "gpuMib": 247,
+   "rendererRssMib": 274,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 6,
+   "lagS": 0,
+   "bufferS": 0.3,
+   "passes": 199,
+   "words": 118,
+   "vad": {
+    "noiseFloor": 0,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 59,
+   "gpuMib": 207,
+   "rendererRssMib": 271,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 6,
+   "lagS": 0.1,
+   "bufferS": 0.4,
+   "passes": 200,
+   "words": 118,
+   "vad": {
+    "noiseFloor": 0.00007,
+    "hasSpeech": true,
+    "lastRms": 0.0014
+   }
+  },
+  {
+   "t": 61,
+   "gpuMib": 221,
+   "rendererRssMib": 273,
+   "gpuProcRssMib": 325,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 7,
+   "lagS": 0.1,
+   "bufferS": 2.4,
+   "passes": 207,
+   "words": 118,
+   "vad": {
+    "noiseFloor": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.03191
+   }
+  },
+  {
+   "t": 63,
+   "gpuMib": 221,
+   "rendererRssMib": 274,
+   "gpuProcRssMib": 326,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 9,
+   "lagS": 0.2,
+   "bufferS": 4.4,
+   "passes": 214,
+   "words": 118,
+   "vad": {
+    "noiseFloor": 0.00079,
+    "hasSpeech": true,
+    "lastRms": 0.00593
+   }
+  },
+  {
+   "t": 65,
+   "gpuMib": 226,
+   "rendererRssMib": 278,
+   "gpuProcRssMib": 326,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 11,
+   "lagS": 0.1,
+   "bufferS": 6.6,
+   "passes": 222,
+   "words": 118,
+   "vad": {
+    "noiseFloor": 0.00079,
+    "hasSpeech": true,
+    "lastRms": 0.05366
+   }
+  },
+  {
+   "t": 68,
+   "gpuMib": 231,
+   "rendererRssMib": 283,
+   "gpuProcRssMib": 326,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 15,
+   "lagS": 0.2,
+   "bufferS": 8.7,
+   "passes": 229,
+   "words": 118,
+   "vad": {
+    "noiseFloor": 0.00093,
+    "hasSpeech": true,
+    "lastRms": 0.0132
+   }
+  },
+  {
+   "t": 70,
+   "gpuMib": 236,
+   "rendererRssMib": 276,
+   "gpuProcRssMib": 326,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 8,
+   "lagS": 0.2,
+   "bufferS": 10.7,
+   "passes": 236,
+   "words": 118,
+   "vad": {
+    "noiseFloor": 0.00101,
+    "hasSpeech": true,
+    "lastRms": 0.02144
+   }
+  },
+  {
+   "t": 72,
+   "gpuMib": 241,
+   "rendererRssMib": 283,
+   "gpuProcRssMib": 327,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 13,
+   "lagS": 0.1,
+   "bufferS": 12.7,
+   "passes": 244,
+   "words": 118,
+   "vad": {
+    "noiseFloor": 0.00125,
+    "hasSpeech": true,
+    "lastRms": 0.07806
+   }
+  },
+  {
+   "t": 74,
+   "gpuMib": 253,
+   "rendererRssMib": 290,
+   "gpuProcRssMib": 327,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 19,
+   "lagS": 0,
+   "bufferS": 0.3,
+   "passes": 251,
+   "words": 160,
+   "vad": {
+    "noiseFloor": 0,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 76,
+   "gpuMib": 253,
+   "rendererRssMib": 288,
+   "gpuProcRssMib": 326,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 19,
+   "lagS": 0,
+   "bufferS": 0.3,
+   "passes": 251,
+   "words": 160,
+   "vad": {
+    "noiseFloor": 0,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 78,
+   "gpuMib": 253,
+   "rendererRssMib": 268,
+   "gpuProcRssMib": 326,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 4,
+   "lagS": 0,
+   "bufferS": 0.3,
+   "passes": 251,
+   "words": 160,
+   "vad": {
+    "noiseFloor": 0.00012,
+    "hasSpeech": false,
+    "lastRms": 0.00011
+   }
+  },
+  {
+   "t": 80,
+   "gpuMib": 219,
+   "rendererRssMib": 269,
+   "gpuProcRssMib": 326,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 4,
+   "lagS": 0.2,
+   "bufferS": 2.3,
+   "passes": 258,
+   "words": 160,
+   "vad": {
+    "noiseFloor": 0.00024,
+    "hasSpeech": true,
+    "lastRms": 0.01196
+   }
+  },
+  {
+   "t": 82,
+   "gpuMib": 227,
+   "rendererRssMib": 278,
+   "gpuProcRssMib": 327,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 6,
+   "lagS": 0,
+   "bufferS": 4.3,
+   "passes": 266,
+   "words": 160,
+   "vad": {
+    "noiseFloor": 0.00075,
+    "hasSpeech": true,
+    "lastRms": 0.02627
+   }
+  },
+  {
+   "t": 84,
+   "gpuMib": 228,
+   "rendererRssMib": 285,
+   "gpuProcRssMib": 330,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 9,
+   "lagS": 0.1,
+   "bufferS": 6.3,
+   "passes": 273,
+   "words": 160,
+   "vad": {
+    "noiseFloor": 0.00088,
+    "hasSpeech": true,
+    "lastRms": 0.02332
+   }
+  },
+  {
+   "t": 86,
+   "gpuMib": 234,
+   "rendererRssMib": 288,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 7,
+   "lagS": 0.1,
+   "bufferS": 8.3,
+   "passes": 280,
+   "words": 160,
+   "vad": {
+    "noiseFloor": 0.00011,
+    "hasSpeech": true,
+    "lastRms": 0.00009
+   }
+  },
+  {
+   "t": 88,
+   "gpuMib": 238,
+   "rendererRssMib": 293,
+   "gpuProcRssMib": 332,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 12,
+   "lagS": 0.1,
+   "bufferS": 10.5,
+   "passes": 288,
+   "words": 160,
+   "vad": {
+    "noiseFloor": 0.0022,
+    "hasSpeech": true,
+    "lastRms": 0.00458
+   }
+  },
+  {
+   "t": 90,
+   "gpuMib": 243,
+   "rendererRssMib": 284,
+   "gpuProcRssMib": 332,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 6,
+   "lagS": 0.2,
+   "bufferS": 12.5,
+   "passes": 295,
+   "words": 160,
+   "vad": {
+    "noiseFloor": 0.00095,
+    "hasSpeech": true,
+    "lastRms": 0.04373
+   }
+  },
+  {
+   "t": 92,
+   "gpuMib": 248,
+   "rendererRssMib": 291,
+   "gpuProcRssMib": 332,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 13,
+   "lagS": 0.2,
+   "bufferS": 14.5,
+   "passes": 302,
+   "words": 160,
+   "vad": {
+    "noiseFloor": 0.00044,
+    "hasSpeech": true,
+    "lastRms": 0.01548
+   }
+  },
+  {
+   "t": 94,
+   "gpuMib": 250,
+   "rendererRssMib": 310,
+   "gpuProcRssMib": 331,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 20,
+   "lagS": 0.2,
+   "bufferS": 16.5,
+   "passes": 309,
+   "words": 160,
+   "vad": {
+    "noiseFloor": 0.00046,
+    "hasSpeech": true,
+    "lastRms": 0.0258
+   }
+  },
+  {
+   "t": 96,
+   "gpuMib": 250,
+   "rendererRssMib": 300,
+   "gpuProcRssMib": 332,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 10,
+   "lagS": 0.1,
+   "bufferS": 18.7,
+   "passes": 317,
+   "words": 160,
+   "vad": {
+    "noiseFloor": 0.00027,
+    "hasSpeech": true,
+    "lastRms": 0.11005
+   }
+  },
+  {
+   "t": 98,
+   "gpuMib": 250,
+   "rendererRssMib": 308,
+   "gpuProcRssMib": 332,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 19,
+   "lagS": 0.1,
+   "bufferS": 20.6,
+   "passes": 324,
+   "words": 160,
+   "vad": {
+    "noiseFloor": 0.00062,
+    "hasSpeech": true,
+    "lastRms": 0.007
+   }
+  },
+  {
+   "t": 100,
+   "gpuMib": 250,
+   "rendererRssMib": 291,
+   "gpuProcRssMib": 332,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 6,
+   "lagS": 0.3,
+   "bufferS": 22.8,
+   "passes": 331,
+   "words": 160,
+   "vad": {
+    "noiseFloor": 0.00059,
+    "hasSpeech": true,
+    "lastRms": 0.00161
+   }
+  },
+  {
+   "t": 102,
+   "gpuMib": 259,
+   "rendererRssMib": 314,
+   "gpuProcRssMib": 332,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 14,
+   "lagS": 0.2,
+   "bufferS": 6.5,
+   "passes": 339,
+   "words": 195,
+   "vad": {
+    "noiseFloor": 0.00041,
+    "hasSpeech": true,
+    "lastRms": 0.03175
+   }
+  },
+  {
+   "t": 104,
+   "gpuMib": 258,
+   "rendererRssMib": 304,
+   "gpuProcRssMib": 333,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 18,
+   "lagS": 0.2,
+   "bufferS": 8.5,
+   "passes": 346,
+   "words": 195,
+   "vad": {
+    "noiseFloor": 0.00133,
+    "hasSpeech": true,
+    "lastRms": 0.03924
+   }
+  },
+  {
+   "t": 106,
+   "gpuMib": 254,
+   "rendererRssMib": 318,
+   "gpuProcRssMib": 333,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 22,
+   "lagS": 0.1,
+   "bufferS": 10.6,
+   "passes": 354,
+   "words": 195,
+   "vad": {
+    "noiseFloor": 0.00024,
+    "hasSpeech": true,
+    "lastRms": 0.09849
+   }
+  },
+  {
+   "t": 108,
+   "gpuMib": 252,
+   "rendererRssMib": 297,
+   "gpuProcRssMib": 334,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 4,
+   "lagS": 0.1,
+   "bufferS": 12.5,
+   "passes": 361,
+   "words": 195,
+   "vad": {
+    "noiseFloor": 0.00039,
+    "hasSpeech": true,
+    "lastRms": 0.00201
+   }
+  },
+  {
+   "t": 111,
+   "gpuMib": 252,
+   "rendererRssMib": 298,
+   "gpuProcRssMib": 334,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 10,
+   "lagS": 0.3,
+   "bufferS": 14.7,
+   "passes": 368,
+   "words": 195,
+   "vad": {
+    "noiseFloor": 0.00039,
+    "hasSpeech": true,
+    "lastRms": 0.0089
+   }
+  },
+  {
+   "t": 113,
+   "gpuMib": 252,
+   "rendererRssMib": 298,
+   "gpuProcRssMib": 334,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 10,
+   "lagS": 0.1,
+   "bufferS": 16.7,
+   "passes": 376,
+   "words": 195,
+   "vad": {
+    "noiseFloor": 0.00117,
+    "hasSpeech": true,
+    "lastRms": 0.00266
+   }
+  },
+  {
+   "t": 115,
+   "gpuMib": 252,
+   "rendererRssMib": 292,
+   "gpuProcRssMib": 334,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 6,
+   "lagS": 0.1,
+   "bufferS": 18.7,
+   "passes": 383,
+   "words": 195,
+   "vad": {
+    "noiseFloor": 0.0009,
+    "hasSpeech": true,
+    "lastRms": 0.03464
+   }
+  },
+  {
+   "t": 117,
+   "gpuMib": 252,
+   "rendererRssMib": 318,
+   "gpuProcRssMib": 334,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 16,
+   "lagS": 0.2,
+   "bufferS": 20.7,
+   "passes": 390,
+   "words": 195,
+   "vad": {
+    "noiseFloor": 0.00063,
+    "hasSpeech": true,
+    "lastRms": 0.14479
+   }
+  },
+  {
+   "t": 119,
+   "gpuMib": 252,
+   "rendererRssMib": 306,
+   "gpuProcRssMib": 334,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 6,
+   "lagS": 0.1,
+   "bufferS": 22.9,
+   "passes": 398,
+   "words": 195,
+   "vad": {
+    "noiseFloor": 0.00114,
+    "hasSpeech": true,
+    "lastRms": 0.03181
+   }
+  },
+  {
+   "t": 121,
+   "gpuMib": 261,
+   "rendererRssMib": 306,
+   "gpuProcRssMib": 335,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 14,
+   "lagS": 0,
+   "bufferS": 5.8,
+   "passes": 406,
+   "words": 240,
+   "vad": {
+    "noiseFloor": 0.00151,
+    "hasSpeech": true,
+    "lastRms": 0.00387
+   }
+  },
+  {
+   "t": 123,
+   "gpuMib": 260,
+   "rendererRssMib": 316,
+   "gpuProcRssMib": 335,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 18,
+   "lagS": 0.1,
+   "bufferS": 7.9,
+   "passes": 413,
+   "words": 240,
+   "vad": {
+    "noiseFloor": 0.00031,
+    "hasSpeech": true,
+    "lastRms": 0.00644
+   }
+  },
+  {
+   "t": 125,
+   "gpuMib": 256,
+   "rendererRssMib": 315,
+   "gpuProcRssMib": 335,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 22,
+   "lagS": 0.2,
+   "bufferS": 9.9,
+   "passes": 420,
+   "words": 240,
+   "vad": {
+    "noiseFloor": 0.00074,
+    "hasSpeech": true,
+    "lastRms": 0.01954
+   }
+  },
+  {
+   "t": 127,
+   "gpuMib": 252,
+   "rendererRssMib": 288,
+   "gpuProcRssMib": 335,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 5,
+   "lagS": 0.2,
+   "bufferS": 11.9,
+   "passes": 427,
+   "words": 240,
+   "vad": {
+    "noiseFloor": 0.00093,
+    "hasSpeech": true,
+    "lastRms": 0.04107
+   }
+  },
+  {
+   "t": 129,
+   "gpuMib": 252,
+   "rendererRssMib": 304,
+   "gpuProcRssMib": 335,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 9,
+   "lagS": 0.1,
+   "bufferS": 14,
+   "passes": 435,
+   "words": 240,
+   "vad": {
+    "noiseFloor": 0.00086,
+    "hasSpeech": true,
+    "lastRms": 0.06958
+   }
+  },
+  {
+   "t": 131,
+   "gpuMib": 252,
+   "rendererRssMib": 304,
+   "gpuProcRssMib": 334,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 9,
+   "lagS": 0.1,
+   "bufferS": 16,
+   "passes": 442,
+   "words": 240,
+   "vad": {
+    "noiseFloor": 0.00037,
+    "hasSpeech": true,
+    "lastRms": 0.01437
+   }
+  },
+  {
+   "t": 133,
+   "gpuMib": 261,
+   "rendererRssMib": 301,
+   "gpuProcRssMib": 335,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 15,
+   "lagS": 0,
+   "bufferS": 0.3,
+   "passes": 447,
+   "words": 278,
+   "vad": {
+    "noiseFloor": 0,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 135,
+   "gpuMib": 260,
+   "rendererRssMib": 289,
+   "gpuProcRssMib": 335,
+   "wasmHeapMb": 56,
+   "jsHeapMb": 15,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 447,
+   "words": 278,
+   "vad": {
+    "noiseFloor": 0,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  }
+ ],
+ "passes": [
+  [
+   83.6,
+   0.1,
+   0,
+   0.2,
+   0.7
+  ],
+  [
+   28.9,
+   0.4,
+   0,
+   0.2,
+   0.9
+  ],
+  [
+   31.3,
+   0.7,
+   0,
+   0.5,
+   0.6
+  ],
+  [
+   28.4,
+   0.3,
+   0,
+   0.3,
+   0.7
+  ],
+  [
+   40.3,
+   0.6,
+   0,
+   0.5,
+   3.4
+  ],
+  [
+   43.9,
+   0.9,
+   0,
+   0.8,
+   5
+  ],
+  [
+   66.5,
+   1.2,
+   0,
+   0.6,
+   6
+  ],
+  [
+   81.8,
+   1.5,
+   0,
+   1.2,
+   4.2
+  ],
+  [
+   65.1,
+   1.7,
+   0,
+   0.8,
+   4.8
+  ],
+  [
+   66.1,
+   2,
+   0,
+   0.8,
+   5.8
+  ],
+  [
+   77,
+   2.3,
+   0,
+   1.4,
+   6.9
+  ],
+  [
+   68.2,
+   2.6,
+   0,
+   1.6,
+   7.4
+  ],
+  [
+   71.3,
+   2.9,
+   0,
+   1.7,
+   9
+  ],
+  [
+   73.2,
+   3.1,
+   0,
+   1.8,
+   7.2
+  ],
+  [
+   79.3,
+   3.4,
+   0,
+   2.4,
+   10.4
+  ],
+  [
+   98.4,
+   3.7,
+   0,
+   2,
+   10.2
+  ],
+  [
+   68.8,
+   4,
+   0,
+   1.9,
+   9.6
+  ],
+  [
+   77.1,
+   4.3,
+   0,
+   2.5,
+   13.1
+  ],
+  [
+   73.9,
+   4.5,
+   0,
+   2.4,
+   13.3
+  ],
+  [
+   71.8,
+   4.8,
+   0,
+   2.3,
+   10.9
+  ],
+  [
+   72.2,
+   5.1,
+   0,
+   2.4,
+   12.3
+  ],
+  [
+   73.9,
+   5.4,
+   0,
+   2.6,
+   12.2
+  ],
+  [
+   86.7,
+   5.7,
+   0,
+   2.9,
+   14.5
+  ],
+  [
+   105.7,
+   5.9,
+   0,
+   3.1,
+   18
+  ],
+  [
+   76.3,
+   6.2,
+   0,
+   3.1,
+   13.9
+  ],
+  [
+   82.5,
+   6.5,
+   0,
+   3,
+   14.6
+  ],
+  [
+   80.2,
+   6.8,
+   0,
+   3.6,
+   17
+  ],
+  [
+   81.2,
+   7.1,
+   0,
+   3.8,
+   15.7
+  ],
+  [
+   85.1,
+   7.3,
+   0,
+   3.5,
+   20.3
+  ],
+  [
+   81.3,
+   7.6,
+   0,
+   4,
+   17.3
+  ],
+  [
+   94.9,
+   7.9,
+   0,
+   3.7,
+   18.5
+  ],
+  [
+   92.2,
+   8.2,
+   0,
+   3.8,
+   16.8
+  ],
+  [
+   96.8,
+   8.5,
+   0,
+   4.4,
+   19.5
+  ],
+  [
+   100.6,
+   8.7,
+   0,
+   5.1,
+   19.9
+  ],
+  [
+   105.8,
+   9,
+   0,
+   4.6,
+   20.4
+  ],
+  [
+   103.9,
+   9.3,
+   0,
+   6.7,
+   21.4
+  ],
+  [
+   100.2,
+   9.6,
+   0,
+   4.4,
+   22.5
+  ],
+  [
+   100.8,
+   9.9,
+   0,
+   5.3,
+   22.8
+  ],
+  [
+   101,
+   10.1,
+   0,
+   4.8,
+   21.6
+  ],
+  [
+   105.2,
+   10.4,
+   0,
+   5.8,
+   23.5
+  ],
+  [
+   108.8,
+   10.7,
+   0,
+   5.9,
+   24.1
+  ],
+  [
+   110.4,
+   11,
+   0,
+   5.7,
+   24.8
+  ],
+  [
+   113.8,
+   11.3,
+   0,
+   5.7,
+   32.3
+  ],
+  [
+   109.5,
+   11.5,
+   0,
+   5.5,
+   23.9
+  ],
+  [
+   112.7,
+   11.8,
+   0,
+   6.3,
+   25.5
+  ],
+  [
+   108.4,
+   12.1,
+   0,
+   6,
+   26
+  ],
+  [
+   111.2,
+   12.4,
+   0,
+   6.6,
+   26.3
+  ],
+  [
+   110.4,
+   12.7,
+   0,
+   5.7,
+   25.3
+  ],
+  [
+   114.4,
+   12.9,
+   0,
+   6.9,
+   26.3
+  ],
+  [
+   115.1,
+   13.2,
+   0,
+   6,
+   28.7
+  ],
+  [
+   116.3,
+   13.5,
+   0,
+   6.3,
+   27.4
+  ],
+  [
+   114.9,
+   13.8,
+   0,
+   6.1,
+   27.7
+  ],
+  [
+   117.7,
+   14.1,
+   0,
+   6.6,
+   30.2
+  ],
+  [
+   115.7,
+   14.3,
+   0,
+   8.3,
+   28.1
+  ],
+  [
+   112.8,
+   14.6,
+   0,
+   7.4,
+   27.8
+  ],
+  [
+   113.6,
+   14.9,
+   0,
+   6.6,
+   27.3
+  ],
+  [
+   113.7,
+   15.2,
+   0,
+   7.6,
+   28.3
+  ],
+  [
+   115.5,
+   15.5,
+   0,
+   7.3,
+   29.3
+  ],
+  [
+   114.4,
+   15.7,
+   0,
+   8.7,
+   32.3
+  ],
+  [
+   120,
+   16,
+   0,
+   8.9,
+   34.1
+  ],
+  [
+   116.5,
+   16.3,
+   0,
+   9.1,
+   32.2
+  ],
+  [
+   112.5,
+   16.6,
+   0,
+   7.5,
+   32
+  ],
+  [
+   119,
+   16.9,
+   0,
+   8.9,
+   33.2
+  ],
+  [
+   124.5,
+   17.1,
+   0,
+   9,
+   33.4
+  ],
+  [
+   123.9,
+   17.4,
+   0,
+   8.1,
+   34.4
+  ],
+  [
+   122.8,
+   17.7,
+   0,
+   8.6,
+   34.2
+  ],
+  [
+   125.1,
+   18,
+   0,
+   8.9,
+   35.9
+  ],
+  [
+   118.2,
+   18.3,
+   0,
+   8,
+   34.8
+  ],
+  [
+   121.7,
+   18.5,
+   0,
+   10,
+   34.9
+  ],
+  [
+   121.1,
+   18.8,
+   0,
+   9.1,
+   36.5
+  ],
+  [
+   124.2,
+   19.1,
+   0,
+   10.4,
+   36.5
+  ],
+  [
+   129.3,
+   19.4,
+   0,
+   8.9,
+   38.2
+  ],
+  [
+   126.3,
+   19.7,
+   0,
+   9.5,
+   36.7
+  ],
+  [
+   129.4,
+   19.9,
+   0,
+   9.6,
+   41.1
+  ],
+  [
+   125.8,
+   20.2,
+   0,
+   9.3,
+   38.4
+  ],
+  [
+   137.1,
+   20.5,
+   0,
+   10.8,
+   39.1
+  ],
+  [
+   133.4,
+   20.8,
+   0,
+   10.7,
+   40.1
+  ],
+  [
+   114.8,
+   21.1,
+   0,
+   11,
+   40.1
+  ],
+  [
+   116.1,
+   21.3,
+   0,
+   12.6,
+   38.5
+  ],
+  [
+   120.5,
+   21.6,
+   0,
+   13,
+   42.7
+  ],
+  [
+   121.1,
+   21.9,
+   0,
+   10.8,
+   41.1
+  ],
+  [
+   118.7,
+   22.2,
+   0,
+   10.9,
+   40.1
+  ],
+  [
+   119.6,
+   22.5,
+   0,
+   11.5,
+   41.1
+  ],
+  [
+   122.3,
+   22.7,
+   0,
+   11.8,
+   42.8
+  ],
+  [
+   150.1,
+   23,
+   0,
+   11.8,
+   41.8
+  ],
+  [
+   148.8,
+   23.3,
+   0,
+   16.4,
+   43.4
+  ],
+  [
+   122.3,
+   23.6,
+   0,
+   11.3,
+   43.3
+  ],
+  [
+   127.8,
+   23.9,
+   0,
+   11.7,
+   43.7
+  ],
+  [
+   100.2,
+   18.3,
+   1,
+   9.1,
+   35.5
+  ],
+  [
+   46.1,
+   6,
+   0,
+   2.7,
+   9.3
+  ],
+  [
+   50.7,
+   6.3,
+   0,
+   3.4,
+   11.4
+  ],
+  [
+   48.4,
+   6.6,
+   0,
+   3.1,
+   11.5
+  ],
+  [
+   54,
+   6.9,
+   0,
+   4.7,
+   14.6
+  ],
+  [
+   81.6,
+   7.1,
+   0,
+   3.7,
+   12.3
+  ],
+  [
+   78.4,
+   7.4,
+   0,
+   3.6,
+   12.3
+  ],
+  [
+   80.5,
+   7.7,
+   0,
+   3.7,
+   12.7
+  ],
+  [
+   91.2,
+   8,
+   0,
+   3.6,
+   14.3
+  ],
+  [
+   87.9,
+   8.3,
+   0,
+   4.3,
+   15.2
+  ],
+  [
+   96.3,
+   8.5,
+   0,
+   4.5,
+   16.3
+  ],
+  [
+   96.4,
+   8.8,
+   0,
+   5,
+   16.6
+  ],
+  [
+   91.7,
+   9.1,
+   0,
+   4.2,
+   15.5
+  ],
+  [
+   95.5,
+   9.4,
+   0,
+   4.6,
+   16.6
+  ],
+  [
+   91.6,
+   9.7,
+   0,
+   4.7,
+   15.4
+  ],
+  [
+   93.4,
+   9.9,
+   0,
+   4.7,
+   16.5
+  ],
+  [
+   96.2,
+   10.2,
+   0,
+   7,
+   18
+  ],
+  [
+   102.2,
+   10.5,
+   0,
+   5.5,
+   18.5
+  ],
+  [
+   108.6,
+   10.8,
+   0,
+   5.6,
+   21.1
+  ],
+  [
+   104.1,
+   11.1,
+   0,
+   5,
+   18.5
+  ],
+  [
+   106.8,
+   11.3,
+   0,
+   6.6,
+   19.3
+  ],
+  [
+   111.7,
+   11.6,
+   0,
+   6.8,
+   20.7
+  ],
+  [
+   102.2,
+   11.9,
+   0,
+   7.3,
+   20
+  ],
+  [
+   104.9,
+   12.2,
+   0,
+   6.3,
+   20.3
+  ],
+  [
+   103,
+   12.5,
+   0,
+   5.7,
+   24.1
+  ],
+  [
+   101.5,
+   12.7,
+   0,
+   7.1,
+   20.5
+  ],
+  [
+   108.9,
+   13,
+   0,
+   6.6,
+   22.2
+  ],
+  [
+   111.4,
+   13.3,
+   0,
+   6.4,
+   22.2
+  ],
+  [
+   105.1,
+   13.6,
+   0,
+   8.2,
+   22.1
+  ],
+  [
+   108.3,
+   13.9,
+   0,
+   6.5,
+   22
+  ],
+  [
+   109.2,
+   14.1,
+   0,
+   7.4,
+   23.3
+  ],
+  [
+   110.7,
+   14.4,
+   0,
+   9,
+   24
+  ],
+  [
+   104.4,
+   14.7,
+   0,
+   7.9,
+   25.2
+  ],
+  [
+   110.8,
+   15,
+   0,
+   6.7,
+   29.9
+  ],
+  [
+   117,
+   15.3,
+   0,
+   7,
+   26.8
+  ],
+  [
+   112.7,
+   15.5,
+   0,
+   7.1,
+   27.3
+  ],
+  [
+   112.6,
+   15.8,
+   0,
+   8.5,
+   26.8
+  ],
+  [
+   112.1,
+   16.1,
+   0,
+   8.7,
+   29.3
+  ],
+  [
+   107.9,
+   16.4,
+   0,
+   7.3,
+   28.7
+  ],
+  [
+   110.5,
+   16.7,
+   0,
+   7.5,
+   29.4
+  ],
+  [
+   107.4,
+   16.9,
+   0,
+   7.4,
+   28
+  ],
+  [
+   116.3,
+   17.2,
+   0,
+   8.1,
+   29.7
+  ],
+  [
+   115.3,
+   17.5,
+   0,
+   8.8,
+   29.4
+  ],
+  [
+   113.7,
+   17.8,
+   0,
+   8.2,
+   30.2
+  ],
+  [
+   120.1,
+   18.1,
+   0,
+   9.4,
+   31.3
+  ],
+  [
+   121,
+   18.3,
+   0,
+   9.5,
+   33.3
+  ],
+  [
+   118.9,
+   18.6,
+   0,
+   10,
+   31.5
+  ],
+  [
+   118.6,
+   18.9,
+   0,
+   9.7,
+   31.2
+  ],
+  [
+   122.9,
+   19.2,
+   0,
+   9.5,
+   32.3
+  ],
+  [
+   120.3,
+   19.5,
+   0,
+   9.1,
+   34.1
+  ],
+  [
+   124.7,
+   19.7,
+   0,
+   9.5,
+   32.8
+  ],
+  [
+   122.2,
+   20,
+   0,
+   9.2,
+   34.2
+  ],
+  [
+   126,
+   20.3,
+   0,
+   10.8,
+   36.6
+  ],
+  [
+   133.8,
+   20.6,
+   0,
+   11.2,
+   38
+  ],
+  [
+   111.2,
+   20.9,
+   0,
+   11.2,
+   36.1
+  ],
+  [
+   115.7,
+   21.1,
+   0,
+   11.6,
+   38.2
+  ],
+  [
+   113.6,
+   21.4,
+   0,
+   10.2,
+   39.8
+  ],
+  [
+   111.7,
+   21.7,
+   0,
+   10,
+   39.1
+  ],
+  [
+   113.6,
+   22,
+   0,
+   10.4,
+   38.5
+  ],
+  [
+   120.3,
+   22.3,
+   0,
+   12,
+   42.1
+  ],
+  [
+   150.2,
+   22.5,
+   0,
+   11.9,
+   40
+  ],
+  [
+   139.8,
+   22.8,
+   0,
+   12.3,
+   41.6
+  ],
+  [
+   147,
+   23.1,
+   0,
+   13.9,
+   39.9
+  ],
+  [
+   117.5,
+   23.4,
+   0,
+   11.4,
+   41.5
+  ],
+  [
+   119.4,
+   23.7,
+   0,
+   11.4,
+   44.6
+  ],
+  [
+   117.6,
+   23.9,
+   0,
+   11,
+   42.3
+  ],
+  [
+   90.4,
+   19.1,
+   1,
+   8.3,
+   31.6
+  ],
+  [
+   44.6,
+   5.2,
+   0,
+   3.6,
+   11.8
+  ],
+  [
+   49.7,
+   5.5,
+   0,
+   4.1,
+   14.5
+  ],
+  [
+   55.2,
+   5.8,
+   0,
+   4.4,
+   15.1
+  ],
+  [
+   47.4,
+   6.1,
+   0,
+   3.2,
+   12.5
+  ],
+  [
+   47.9,
+   6.4,
+   0,
+   4.5,
+   12.8
+  ],
+  [
+   49.3,
+   6.6,
+   0,
+   4.6,
+   13.1
+  ],
+  [
+   78.1,
+   6.9,
+   0,
+   4.8,
+   14
+  ],
+  [
+   85.7,
+   7.2,
+   0,
+   3.9,
+   15.9
+  ],
+  [
+   86.7,
+   7.5,
+   0,
+   5.1,
+   15.6
+  ],
+  [
+   92.6,
+   7.8,
+   0,
+   4,
+   16
+  ],
+  [
+   91.8,
+   8,
+   0,
+   3.7,
+   15.1
+  ],
+  [
+   93.4,
+   8.3,
+   0,
+   3.9,
+   16.3
+  ],
+  [
+   92.1,
+   8.6,
+   0,
+   4.1,
+   17.1
+  ],
+  [
+   89.9,
+   8.9,
+   0,
+   4,
+   15.2
+  ],
+  [
+   92.8,
+   9.2,
+   0,
+   5,
+   15.7
+  ],
+  [
+   94.9,
+   9.4,
+   0,
+   5.1,
+   16.8
+  ],
+  [
+   96.7,
+   9.7,
+   0,
+   5.2,
+   16.8
+  ],
+  [
+   98.6,
+   10,
+   0,
+   7.3,
+   17.4
+  ],
+  [
+   97.7,
+   10.3,
+   0,
+   5.2,
+   19.4
+  ],
+  [
+   98.9,
+   10.6,
+   0,
+   5,
+   19
+  ],
+  [
+   97.6,
+   10.8,
+   0,
+   5.5,
+   19.6
+  ],
+  [
+   101.1,
+   11.1,
+   0,
+   6.2,
+   22.6
+  ],
+  [
+   101.2,
+   11.4,
+   0,
+   6.1,
+   22.1
+  ],
+  [
+   108.3,
+   11.7,
+   0,
+   6.1,
+   22.5
+  ],
+  [
+   104.2,
+   12,
+   0,
+   5.9,
+   24
+  ],
+  [
+   106.7,
+   12.2,
+   0,
+   5.6,
+   21.3
+  ],
+  [
+   103.6,
+   12.5,
+   0,
+   6.3,
+   23.2
+  ],
+  [
+   102.4,
+   12.8,
+   0,
+   6.3,
+   21.6
+  ],
+  [
+   105.2,
+   13.1,
+   0,
+   6.6,
+   23.7
+  ],
+  [
+   103,
+   13.4,
+   0,
+   6,
+   25.3
+  ],
+  [
+   110.6,
+   13.6,
+   0,
+   6.8,
+   23.7
+  ],
+  [
+   113.1,
+   13.9,
+   0,
+   8.6,
+   26.5
+  ],
+  [
+   115.1,
+   14.2,
+   0,
+   8.3,
+   28.6
+  ],
+  [
+   113.4,
+   14.5,
+   0,
+   8,
+   26.7
+  ],
+  [
+   115.2,
+   14.8,
+   0,
+   6.8,
+   26.6
+  ],
+  [
+   113.9,
+   15,
+   0,
+   8.2,
+   27.8
+  ],
+  [
+   114.2,
+   15.3,
+   0,
+   8,
+   28.1
+  ],
+  [
+   117,
+   15.6,
+   0,
+   8.8,
+   30.3
+  ],
+  [
+   115.3,
+   15.9,
+   0,
+   8.7,
+   28.6
+  ],
+  [
+   118.1,
+   16.2,
+   0,
+   8.4,
+   30
+  ],
+  [
+   117.4,
+   16.4,
+   0,
+   7.7,
+   31.3
+  ],
+  [
+   118.3,
+   16.7,
+   0,
+   9,
+   31.2
+  ],
+  [
+   117.2,
+   17,
+   0,
+   10.9,
+   32.9
+  ],
+  [
+   116.6,
+   17.3,
+   0,
+   9,
+   33.4
+  ],
+  [
+   97.3,
+   0.3,
+   0,
+   0.3,
+   0.6
+  ],
+  [
+   79.4,
+   0.6,
+   0,
+   0.3,
+   0.8
+  ],
+  [
+   60.7,
+   0.9,
+   0,
+   0.6,
+   2.6
+  ],
+  [
+   61.8,
+   1.2,
+   0,
+   0.6,
+   3.6
+  ],
+  [
+   63.6,
+   1.5,
+   0,
+   1,
+   4.5
+  ],
+  [
+   65.1,
+   1.7,
+   0,
+   1.1,
+   4.6
+  ],
+  [
+   66.3,
+   2,
+   0,
+   1.1,
+   4.9
+  ],
+  [
+   66,
+   2.3,
+   0,
+   1.2,
+   4.7
+  ],
+  [
+   92.6,
+   2.6,
+   0,
+   1.4,
+   4.9
+  ],
+  [
+   70.6,
+   2.9,
+   0,
+   1.3,
+   5.8
+  ],
+  [
+   67.4,
+   3.1,
+   0,
+   1.5,
+   6.2
+  ],
+  [
+   74.5,
+   3.4,
+   0,
+   1.8,
+   8.1
+  ],
+  [
+   71.6,
+   3.7,
+   0,
+   2.1,
+   8.5
+  ],
+  [
+   71.2,
+   4,
+   0,
+   2.2,
+   8.7
+  ],
+  [
+   72.2,
+   4.3,
+   0,
+   2.1,
+   8.5
+  ],
+  [
+   85.4,
+   4.5,
+   0,
+   2.2,
+   10.7
+  ],
+  [
+   80.4,
+   4.8,
+   0,
+   3.4,
+   9.6
+  ],
+  [
+   77,
+   5.1,
+   0,
+   2.8,
+   10.5
+  ],
+  [
+   78.7,
+   5.4,
+   0,
+   2.5,
+   10.7
+  ],
+  [
+   82.8,
+   5.7,
+   0,
+   3,
+   14.2
+  ],
+  [
+   80.9,
+   5.9,
+   0,
+   3.3,
+   12.2
+  ],
+  [
+   80.4,
+   6.2,
+   0,
+   3.1,
+   11.4
+  ],
+  [
+   84.7,
+   6.5,
+   0,
+   3.1,
+   13.4
+  ],
+  [
+   109.7,
+   6.8,
+   0,
+   3.4,
+   13.1
+  ],
+  [
+   80.5,
+   7.1,
+   0,
+   4.6,
+   13.7
+  ],
+  [
+   83.1,
+   7.3,
+   0,
+   5.5,
+   15.8
+  ],
+  [
+   81.1,
+   7.6,
+   0,
+   3.7,
+   14.2
+  ],
+  [
+   84.6,
+   7.9,
+   0,
+   4.2,
+   14.9
+  ],
+  [
+   86.9,
+   8.2,
+   0,
+   4,
+   17.4
+  ],
+  [
+   87.4,
+   8.5,
+   0,
+   3.9,
+   16.6
+  ],
+  [
+   93.9,
+   8.7,
+   0,
+   4.5,
+   19.2
+  ],
+  [
+   98.4,
+   9,
+   0,
+   5.4,
+   19
+  ],
+  [
+   99.7,
+   9.3,
+   0,
+   4.8,
+   19.9
+  ],
+  [
+   98.8,
+   9.6,
+   0,
+   5.1,
+   20.7
+  ],
+  [
+   99.3,
+   9.9,
+   0,
+   5.3,
+   20.3
+  ],
+  [
+   100.1,
+   10.1,
+   0,
+   6.4,
+   20.4
+  ],
+  [
+   103.1,
+   10.4,
+   0,
+   5.1,
+   21.1
+  ],
+  [
+   105.1,
+   10.7,
+   0,
+   5.4,
+   23.1
+  ],
+  [
+   102.8,
+   11,
+   0,
+   5.4,
+   23
+  ],
+  [
+   108.8,
+   11.3,
+   0,
+   5.7,
+   23.9
+  ],
+  [
+   106.4,
+   11.5,
+   0,
+   6,
+   23.3
+  ],
+  [
+   104.8,
+   11.8,
+   0,
+   6.3,
+   24
+  ],
+  [
+   102.2,
+   12.1,
+   0,
+   5.4,
+   23.3
+  ],
+  [
+   112.7,
+   12.4,
+   0,
+   6.9,
+   26.1
+  ],
+  [
+   111.9,
+   12.7,
+   0,
+   5.8,
+   25.1
+  ],
+  [
+   115.2,
+   12.9,
+   0,
+   7.8,
+   29.2
+  ],
+  [
+   110.5,
+   13.2,
+   0,
+   6.2,
+   27.8
+  ],
+  [
+   111.2,
+   13.5,
+   0,
+   7.4,
+   28.1
+  ],
+  [
+   111.2,
+   13.8,
+   0,
+   7.2,
+   29.6
+  ],
+  [
+   112,
+   14.1,
+   0,
+   7.5,
+   26.9
+  ],
+  [
+   113.1,
+   14.3,
+   0,
+   7.2,
+   27.2
+  ],
+  [
+   118,
+   14.6,
+   0,
+   7.3,
+   29.6
+  ],
+  [
+   128.3,
+   0.3,
+   0,
+   0.2,
+   0.5
+  ],
+  [
+   94.5,
+   0.6,
+   0,
+   0.4,
+   2.3
+  ],
+  [
+   82.2,
+   0.9,
+   0,
+   0.6,
+   3.9
+  ],
+  [
+   64.1,
+   1.2,
+   0,
+   0.6,
+   3.9
+  ],
+  [
+   66.2,
+   1.5,
+   0,
+   1,
+   3.7
+  ],
+  [
+   71.5,
+   1.7,
+   0,
+   1,
+   4.5
+  ],
+  [
+   69.8,
+   2,
+   0,
+   1.1,
+   5.1
+  ],
+  [
+   72.1,
+   2.3,
+   0,
+   1.2,
+   6.9
+  ],
+  [
+   72,
+   2.6,
+   0,
+   1.5,
+   7.6
+  ],
+  [
+   89.9,
+   2.9,
+   0,
+   1.4,
+   9.2
+  ],
+  [
+   67.9,
+   3.1,
+   0,
+   1.7,
+   8.6
+  ],
+  [
+   70,
+   3.4,
+   0,
+   1.6,
+   10.2
+  ],
+  [
+   69.1,
+   3.7,
+   0,
+   1.9,
+   9.3
+  ],
+  [
+   75.5,
+   4,
+   0,
+   2,
+   10.6
+  ],
+  [
+   74.5,
+   4.3,
+   0,
+   2.9,
+   10.7
+  ],
+  [
+   74.8,
+   4.5,
+   0,
+   2.1,
+   12
+  ],
+  [
+   79.3,
+   4.8,
+   0,
+   2.6,
+   12.4
+  ],
+  [
+   84.6,
+   5.1,
+   0,
+   2.7,
+   13.8
+  ],
+  [
+   86.2,
+   5.4,
+   0,
+   2.9,
+   13.9
+  ],
+  [
+   101.3,
+   5.7,
+   0,
+   2.7,
+   12.6
+  ],
+  [
+   79.4,
+   5.9,
+   0,
+   2.8,
+   15.1
+  ],
+  [
+   80.4,
+   6.2,
+   0,
+   3.1,
+   15.7
+  ],
+  [
+   80.8,
+   6.5,
+   0,
+   3.6,
+   13.9
+  ],
+  [
+   82.1,
+   6.8,
+   0,
+   3.7,
+   15.3
+  ],
+  [
+   86.6,
+   7.1,
+   0,
+   3.6,
+   16.9
+  ],
+  [
+   88.8,
+   7.3,
+   0,
+   3.8,
+   16.8
+  ],
+  [
+   83.2,
+   7.6,
+   0,
+   3.4,
+   17
+  ],
+  [
+   94.5,
+   7.9,
+   0,
+   3.7,
+   17.6
+  ],
+  [
+   95.5,
+   8.2,
+   0,
+   5.7,
+   18.8
+  ],
+  [
+   94.2,
+   8.5,
+   0,
+   4.6,
+   18.1
+  ],
+  [
+   98,
+   8.7,
+   0,
+   4.5,
+   19
+  ],
+  [
+   99.5,
+   9,
+   0,
+   4.8,
+   20.4
+  ],
+  [
+   100.2,
+   9.3,
+   0,
+   5.3,
+   21.7
+  ],
+  [
+   97.7,
+   9.6,
+   0,
+   4.8,
+   20.6
+  ],
+  [
+   105.5,
+   9.9,
+   0,
+   5,
+   23
+  ],
+  [
+   102.9,
+   10.1,
+   0,
+   4.9,
+   23.3
+  ],
+  [
+   100.2,
+   10.4,
+   0,
+   5.9,
+   22
+  ],
+  [
+   105.3,
+   10.7,
+   0,
+   5.6,
+   25.2
+  ],
+  [
+   108.3,
+   11,
+   0,
+   5.7,
+   23.4
+  ],
+  [
+   103.7,
+   11.3,
+   0,
+   6.8,
+   23
+  ],
+  [
+   103.8,
+   11.5,
+   0,
+   5.4,
+   23.5
+  ],
+  [
+   105.6,
+   11.8,
+   0,
+   6.9,
+   25.4
+  ],
+  [
+   104.1,
+   12.1,
+   0,
+   5.6,
+   24.9
+  ],
+  [
+   114.5,
+   12.4,
+   0,
+   7.8,
+   24.8
+  ],
+  [
+   111.5,
+   12.7,
+   0,
+   6.5,
+   25.8
+  ],
+  [
+   115,
+   12.9,
+   0,
+   6.7,
+   26.7
+  ],
+  [
+   111.7,
+   13.2,
+   0,
+   6.6,
+   25.9
+  ],
+  [
+   111.9,
+   13.5,
+   0,
+   7.5,
+   25.9
+  ],
+  [
+   110.8,
+   13.8,
+   0,
+   6.7,
+   26.8
+  ],
+  [
+   108.3,
+   14.1,
+   0,
+   6.8,
+   28.5
+  ],
+  [
+   115.8,
+   14.3,
+   0,
+   10.6,
+   29.2
+  ],
+  [
+   114.9,
+   14.6,
+   0,
+   7.8,
+   30.6
+  ],
+  [
+   116.9,
+   14.9,
+   0,
+   7.9,
+   29.5
+  ],
+  [
+   116.4,
+   15.2,
+   0,
+   7.9,
+   29.9
+  ],
+  [
+   114.9,
+   15.5,
+   0,
+   8.1,
+   28.8
+  ],
+  [
+   116.9,
+   15.7,
+   0,
+   7.9,
+   30.2
+  ],
+  [
+   117.9,
+   16,
+   0,
+   7.4,
+   31.8
+  ],
+  [
+   120.4,
+   16.3,
+   0,
+   7.8,
+   33.7
+  ],
+  [
+   117.4,
+   16.6,
+   0,
+   7.4,
+   31.3
+  ],
+  [
+   118.9,
+   16.9,
+   0,
+   8.9,
+   31
+  ],
+  [
+   119.2,
+   17.1,
+   0,
+   10.4,
+   30.2
+  ],
+  [
+   121.3,
+   17.4,
+   0,
+   7.8,
+   32.9
+  ],
+  [
+   131.4,
+   17.7,
+   0,
+   11.4,
+   40.1
+  ],
+  [
+   126.1,
+   18,
+   0,
+   9.1,
+   35.1
+  ],
+  [
+   123.4,
+   18.3,
+   0,
+   9.2,
+   35.3
+  ],
+  [
+   122.2,
+   18.5,
+   0,
+   11.7,
+   33.9
+  ],
+  [
+   120.8,
+   18.8,
+   0,
+   8.4,
+   36
+  ],
+  [
+   121.1,
+   19.1,
+   0,
+   10.6,
+   35.6
+  ],
+  [
+   122.8,
+   19.4,
+   0,
+   10.3,
+   35.5
+  ],
+  [
+   126.5,
+   19.7,
+   0,
+   13.1,
+   36.6
+  ],
+  [
+   128.8,
+   19.9,
+   0,
+   9.3,
+   37.9
+  ],
+  [
+   126.2,
+   20.2,
+   0,
+   10,
+   38
+  ],
+  [
+   127.7,
+   20.5,
+   0,
+   10,
+   35.5
+  ],
+  [
+   130.4,
+   20.8,
+   0,
+   10.3,
+   39.4
+  ],
+  [
+   129.4,
+   21.1,
+   0,
+   10.3,
+   39.4
+  ],
+  [
+   111.4,
+   21.3,
+   0,
+   11,
+   37.8
+  ],
+  [
+   117.3,
+   21.6,
+   0,
+   11.9,
+   43.2
+  ],
+  [
+   115.1,
+   21.9,
+   0,
+   13.1,
+   39.1
+  ],
+  [
+   113.4,
+   22.2,
+   0,
+   10,
+   39.2
+  ],
+  [
+   121.8,
+   22.5,
+   0,
+   10.9,
+   41
+  ],
+  [
+   118.6,
+   22.7,
+   0,
+   11.7,
+   42
+  ],
+  [
+   147.2,
+   23,
+   0,
+   10.5,
+   39.9
+  ],
+  [
+   124.9,
+   23.3,
+   0,
+   11.9,
+   42.8
+  ],
+  [
+   125.8,
+   23.6,
+   0,
+   10.5,
+   42.2
+  ],
+  [
+   125.8,
+   23.9,
+   0,
+   11.6,
+   41
+  ],
+  [
+   103.4,
+   18.3,
+   1,
+   13.4,
+   33.9
+  ],
+  [
+   50.7,
+   6,
+   0,
+   3.8,
+   11.1
+  ],
+  [
+   49.7,
+   6.3,
+   0,
+   3,
+   10.3
+  ],
+  [
+   53.3,
+   6.6,
+   0,
+   4.5,
+   9.8
+  ],
+  [
+   73.7,
+   6.9,
+   0,
+   4.8,
+   12.6
+  ],
+  [
+   79.1,
+   7.1,
+   0,
+   3.7,
+   13.8
+  ],
+  [
+   82.5,
+   7.4,
+   0,
+   3.5,
+   12
+  ],
+  [
+   82,
+   7.7,
+   0,
+   3.8,
+   14.3
+  ],
+  [
+   87.9,
+   8,
+   0,
+   3.8,
+   13.9
+  ],
+  [
+   85.9,
+   8.3,
+   0,
+   4,
+   12.8
+  ],
+  [
+   93.6,
+   8.5,
+   0,
+   4.6,
+   16.1
+  ],
+  [
+   96,
+   8.8,
+   0,
+   4.6,
+   16.7
+  ],
+  [
+   94,
+   9.1,
+   0,
+   4.8,
+   16.9
+  ],
+  [
+   97.4,
+   9.4,
+   0,
+   6.8,
+   16.3
+  ],
+  [
+   92.3,
+   9.7,
+   0,
+   4.4,
+   15.4
+  ],
+  [
+   92.9,
+   9.9,
+   0,
+   4.9,
+   15.7
+  ],
+  [
+   94.8,
+   10.2,
+   0,
+   5.3,
+   17.9
+  ],
+  [
+   99.1,
+   10.5,
+   0,
+   5.6,
+   19.4
+  ],
+  [
+   100.6,
+   10.8,
+   0,
+   4.8,
+   20.7
+  ],
+  [
+   104.6,
+   11.1,
+   0,
+   5.9,
+   18.2
+  ],
+  [
+   98.7,
+   11.3,
+   0,
+   5.4,
+   20.3
+  ],
+  [
+   100.5,
+   11.6,
+   0,
+   6,
+   21
+  ],
+  [
+   98,
+   11.9,
+   0,
+   6.1,
+   20.5
+  ],
+  [
+   102.2,
+   12.2,
+   0,
+   5.9,
+   22.6
+  ],
+  [
+   100.4,
+   12.5,
+   0,
+   6.4,
+   20.8
+  ],
+  [
+   100.4,
+   12.7,
+   0,
+   5.7,
+   22.4
+  ],
+  [
+   107,
+   13,
+   0,
+   7,
+   21.4
+  ],
+  [
+   99,
+   13.3,
+   0,
+   5.9,
+   21.6
+  ],
+  [
+   103.5,
+   13.6,
+   0,
+   8.6,
+   22.2
+  ],
+  [
+   110.9,
+   13.9,
+   0,
+   8,
+   23.5
+  ],
+  [
+   110,
+   14.1,
+   0,
+   7.2,
+   28.5
+  ],
+  [
+   110.8,
+   14.4,
+   0,
+   7.3,
+   24.3
+  ],
+  [
+   105.4,
+   14.7,
+   0,
+   9.2,
+   23.4
+  ],
+  [
+   104.3,
+   15,
+   0,
+   7.2,
+   24.2
+  ],
+  [
+   111.2,
+   15.3,
+   0,
+   6.6,
+   24.8
+  ],
+  [
+   109.9,
+   15.5,
+   0,
+   7.6,
+   27.1
+  ],
+  [
+   112.9,
+   15.8,
+   0,
+   7.5,
+   26.4
+  ],
+  [
+   108.9,
+   16.1,
+   0,
+   7.7,
+   28
+  ],
+  [
+   112.1,
+   16.4,
+   0,
+   7.3,
+   26.9
+  ],
+  [
+   109.1,
+   16.7,
+   0,
+   7.5,
+   26.9
+  ],
+  [
+   113.1,
+   16.9,
+   0,
+   8.7,
+   28.5
+  ],
+  [
+   116,
+   17.2,
+   0,
+   9,
+   29.5
+  ],
+  [
+   115,
+   17.5,
+   0,
+   8.2,
+   30.5
+  ],
+  [
+   114.3,
+   17.8,
+   0,
+   8.4,
+   31.9
+  ],
+  [
+   122,
+   18.1,
+   0,
+   11.3,
+   32.3
+  ],
+  [
+   117.8,
+   18.3,
+   0,
+   10.4,
+   31.9
+  ],
+  [
+   117.3,
+   18.6,
+   0,
+   9.7,
+   31.3
+  ],
+  [
+   122.8,
+   18.9,
+   0,
+   8.5,
+   33.8
+  ],
+  [
+   117.7,
+   19.2,
+   0,
+   9.9,
+   33
+  ],
+  [
+   120.5,
+   19.5,
+   0,
+   10.1,
+   33.3
+  ],
+  [
+   121.6,
+   19.7,
+   0,
+   9.1,
+   34.6
+  ],
+  [
+   122.3,
+   20,
+   0,
+   10.2,
+   34.3
+  ],
+  [
+   121.9,
+   20.3,
+   0,
+   9.5,
+   34.9
+  ],
+  [
+   132,
+   20.6,
+   0,
+   12.2,
+   37.5
+  ],
+  [
+   128.3,
+   20.9,
+   0,
+   9.1,
+   36.5
+  ],
+  [
+   111.2,
+   21.1,
+   0,
+   11,
+   39.3
+  ],
+  [
+   112.9,
+   21.4,
+   0,
+   10,
+   39.2
+  ],
+  [
+   112.3,
+   21.7,
+   0,
+   9.8,
+   39.3
+  ],
+  [
+   113.6,
+   22,
+   0,
+   9.9,
+   41.3
+  ],
+  [
+   112.1,
+   22.3,
+   0,
+   11.4,
+   38.2
+  ],
+  [
+   117.9,
+   22.5,
+   0,
+   12.2,
+   43.2
+  ],
+  [
+   120.4,
+   22.8,
+   0,
+   11.7,
+   41
+  ],
+  [
+   152.5,
+   23.1,
+   0,
+   12,
+   43.2
+  ],
+  [
+   122.5,
+   23.4,
+   0,
+   10.8,
+   42.5
+  ],
+  [
+   123.2,
+   23.7,
+   0,
+   10.9,
+   43.3
+  ],
+  [
+   129.9,
+   23.9,
+   0,
+   11.2,
+   43
+  ],
+  [
+   98,
+   19.1,
+   1,
+   8.8,
+   34.1
+  ],
+  [
+   46.6,
+   5.2,
+   0,
+   2.5,
+   10
+  ],
+  [
+   51.6,
+   5.5,
+   0,
+   2.8,
+   14
+  ],
+  [
+   50.4,
+   5.8,
+   0,
+   3.1,
+   12.6
+  ],
+  [
+   72.3,
+   6.1,
+   0,
+   3.3,
+   13.3
+  ],
+  [
+   69.6,
+   6.4,
+   0,
+   3,
+   11.2
+  ],
+  [
+   77.2,
+   6.6,
+   0,
+   3.5,
+   12.3
+  ],
+  [
+   79.4,
+   6.9,
+   0,
+   3.5,
+   13.3
+  ],
+  [
+   81.3,
+   7.2,
+   0,
+   3.3,
+   13.4
+  ],
+  [
+   88.8,
+   7.5,
+   0,
+   3.8,
+   16.2
+  ],
+  [
+   89.7,
+   7.8,
+   0,
+   4,
+   15.7
+  ],
+  [
+   94.2,
+   8,
+   0,
+   4.3,
+   16.3
+  ],
+  [
+   101.7,
+   8.3,
+   0,
+   3.9,
+   15.9
+  ],
+  [
+   93,
+   8.6,
+   0,
+   3.9,
+   16.8
+  ],
+  [
+   96.7,
+   8.9,
+   0,
+   4.4,
+   17.7
+  ],
+  [
+   101.5,
+   9.2,
+   0,
+   5.5,
+   15.7
+  ],
+  [
+   93.8,
+   9.4,
+   0,
+   4.3,
+   16.1
+  ],
+  [
+   96.4,
+   9.7,
+   0,
+   4.3,
+   17.9
+  ],
+  [
+   93.6,
+   10,
+   0,
+   4.8,
+   17
+  ],
+  [
+   100.5,
+   10.3,
+   0,
+   4.8,
+   20.9
+  ],
+  [
+   103.1,
+   10.6,
+   0,
+   5,
+   21.6
+  ],
+  [
+   97.6,
+   10.8,
+   0,
+   5.1,
+   21.1
+  ],
+  [
+   101.3,
+   11.1,
+   0,
+   5.7,
+   22.5
+  ],
+  [
+   102.4,
+   11.4,
+   0,
+   6.1,
+   22.9
+  ],
+  [
+   107.5,
+   11.7,
+   0,
+   6.3,
+   22.4
+  ],
+  [
+   107.6,
+   12,
+   0,
+   6.9,
+   21.8
+  ],
+  [
+   103.7,
+   12.2,
+   0,
+   5.6,
+   24.6
+  ],
+  [
+   103.6,
+   12.5,
+   0,
+   5.8,
+   23.9
+  ],
+  [
+   110,
+   12.8,
+   0,
+   6.8,
+   24
+  ],
+  [
+   108.5,
+   13.1,
+   0,
+   7.5,
+   25.2
+  ],
+  [
+   108.1,
+   13.4,
+   0,
+   6.9,
+   26.2
+  ],
+  [
+   113.7,
+   13.6,
+   0,
+   7,
+   26.5
+  ],
+  [
+   109.4,
+   13.9,
+   0,
+   6.6,
+   24.6
+  ],
+  [
+   114.2,
+   14.2,
+   0,
+   6.4,
+   33.8
+  ],
+  [
+   111.4,
+   14.5,
+   0,
+   7.7,
+   26.2
+  ],
+  [
+   114.6,
+   14.8,
+   0,
+   7.4,
+   27.6
+  ],
+  [
+   111.4,
+   15,
+   0,
+   7.4,
+   28.1
+  ],
+  [
+   113.1,
+   15.3,
+   0,
+   7.2,
+   28.5
+  ],
+  [
+   112.8,
+   15.6,
+   0,
+   8.2,
+   29.8
+  ],
+  [
+   114.9,
+   15.9,
+   0,
+   7.9,
+   30.1
+  ],
+  [
+   116.3,
+   16.2,
+   0,
+   7.7,
+   30.2
+  ],
+  [
+   118.3,
+   16.4,
+   0,
+   8.3,
+   32.8
+  ],
+  [
+   119.9,
+   16.7,
+   0,
+   8.1,
+   33.1
+  ],
+  [
+   117.7,
+   17,
+   0,
+   8.2,
+   30.9
+  ],
+  [
+   115.8,
+   17.3,
+   0,
+   8.3,
+   30.4
+  ]
+ ],
+ "offline": {
+  "text": "Welcome to Quirk Quid Quill Inc. where finance meets innovation. Explore diverse offerings from the P three Quatro a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and our and experience nonstandard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier our forward thinking financial forecasting tool. Explore venture capital world with U three unifund or move your money with the M three mover our sophisticated monetary transfer module. At CorkidQuill Inc, we turn complex finance into creative solutions. Join us in redefining financial services Going along slushy country roads and speaking damp audiences in drafty schoolrooms day after day for a fortnight, he'll have to put in an appearance at some place of worship on Sunday morning and he can come to us immediately afterwards Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatro a unique investment portfolio quadrant to the O three Omni a platform for intricate derivative trading strategies delve into unconventional bond markets with our B three Bond X and our and experience non standard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier are forward thinking financial forecasting tool. Explore venture capital world with U three unifund or move your money with the M three Mover sophisticated monetary transfer module at Corkuid Quill Inc. We turn complex finance into creative solutions. Join us in redefining financial services.",
+  "ms": 876.8000000715256,
+  "seconds": 137.898
+ },
+ "vsOffline": {
+  "exact": false,
+  "raw": {
+   "differing": 70,
+   "words": 280,
+   "spans": [
+    "meets [innovation. Explore -> innovation, explore]",
+    "portfolio [quadrant -> Quadrant]",
+    "trading [strategies. -> strategies]",
+    "and [our and -> ]",
+    "experience [nonstandard -> non standard]",
+    "two [outlier -> outlier,]",
+    "Explore [venture capital world -> Venture Capital World]",
+    "three [unifund -> Unifund]",
+    "three [mover -> Mover,]",
+    "CorkidQuill [Inc, -> Inc.]",
+    "financial [services Going -> services. going]",
+    "speaking [ -> to]",
+    "in [drafty -> draughty]",
+    "a [fortnight, -> fortnight]",
+    "Sunday [morning -> morning,]",
+    "immediately [afterwards -> afterwards.]",
+    "three [Omni -> Omni,]",
+    "trading [strategies delve -> strategies, Delve]",
+    "and [our and -> ]",
+    "two [outlier are -> outlier, our]",
+    "Explore [venture capital world -> Venture Capital World]",
+    "three [unifund -> Unifund]",
+    "Mover [ -> our]",
+    "transfer [module at Corkuid Quill -> module. At CorkidQuill]",
+    "Inc. [We -> we]"
+   ]
+  },
+  "normalized": {
+   "differing": 16,
+   "words": 280,
+   "spans": [
+    "and [our and -> ]",
+    "experience [nonstandard -> non standard]",
+    "speaking [ -> to]",
+    "in [drafty -> draughty]",
+    "and [our and -> ]",
+    "outlier [are -> our]",
+    "mover [ -> our]",
+    "at [corkuid quill -> corkidquill]"
+   ]
+  }
+ },
+ "vsExpected": {
+  "exact": false,
+  "raw": {
+   "differing": 52,
+   "words": 286,
+   "spans": [
+    "portfolio [quadrant -> Quadrant]",
+    "trading [strategies. -> strategies]",
+    "and [our and -> ]",
+    "three [equity, personalize -> equity. Personalize]",
+    "Explore [venture capital world -> Venture Capital World]",
+    "three [unifund -> Unifund]",
+    "three [mover, -> Mover,]",
+    "At [Cork Quid Quill -> CorkidQuill]",
+    "a [fortnight. He'll -> fortnight he'll]",
+    "immediately [afterwards -> afterwards.]",
+    "trading [strategies. -> strategies,]",
+    "and [our and -> ]",
+    "three [equity, personalize -> equity. Personalize]",
+    "Explore [venture capital world -> Venture Capital World]",
+    "three [unifund -> Unifund]",
+    "three [mover, -> Mover]",
+    "At [Cork Quid Quill -> CorkidQuill]"
+   ]
+  },
+  "normalized": {
+   "differing": 12,
+   "words": 286,
+   "spans": [
+    "and [our and -> ]",
+    "at [cork quid quill -> corkidquill]",
+    "and [our and -> ]",
+    "at [cork quid quill -> corkidquill]"
+   ]
+  }
+ },
+ "loadavgEnd": "3.11 3.38 3.22 5/2320 1042636"
+}
