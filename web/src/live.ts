@@ -112,7 +112,8 @@ let backendLabel = "backend: not loaded yet";
 async function modelBase(file: string) {
   if (cfg.base) return cfg.base;
   // Next to the page when built locally; the published live page reuses the benchmark deployment's files.
-  for (const base of ["models/", "../parakeet-ggml-browser/models/"]) {
+  const local = "models/", shared = "../parakeet-ggml-browser/models/";
+  for (const base of /live\.html$/.test(location.pathname) ? [local, shared] : [shared, local]) {
     try { const r = await fetch(base + file, { method: "HEAD" }); if (r.ok && Number(r.headers.get("content-length") ?? 0) > 1e6) return base; } catch { /* next */ }
   }
   return "models/";

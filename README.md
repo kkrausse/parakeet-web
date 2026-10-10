@@ -7,6 +7,13 @@ blocks directly. The encoder runs on WebGPU, mel and the TDT decoder on one WASM
 NVIDIA `parakeet-tdt_ctc-110m` (the page default) and `parakeet-tdt-0.6b-v2`. The comparison is the
 onnxruntime-web page in `../parakeet-webgpu-bench/` (same clips, same driver, same metrics).
 
+**Live microphone page** (10 Oct 06:40-08:30, section "Live demo" below):
+https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-live/ re-transcribes the current utterance
+about four times a second and commits it on a pause or at 24 s. Chrome on this box, fake microphone,
+110m Q8_0: a pass on a 12 s buffer takes 105-111 ms, text trails speech by 0.1 s (0.7 s at worst),
+GPU 207-261 MiB and WASM heap 56 MB flat over 4.8 minutes; committed text differs from an offline
+pass over the same audio in 26 of 601 words. Not run on a phone or in Safari.
+
 Short answer, fourth pass (10 Oct 05:30-06:35; details under "Fourth pass" below, the third-pass
 summary follows unchanged):
 
@@ -639,6 +646,147 @@ pass: simulator Safari (iOS 18.3) ran it on the CPU only; see "WebKit attempt" a
 - Desktop numbers that bear on a phone: 110m Q8_0 needs about 0.2 GB of GPU memory after load
   (0.27 with a 56 s clip) in buffers of at most 256 MiB, and 0.31 GB of renderer memory at peak,
   about 0.15 GB over a blank page; 0.6b Q4_0 0.5 GB / 0.6 GB of GPU memory.
+
+## Live demo
+
+`web/live.html` + `web/src/live.ts`: one Record / Stop button, the microphone, and the transcript
+appearing while you speak. Same worker, WASM module, loader, adapter probe, device-request ladder,
+`GPU ERROR` reporting and persisted step trail as the benchmark page (`web/src/common.ts` is what
+the two pages share; the runtime was not changed, patches stay 0001-0019).
+
+Published (tailnet only): https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-live/
+(screenshots: https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-live-shots/). It is also
+`live.html` in the benchmark deployment; the short link reads the model files from
+`../parakeet-ggml-browser/models/` instead of carrying its own copy.
+
+**Nothing here ran on a phone or in Safari.** The iOS-specific parts are written from documentation:
+the AudioContext is created and resumed inside the tap handler before any `await`, it runs at the
+device rate (the worklet resamples), capture needs https, and without JSPI the ASYNCIFY build loads.
+
+### How it works
+
+- **Audio**: `getUserMedia` (mono, `echoCancellation` and `noiseSuppression` off unless the checkbox
+  under "details" is ticked, `autoGainControl` on) -> `AudioWorkletNode` (`src/live-worklet.ts`) ->
+  40 ms blocks of 16 kHz float PCM. The resampler is a polyphase Kaiser-windowed sinc (12 zero
+  crossings a side, beta 8.6, cutoff 0.94 of the lower Nyquist): 1 phase for 48 kHz, 160 for
+  44.1 kHz, 512 quantized phases for rates with a larger ratio. The level meter is the block peak
+  on a 60 dB scale, green while the endpointer calls the frame speech.
+- **Pseudo-streaming** (the models are offline ones): the utterance buffer is transcribed again as
+  soon as the previous pass has finished, never less than 250 ms after that pass started, and only
+  if 100 ms of new audio arrived. That text is provisional (grey italic). A provisional pass always
+  takes the whole newest buffer, so nothing queues behind a slow pass; the stats show the lag.
+- **Commit**: 20 ms frames, speech when RMS > max(0.004, 3 x noise floor); the floor follows
+  non-speech frames only (down fast, up slowly). Two speech frames in a row start an utterance
+  (300 ms of pre-roll kept); 700 ms without a speech frame ends it. An utterance that reaches 24 s
+  is cut in the middle of the longest non-speech gap of its last 10 s (if none is 160 ms long, at
+  the quietest 200 ms), and the rest stays as the current utterance. A cut utterance gets one final
+  pass over exactly its audio (speech + 300 ms), unless the newest provisional pass had already
+  seen all of it, in which case that text, the one on screen, is committed as is. Committed text
+  is appended as a new text node and never touched again; its audio is dropped. Silence is neither
+  kept nor transcribed. Bursts under 120 ms of speech are dropped.
+- **Slower than real time**: final passes go first and provisional ones are skipped while any is
+  pending. If more than 120 s of audio is waiting for a final pass, new audio is skipped until half
+  is cleared and a "[N s of audio skipped ...]" line goes into the transcript.
+- **Model**: loads on page open, independent of recording (recording before it is ready just
+  queues audio); default 110m Q8_0, the picker has the others and remembers the choice. One warm-up
+  pass over 1.5 s of faint noise compiles the pipelines. Any GPU error or device loss stops the
+  passes, shows the message and offers "Reload the model". Without WebGPU the page says so in a
+  notice and in the backend line ("CPU fallback, one WASM thread (slow)").
+- Also: Copy, Clear, Space toggles recording, screen wake lock while recording, microphone released
+  on Stop, plain messages for permission denied / no microphone / no https / a silent microphone.
+
+Query string: `model=`, `variant=jspi|asyncify`, `f16=0`, `cpu=1` (CPU backend even where WebGPU
+works), `env=NAME=VALUE`, `store=`, `base=`, `verbose=1` as on the benchmark page; tuning:
+`gap=` (ms between pass starts, 250), `hang=` (ms of silence that ends an utterance, 700), `cap=`
+(s, 24), `thr=` (absolute RMS threshold, 0.004), `ratio=` (x noise floor, 3).
+
+### Verified in Chrome on diesel2 (fake microphone)
+
+Chrome 154 with `--use-fake-device-for-media-stream --use-fake-ui-for-media-stream
+--use-file-for-fake-audio-capture=<wav>%noloop`; the fake device runs at 44.1 kHz, so the 160-phase
+resampler path is what was exercised (48 kHz was not). Clips (`scripts/live-clips.py`): `t14` and
+`t56` are the 13.7 s and 56 s fixtures plus 6 s of silence; `g2` is a56, 3 s of silence, a14, 3 s,
+a56 (2.3 min); `g5` is the `l5` sequence with 2-4 s of silence between parts (4.8 min). "vs offline" is
+the committed text against one offline pass over the same samples through the same worker (single
+shot up to 60 s, chunked 30+4 above), "vs references" against the fixtures' reference texts joined;
+both as differing words (insertions + deletions) after dropping case and punctuation. 10 Oct
+07:40-08:25, load average 2.6-5.8 (12 for the `t14` row).
+
+| Run | Passes | Provisional pass ms, median / p95 / max | on (median s) | Commits (pause, cap; no final pass) | Lag s, median / max | vs offline | vs references | GPU MiB | Renderer RSS MiB | WASM heap MB |
+| --- | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 110m Q8_0, f16, `t14` 17 s | 52 | 90 / 118 / 133 | 7.4 | 1 (1, 0; 1) | 0.1 / 0.4 | 2 of 42 | 2 of 42 | 216-244 | 253-272 | 46 |
+| 110m Q8_0, f16, `t56` 60 s | 200 | 111 / 145 / 159 | 12.7 | 3 (1, 2; 1) | 0.1 / 0.4 | 6 of 120 | 6 of 122 | 240-247 | 267-324 | 56 |
+| 110m Q8_0, f16, `g5` 289 s | 949 | 105 / 135 / 231 | 11.4 | 16 (8, 8; 8) | 0.1 / 0.7 | 26 of 601 | 29 of 610 | 207-261 | 264-320 | 56 |
+| 110m Q8_0, stock Chrome (f32-only), `t56` | 200 | 106 / 128 / 151 | 12.7 | 3 (1, 2; 1) | 0.1 / 0.6 | 6 of 120 | 6 of 122 | 240-247 | 269-319 | 46 |
+| 110m Q8_0, stock Chrome (f32-only), `g2` 135 s | 447 | 105 / 127 / 153 | 12.0 | 7 (3, 4; 3) | 0.1 / 0.6 | 16 of 280 | 12 of 286 | 207-261 | 268-318 | 56 |
+| 110m Q8_0, ASYNCIFY build, `t56` | 199 | 110 / 136 / 170 | 12.7 | 3 (1, 2; 1) | 0.1 / 0.6 | 6 of 120 | 6 of 122 | 240-247 | 276-329 | 56 |
+| 110m Q8_0, 390 x 844 viewport, `t56` | 200 | 113 / 138 / 147 | 12.7 | 3 (1, 2; 1) | 0.1 / 0.6 | 6 of 120 | 6 of 122 | 223-237 | 268-322 | 56 |
+| 0.6b Q4_0, f16, `t56` | 199 | 151 / 273 / 311 | 12.7 | 3 (1, 2; 1) | 0.1 / 0.8 | 22 of 110 | (110m text) | 530-579 | 301-342 | 67 |
+| 110m Q8_0, `cpu=1`, `t14` | 19 | 668 / 2361 / 2361 | 3.2 | 1 (1, 0; 0) | 1.6 / 3.6 | 0 of 42 | 0 of 42 | none | 427-467 | 287 |
+| 110m Q8_0, Chrome with WebGPU disabled, `t14` | 22 | 468 / 1771 / 2070 | 3.2 | 1 (1, 0; 0) | 1.6 / 3.2 | 0 of 42 | 0 of 42 | none | 432-475 | 287 |
+| **published link**, stock Chrome, `t56` | 200 | 117 / 169 / 258 | 12.7 | 3 (1, 2; 1) | 0.1 / 0.6 | 4 of 120 | 4 of 122 | 240-247 | 270-311 | 56 |
+| **published link**, stock Chrome, 390 x 844, `t14` | 51 | 95 / 119 / 140 | 7.1 | 1 (1, 0; 1) | 0.1 / 0.4 | 0 of 42 | 0 of 42 | 199-224 | 250-272 | 46 |
+
+Memory ranges are minimum-maximum over the recording after its first 30 s (first third for the short
+clips), sampled every 2 s.
+
+- **Memory is flat over the 4.8 min run**: GPU 242 MiB at 31 s and 260 at 277 s, moving between 207
+  and 261 with the length of the buffer; renderer RSS 264-320 MiB with no trend; WASM heap 56 MB
+  throughout; JS heap 3-28 MB (`results/live/f16-g5.json` has the series).
+- **What differs from the offline transcript** is the kind of thing the model already varies on
+  between contexts, not lost or doubled words at the cuts: "our and" (a disfluency the offline pass
+  keeps and the shorter live segments drop), "non standard" / "nonstandard", "Quatre" / "Quatro",
+  "Cork Quid Quill" / "CorkidQuill", "drafty" / "draughty". A cap cut also leaves a sentence without
+  its full stop when the cut falls on a sentence boundary ("... trading strategies Delve into ...").
+  With 0.6b Q4_0 the differences are formatting: the live segments say "B three", "E three" where
+  the one-shot pass writes "B3", "E3" (and the reverse for "U3").
+- **The committed text of one clip is not byte-stable between runs**: `t14` gave "drafty" in some
+  runs and "draughty" in others. The fake microphone starts at a slightly different offset each
+  time and the pass that ends up supplying the final text sees a different amount of trailing silence.
+- **Pass times at the live cadence are about twice the benchmark's**: 105-111 ms on a 12 s buffer
+  against 56 ms for the same buffer run back to back. The card clocks down between passes at a
+  15-40% duty cycle: with `gap=0` (a pass every 100 ms of audio) the same buffers take 33-40 ms, and
+  the first passes after the load are fast until about 3 s in. Rendering was ruled out (hiding the
+  transcript changed nothing). 250 ms was kept: the lag is 0.1 s median either way.
+- **CPU fallback** on this desktop (one WASM thread): a pass costs about 0.18 s per second of buffer
+  (14 s in 2.2-2.6 s), so provisional text trails by 1.6 s median and 3.2-3.6 s at worst on a 14 s
+  utterance; the lag cell turns red above 2 s. The text was the reference text. This is a desktop
+  x86 core, not a phone.
+- GPU error path: `env=GGML_WEBGPU_BREAK_SHADER=soft_max` shows the compiler's message on the page
+  and the model as stopped. Microphone refused (`--deny-permission-prompts`) and no input device:
+  "Microphone access was refused. ..." and "No microphone was found on this device.".
+- After a `%noloop` file ends, Chrome's fake device repeats its last buffer for ever (constant RMS
+  0.022), which reads as speech; the test clips therefore end in silence and the driver stops 2 s
+  before the file does.
+
+### Run, test, deploy
+
+```sh
+cd web && bun build.ts                            # dist/ (both pages) and dist-live/ (the live page alone, no models)
+tmux new -d -s pkl-serve 'bun serve.ts 8791 --no-coi'   # then http://127.0.0.1:8791/live.html (microphone works on localhost)
+python3 scripts/live-clips.py                     # test wavs with silences into $R/audio/live/
+scripts/lv.sh NAME t56 ["query"] [--shot 30] [--viewport 390x844] [--no-webgpu] [--seconds N]   # one fake-microphone run -> results/live/NAME.json (+ .png)
+STOCK=1 scripts/lv.sh NAME g2                     # without the Dawn f16 flag (f32-only shaders)
+URL=https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-live/ STOCK=1 scripts/lv.sh NAME t56   # against the published link
+python3 scripts/lsum.py NAME [NAME ...]           # one line per run
+~/devfs/repos/kkrausse/random/scripts/deploy-artifact.sh "$PWD/web/dist-live" parakeet-live   # private shelf, short link
+scripts/pub.sh                                    # the benchmark deployment (also carries live.html and the model files the short link reads)
+```
+
+`window.__pkl` on the page holds what the driver reads: committed text, segments (start, end,
+reason, text), pass times, lag, and `offline(url)` for a whole-file pass.
+
+### Not tested, not done (live page)
+
+- Any phone, Safari, Firefox; a real microphone (levels, room noise, the endpointing thresholds on
+  real speech, `autoGainControl` interacting with the noise floor); 48 kHz input; Bluetooth input;
+  a tab going to the background while recording; the wake lock; Copy (clipboard) in a real browser
+  session; the OPFS-missing fallback (private window).
+- Recordings longer than 4.8 min; the audio-skipping path (needs a device slower than real time);
+  the cap cut on speech with no gap at all; 0.6b Q8_0 / F16 and 110m Q4_0 live.
+- Word timestamps, punctuation repair across cap cuts, a real VAD, carrying decoder state across
+  cuts: none attempted. The lag on slow devices could be cut by transcribing only the tail of a long
+  utterance for the provisional text; not done.
 
 ## Build, run, deploy
 
