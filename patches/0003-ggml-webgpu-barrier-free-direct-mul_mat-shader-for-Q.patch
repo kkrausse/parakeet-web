@@ -1,0 +1,379 @@
+From 5e5314ba543358109ce42c0ca9d55e8143c4d69a Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 02:19:00 -0700
+Subject: [PATCH 3/3] ggml-webgpu: barrier-free direct mul_mat shader for
+ Q8_0/Q4_0/F16/F32; browser-like native mode
+
+mul_mat_direct.wgsl replaces mul_mat_reg_tile where it applies (f32
+activations, K % 4 == 0, K % 64 == 0 for the quantized types, no src
+overlap, no subgroup-matrix feature -- i.e. every browser). Each invocation
+owns a 4x4 output tile and reads the packed weights straight from the storage
+buffer; quantized blocks are walked in word-aligned pairs with the four rows
+loaded as one vec4<u32>, integers are accumulated per block and the block
+scale applied once. No workgroup memory, no barriers, no dequantized staging.
+
+Parakeet TDT 0.6b v2 encoder, 7 s clip, 2080 Ti, native Dawn with
+GGML_WEBGPU_BROWSER=1 (new: disables subgroup-matrix and the Dawn fast
+toggles so native runs the kernels a browser gets), text unchanged:
+  Q8_0 140 -> 58 ms, Q4_0 137 -> 48 ms, F16 94 -> 59 ms.
+In Chrome 154: Q8_0 154 -> 90 ms, Q4_0 -> 83 ms, F16 -> 79 ms.
+GGML_WEBGPU_NO_DIRECT=1 restores the old shader for A/B.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ .../ggml-webgpu/ggml-webgpu-shader-lib.hpp    |  37 +++-
+ ggml/src/ggml-webgpu/ggml-webgpu.cpp          |  36 ++-
+ .../wgsl-shaders/mul_mat_direct.wgsl          | 208 ++++++++++++++++++
+ 3 files changed, 279 insertions(+), 2 deletions(-)
+ create mode 100644 ggml/src/ggml-webgpu/wgsl-shaders/mul_mat_direct.wgsl
+
+diff --git a/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp b/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
+index 47a266d7..b2216e18 100644
+--- a/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
++++ b/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
+@@ -93,6 +93,8 @@ struct ggml_webgpu_shader_lib_context {
+     uint32_t    min_subgroup_size        = 0;
+     uint32_t    max_subgroup_size        = 0;
+     bool        supports_dot_product     = false;
++    // mul_mat: operand offsets / shapes allow the barrier-free direct shader
++    bool        mul_mat_direct_ok        = false;
+     std::string vendor;
+ };
+ 
+@@ -1009,10 +1011,12 @@ struct ggml_webgpu_mul_mat_pipeline_key {
+     int       vectorized;
+     int       use_subgroup_matrix;
+     bool      src_overlap;
++    bool      direct = false;
+ 
+     bool operator==(const ggml_webgpu_mul_mat_pipeline_key & other) const {
+         return src0_type == other.src0_type && src1_type == other.src1_type && vectorized == other.vectorized &&
+-               use_subgroup_matrix == other.use_subgroup_matrix && src_overlap == other.src_overlap;
++               use_subgroup_matrix == other.use_subgroup_matrix && src_overlap == other.src_overlap &&
++               direct == other.direct;
+     }
+ };
+ 
+@@ -1024,6 +1028,7 @@ struct ggml_webgpu_mul_mat_pipeline_key_hash {
+         ggml_webgpu_hash_combine(seed, key.vectorized);
+         ggml_webgpu_hash_combine(seed, key.use_subgroup_matrix);
+         ggml_webgpu_hash_combine(seed, key.src_overlap);
++        ggml_webgpu_hash_combine(seed, key.direct);
+         return seed;
+     }
+ };
+@@ -2131,6 +2136,36 @@ class ggml_webgpu_shader_lib {
+             return it->second;
+         }
+ 
++        key.direct = !key.use_subgroup_matrix && !src_overlap && context.mul_mat_direct_ok;
++        if (key.direct) {
++            it = mul_mat_fast_pipelines.find(key);
++            if (it != mul_mat_fast_pipelines.end()) {
++                return it->second;
++            }
++            // Barrier-free 4x4 register-tiled shader (mul_mat_direct.wgsl); same
++            // params, bindings and workgroup geometry as mul_mat_reg_tile.
++            const char * tname = ggml_get_type_traits(context.src0->type)->type_name;
++            std::string  upper = tname;
++            std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
++            std::vector<std::string> ddefs = { "DIRECT_" + upper,
++                                               "WORKGROUP_SIZE_M=" + std::to_string(WEBGPU_MUL_MAT_WG_SIZE_M) + "u",
++                                               "WORKGROUP_SIZE_N=" + std::to_string(WEBGPU_MUL_MAT_WG_SIZE_N) + "u" };
++            auto dproc                 = preprocessor.preprocess(wgsl_mul_mat_direct, ddefs);
++            auto ddec                  = std::make_shared<ggml_webgpu_mul_mat_shader_decisions>();
++            ddec->tile_k               = 4;
++            ddec->tile_m               = WEBGPU_MUL_MAT_TILE_M;
++            ddec->tile_n               = WEBGPU_MUL_MAT_TILE_N;
++            ddec->use_subgroup_matrix  = 0;
++            ddec->wg_size_m            = WEBGPU_MUL_MAT_WG_SIZE_M;
++            ddec->wg_size_n            = WEBGPU_MUL_MAT_WG_SIZE_N;
++            ddec->wg_size              = WEBGPU_MUL_MAT_WG_SIZE_M * WEBGPU_MUL_MAT_WG_SIZE_N;
++            ddec->mul_mat_wg_size      = WEBGPU_MUL_MAT_WG_SIZE;
++            webgpu_pipeline dpipe      = ggml_webgpu_create_pipeline(device, dproc, std::string("mul_mat_direct_") + tname + "_f32");
++            dpipe.context              = ddec;
++            mul_mat_fast_pipelines[key] = dpipe;
++            return mul_mat_fast_pipelines[key];
++        }
++
+         const char * shader_src = key.use_subgroup_matrix ? wgsl_mul_mat_subgroup_matrix : wgsl_mul_mat_reg_tile;
+         std::vector<std::string> defines;
+         std::string              variant = key.use_subgroup_matrix ? "mul_mat_subgroup_matrix" : "mul_mat_reg_tile";
+diff --git a/ggml/src/ggml-webgpu/ggml-webgpu.cpp b/ggml/src/ggml-webgpu/ggml-webgpu.cpp
+index 9c5dc768..1df5350b 100644
+--- a/ggml/src/ggml-webgpu/ggml-webgpu.cpp
++++ b/ggml/src/ggml-webgpu/ggml-webgpu.cpp
+@@ -1655,6 +1655,32 @@ static webgpu_encoded_op ggml_webgpu_mul_mat(webgpu_context & ctx,
+     std::vector<webgpu_dispatch_desc> dispatches;
+     const bool src_overlap = ggml_webgpu_tensor_binding_overlap(ctx->global_ctx, src0, src1) && !use_mmvq;
+ 
++    // Direct (no workgroup memory) shader: f32 activations on a vec4 boundary,
++    // K a whole number of quads / quant blocks, and a weight type it implements.
++    {
++        static const bool no_direct = std::getenv("GGML_WEBGPU_NO_DIRECT") != nullptr;
++        const size_t      mis0      = ggml_webgpu_tensor_misalignment(ctx, src0);
++        const size_t      mis1      = ggml_webgpu_tensor_misalignment(ctx, src1);
++        const int64_t     K         = src0->ne[0];
++        bool              ok        = !no_direct && src1->type == GGML_TYPE_F32 && mis1 % 16 == 0 && K % 4 == 0 &&
++                                      ggml_is_contiguous(src1);
++        switch (src0->type) {
++            case GGML_TYPE_F32:
++                ok = ok && mis0 % 16 == 0 && ggml_is_contiguous(src0);
++                break;
++            case GGML_TYPE_F16:
++                ok = ok && mis0 % 8 == 0 && ggml_is_contiguous(src0);
++                break;
++            case GGML_TYPE_Q8_0:
++            case GGML_TYPE_Q4_0:
++                ok = ok && K % 64 == 0 && mis0 % (2 * ggml_type_size(src0->type)) == 0;
++                break;
++            default:
++                ok = false;
++        }
++        shader_lib_ctx.mul_mat_direct_ok = ok;
++    }
++
+     if (use_mat_vec) {
+         if (use_mmvq) {
+             ggml_webgpu_quantize_q8_dispatch(ctx, src0, src1, dst, dispatches);
+@@ -4155,6 +4181,14 @@ static void create_webgpu_device(ggml_backend_webgpu_reg_context * ctx) {
+         }
+     }
+ #endif
++    // GGML_WEBGPU_BROWSER=1 (native only): behave like a browser device, for
++    // profiling the kernels a page really gets: no chromium_experimental_subgroup_matrix
++    // (so mul_mat takes the reg_tile shader) and none of the Dawn "fast" toggles
++    // below (robustness, workgroup init and div/mod polyfills stay on).
++    const bool browser_like = std::getenv("GGML_WEBGPU_BROWSER") != nullptr;
++    if (browser_like) {
++        valid_subgroup_matrix_config = false;
++    }
+     ctx->webgpu_global_ctx->capabilities.supports_subgroup_matrix = valid_subgroup_matrix_config;
+ 
+     // Runtime subgroup size can be any supported size in this range. Shaders
+@@ -4209,7 +4243,7 @@ static void create_webgpu_device(ggml_backend_webgpu_reg_context * ctx) {
+     const char * const          deviceDisabledToggles[] = { "timestamp_quantization" };
+     wgpu::DawnTogglesDescriptor deviceTogglesDesc;
+     deviceTogglesDesc.enabledToggles      = deviceEnabledToggles;
+-    deviceTogglesDesc.enabledToggleCount  = 3;
++    deviceTogglesDesc.enabledToggleCount  = browser_like ? 0 : 3;
+     deviceTogglesDesc.disabledToggles     = deviceDisabledToggles;
+     deviceTogglesDesc.disabledToggleCount = 1;
+ 
+diff --git a/ggml/src/ggml-webgpu/wgsl-shaders/mul_mat_direct.wgsl b/ggml/src/ggml-webgpu/wgsl-shaders/mul_mat_direct.wgsl
+new file mode 100644
+index 00000000..ccd661b8
+--- /dev/null
++++ b/ggml/src/ggml-webgpu/wgsl-shaders/mul_mat_direct.wgsl
+@@ -0,0 +1,208 @@
++// mul_mat without workgroup memory: every invocation owns a TILE_M x TILE_N (4x4)
++// block of outputs and walks K four elements at a time, reading the weight rows
++// straight out of the packed storage buffer (Q8_0 / Q4_0 blocks, or f16 / f32)
++// and the activations as vec4<f32>. One k-quad is 4 weight loads, 4 activation
++// loads and 4 vec4 * mat4x4 products (16 dot4). For the quantized types the
++// integer weights are accumulated per 32-element block and the block scale is
++// applied once per block and row, so nothing is dequantized into a staging array.
++//
++// This is the path for devices without chromium_experimental_subgroup_matrix,
++// i.e. every browser. Compared with mul_mat_reg_tile (shared-memory tiles,
++// scalar f16 staging, two workgroupBarriers per k-tile) it has no barriers and
++// no scalar stores.
++//
++// Requirements (checked by the caller): src1 is f32, K % 4 == 0 (K % 64 == 0
++// for the quantized types, and src0 starting on a whole block pair), src1 (and a float src0) start on a vec4 boundary.
++enable f16;
++
++#ifdef DIRECT_F32
++#define SRC0_TYPE vec4<f32>
++#endif
++#ifdef DIRECT_F16
++#define SRC0_TYPE vec4<f16>
++#endif
++#ifdef DIRECT_Q8_0
++#define SRC0_TYPE u32
++#define DIRECT_QUANT
++#endif
++#ifdef DIRECT_Q4_0
++#define SRC0_TYPE u32
++#define DIRECT_QUANT
++#endif
++
++struct MulMatParams {
++    offset_src0: u32,
++    offset_src1: u32,
++    offset_dst: u32,
++    m: u32,
++    n: u32,
++    k: u32,
++    stride_01: u32,
++    stride_11: u32,
++    stride_02: u32,
++    stride_12: u32,
++    stride_03: u32,
++    stride_13: u32,
++    bs02: u32,
++    bs03: u32,
++    broadcast2: u32,
++    broadcast3: u32
++};
++
++@group(0) @binding(0) var<storage, read_write> src0: array<SRC0_TYPE>; // M rows, K columns
++@group(0) @binding(1) var<storage, read_write> src1: array<vec4<f32>>; // N rows of K
++@group(0) @binding(2) var<storage, read_write> dst: array<f32>;        // N rows of M
++@group(0) @binding(3) var<uniform> params: MulMatParams;
++
++const TOTAL_WORKGROUP_SIZE = WORKGROUP_SIZE_M * WORKGROUP_SIZE_N;
++
++#ifdef DIRECT_QUANT
++// Portable unpack (no packed_4x8_integer_dot_product requirement).
++fn unpack_i8(w: u32) -> vec4<f32> {
++    return vec4<f32>((vec4<i32>(bitcast<i32>(w)) << vec4<u32>(24u, 16u, 8u, 0u)) >> vec4<u32>(24u));
++}
++fn unpack_u8(w: u32) -> vec4<u32> {
++    return (vec4<u32>(w) >> vec4<u32>(0u, 8u, 16u, 24u)) & vec4<u32>(255u);
++}
++#endif
++
++@compute @workgroup_size(TOTAL_WORKGROUP_SIZE)
++fn main(@builtin(workgroup_id) wg_id: vec3<u32>,
++        @builtin(local_invocation_id) local_id: vec3<u32>,
++        @builtin(num_workgroups) num_wg: vec3<u32>) {
++    let thread_id = local_id.x;
++    let local_m = thread_id % WORKGROUP_SIZE_M;
++    let local_n = thread_id / WORKGROUP_SIZE_M;
++
++    let wg_n_count = (params.n + WORKGROUP_SIZE_N * 4u - 1u) / (WORKGROUP_SIZE_N * 4u);
++    let wg_m_count = (params.m + WORKGROUP_SIZE_M * 4u - 1u) / (WORKGROUP_SIZE_M * 4u);
++    let wg_per_matrix = wg_m_count * wg_n_count;
++    let wg_linear = wg_id.y * num_wg.x + wg_id.x;
++    let batch_idx = wg_linear / wg_per_matrix;
++    let total_batches = params.bs02 * params.broadcast2 * params.bs03 * params.broadcast3;
++    if (batch_idx >= total_batches) {
++        return;
++    }
++    let wg_in_batch = wg_linear % wg_per_matrix;
++    let row_base = ((wg_in_batch % wg_m_count) * WORKGROUP_SIZE_M + local_m) * 4u;
++    let col_base = ((wg_in_batch / wg_m_count) * WORKGROUP_SIZE_N + local_n) * 4u;
++    if (row_base >= params.m || col_base >= params.n) {
++        return;
++    }
++
++    let dst2_stride = params.m * params.n;
++    let dst3_stride = dst2_stride * params.bs02 * params.broadcast2;
++    let dst3_idx = batch_idx / (params.bs02 * params.broadcast2);
++    let src03_idx = dst3_idx / params.broadcast3;
++    let dst2_idx = batch_idx % (params.bs02 * params.broadcast2);
++    let src02_idx = dst2_idx / params.broadcast2;
++    let src0_batch_offset = params.offset_src0 + src03_idx * params.stride_03 + src02_idx * params.stride_02;
++    let src1_batch_offset = params.offset_src1 + dst3_idx * params.stride_13 + dst2_idx * params.stride_12;
++
++    // Rows / columns past the edge are clamped onto the last valid one: they
++    // compute a duplicate that is never stored, and no read goes out of bounds.
++    let last_m = params.m - 1u;
++    let last_n = params.n - 1u;
++    let m0 = row_base;
++    let m1 = min(row_base + 1u, last_m);
++    let m2 = min(row_base + 2u, last_m);
++    let m3 = min(row_base + 3u, last_m);
++    // activation row starts, in vec4 units
++    let x0 = (src1_batch_offset + col_base * params.stride_11) >> 2u;
++    let x1 = (src1_batch_offset + min(col_base + 1u, last_n) * params.stride_11) >> 2u;
++    let x2 = (src1_batch_offset + min(col_base + 2u, last_n) * params.stride_11) >> 2u;
++    let x3 = (src1_batch_offset + min(col_base + 3u, last_n) * params.stride_11) >> 2u;
++
++    // acc[tm] holds the four columns of output row tm
++    var acc0 = vec4<f32>(0.0);
++    var acc1 = vec4<f32>(0.0);
++    var acc2 = vec4<f32>(0.0);
++    var acc3 = vec4<f32>(0.0);
++
++#ifdef DIRECT_QUANT
++    // Blocks are walked in pairs. A Q8_0 block is 34 bytes and a Q4_0 block 18,
++    // so one block is never a whole number of words but two are (17 and 9): with
++    // K % 64 == 0 every row starts on a word, the first block of a pair has its
++    // payload 16 bits into the word stream (each payload word is stitched from
++    // two neighbours, carrying the previous load) and the second block's payload
++    // is word aligned. The four rows are loaded together as one vec4<u32>.
++#ifdef DIRECT_Q8_0
++    const PAIR_WORDS = 17u;
++    const HALF = 8u;  // payload words per block
++#else
++    const PAIR_WORDS = 9u;
++    const HALF = 4u;
++#endif
++    let rw = (vec4<u32>(src0_batch_offset) + vec4<u32>(m0, m1, m2, m3) * params.stride_01) * (PAIR_WORDS / 2u * 4u + 2u) / 4u;
++    let n_pairs = params.k / 64u;
++    for (var pr = 0u; pr < n_pairs; pr++) {
++        let pw = rw + vec4<u32>(pr * PAIR_WORDS);
++        let xq = pr * 16u;
++        var c = vec4<u32>(src0[pw.x], src0[pw.y], src0[pw.z], src0[pw.w]);
++        for (var half = 0u; half < 2u; half++) {
++            // scale: low 16 bits of the pair's first word, high 16 of its middle word
++            let db = select(c >> vec4<u32>(16u), c & vec4<u32>(0xFFFFu), half == 0u);
++            let d = vec4<f32>(unpack2x16float(db.x)[0], unpack2x16float(db.y)[0], unpack2x16float(db.z)[0], unpack2x16float(db.w)[0]);
++            var s0 = vec4<f32>(0.0);
++            var s1 = vec4<f32>(0.0);
++            var s2 = vec4<f32>(0.0);
++            var s3 = vec4<f32>(0.0);
++            let wbase = pw + vec4<u32>(1u + half * HALF);
++            let xb = xq + half * 8u;
++            for (var j = 0u; j < HALF; j++) {
++                let wi = wbase + vec4<u32>(j);
++                let nx = vec4<u32>(src0[wi.x], src0[wi.y], src0[wi.z], src0[wi.w]);
++                let w = select(nx, (c >> vec4<u32>(16u)) | (nx << vec4<u32>(16u)), half == 0u);
++                c = nx;
++#ifdef DIRECT_Q8_0
++                let x = mat4x4<f32>(src1[x0 + xb + j], src1[x1 + xb + j], src1[x2 + xb + j], src1[x3 + xb + j]);
++                s0 += unpack_i8(w.x) * x;
++                s1 += unpack_i8(w.y) * x;
++                s2 += unpack_i8(w.z) * x;
++                s3 += unpack_i8(w.w) * x;
++#else
++                // Q4_0: payload byte i holds element i (low nibble) and i + 16 (high nibble), value = nibble - 8
++                let xl = mat4x4<f32>(src1[x0 + xb + j], src1[x1 + xb + j], src1[x2 + xb + j], src1[x3 + xb + j]);
++                let xh = mat4x4<f32>(src1[x0 + xb + j + 4u], src1[x1 + xb + j + 4u], src1[x2 + xb + j + 4u], src1[x3 + xb + j + 4u]);
++                let b0 = unpack_u8(w.x);
++                let b1 = unpack_u8(w.y);
++                let b2 = unpack_u8(w.z);
++                let b3 = unpack_u8(w.w);
++                s0 += (vec4<f32>(b0 & vec4<u32>(15u)) - 8.0) * xl + (vec4<f32>(b0 >> vec4<u32>(4u)) - 8.0) * xh;
++                s1 += (vec4<f32>(b1 & vec4<u32>(15u)) - 8.0) * xl + (vec4<f32>(b1 >> vec4<u32>(4u)) - 8.0) * xh;
++                s2 += (vec4<f32>(b2 & vec4<u32>(15u)) - 8.0) * xl + (vec4<f32>(b2 >> vec4<u32>(4u)) - 8.0) * xh;
++                s3 += (vec4<f32>(b3 & vec4<u32>(15u)) - 8.0) * xl + (vec4<f32>(b3 >> vec4<u32>(4u)) - 8.0) * xh;
++#endif
++            }
++            acc0 += d.x * s0;
++            acc1 += d.y * s1;
++            acc2 += d.z * s2;
++            acc3 += d.w * s3;
++        }
++    }
++#else
++    let r0 = (src0_batch_offset + m0 * params.stride_01) >> 2u;
++    let r1 = (src0_batch_offset + m1 * params.stride_01) >> 2u;
++    let r2 = (src0_batch_offset + m2 * params.stride_01) >> 2u;
++    let r3 = (src0_batch_offset + m3 * params.stride_01) >> 2u;
++    let n_quads = params.k >> 2u;
++    for (var q = 0u; q < n_quads; q++) {
++        let x = mat4x4<f32>(src1[x0 + q], src1[x1 + q], src1[x2 + q], src1[x3 + q]);
++        acc0 += vec4<f32>(src0[r0 + q]) * x;
++        acc1 += vec4<f32>(src0[r1 + q]) * x;
++        acc2 += vec4<f32>(src0[r2 + q]) * x;
++        acc3 += vec4<f32>(src0[r3 + q]) * x;
++    }
++#endif
++
++    let dst_batch_offset = params.offset_dst + dst3_idx * dst3_stride + dst2_idx * dst2_stride;
++    let rows = min(4u, params.m - row_base);
++    let cols = min(4u, params.n - col_base);
++    let acc = array<vec4<f32>, 4>(acc0, acc1, acc2, acc3);
++    for (var tn = 0u; tn < cols; tn++) {
++        let col = dst_batch_offset + (col_base + tn) * params.m + row_base;
++        for (var tm = 0u; tm < rows; tm++) {
++            dst[col + tm] = acc[tm][tn];
++        }
++    }
++}
+-- 
+2.53.0
+
