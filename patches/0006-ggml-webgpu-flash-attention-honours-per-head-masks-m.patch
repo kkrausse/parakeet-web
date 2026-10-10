@@ -1,7 +1,7 @@
 From 3c610d4cb1ff372cc5ba347b2b96c378dae9fd2d Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 03:05:35 -0700
-Subject: [PATCH 6/8] ggml-webgpu: flash attention honours per-head masks
+Subject: [PATCH 6/9] ggml-webgpu: flash attention honours per-head masks
  (mask->ne[2] == n_heads)
 
 flash_attn.wgsl and flash_attn_tile.wgsl computed the mask offset from the batch

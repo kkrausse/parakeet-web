@@ -178,6 +178,7 @@ async function run() {
     }
     render(result);
   }
+  if (params.get("trim") === "1") { await call("trim"); step("released the GPU compute buffer kept between runs (trim=1)"); await new Promise((r) => setTimeout(r, 1500)); }
   if (cfg.verbose) await call("free"); // a profiling build prints its summary when the backend is freed
   step("done", performance.now() - runStart);
   current.done = true, persist();

@@ -1,7 +1,7 @@
 From 417ccf84a8b0c7e2bfca81ea99ff25205823e3fd Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 01:55:02 -0700
-Subject: [PATCH 1/8] conformer: env-gated F32 mask concat (WebGPU CONCAT has
+Subject: [PATCH 1/9] conformer: env-gated F32 mask concat (WebGPU CONCAT has
  no F16 variant)
 
 Feasibility experiment carried over: TRANSCRIBE_F32_MASK_CONCAT=1 concatenates

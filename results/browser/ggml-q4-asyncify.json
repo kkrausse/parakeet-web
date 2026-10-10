@@ -5,25 +5,25 @@
   "--enable-dawn-features=vulkan_enable_f16_on_nvidia"
  ],
  "machineAtStart": {
-  "loadavg": "3.85 3.80 3.87 8/1992 2571710",
-  "cpuPressure": "some avg10=0.55 avg60=0.86 avg300=0.87 total=10039908971"
+  "loadavg": "2.70 3.40 3.55 5/1975 1625850",
+  "cpuPressure": "some avg10=0.18 avg60=0.59 avg300=0.94 total=10089437835"
  },
  "chrome": "154.0.8037.97",
  "error": null,
  "memory": {
-  "gpuProcessGpuMibAfterLoad": 506,
-  "gpuProcessGpuMibPeak": 973,
-  "rendererRssMibAfterLoad": 247,
-  "rendererRssMibPeak": 580,
-  "gpuProcessRssMibAfterLoad": 300,
-  "gpuProcessRssMibPeak": 344
+  "gpuProcessGpuMibAfterLoad": 502,
+  "gpuProcessGpuMibPeak": 799,
+  "rendererRssMibAfterLoad": 212,
+  "rendererRssMibPeak": 622,
+  "gpuProcessRssMibAfterLoad": 299,
+  "gpuProcessRssMibPeak": 342
  },
  "pids": {
-  "gpu": 2571549,
+  "gpu": 1625781,
   "renderers": [
-   2571736,
-   2571651,
-   2571628
+   1625854,
+   1625827,
+   1625818
   ]
  },
  "page": {
@@ -33,6 +33,7 @@
    "runs": 10,
    "threads": 1,
    "store": "opfs",
+   "f16": true,
    "flash": false,
    "variant": "asyncify",
    "verbose": false,
@@ -40,9 +41,10 @@
    "env": {}
   },
   "model": {
-   "label": "Q4_0 (4-bit weights)",
+   "label": "0.6b v2, Q4_0 (4-bit weights)",
    "file": "parakeet-tdt-0.6b-v2-Q4_0.gguf",
-   "mb": 438
+   "mb": 438,
+   "family": "0.6b"
   },
   "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
   "crossOriginIsolated": true,
@@ -52,50 +54,50 @@
     "seconds": 7,
     "firstInPage": true,
     "firstRunMs": {
-     "pre": 13.1,
-     "enc": 253,
-     "dec": 154.9,
-     "total": 420.9
+     "pre": 14,
+     "enc": 224.8,
+     "dec": 97.1,
+     "total": 336
     },
-    "startToFirstTranscriptMs": 5052,
+    "startToFirstTranscriptMs": 6533,
     "decSteps": 47,
     "text": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight.",
     "matchesNative": true,
     "warmRuns": 10,
     "preMs": {
-     "median": 6.3,
-     "worst": 9.4,
-     "best": 6.1
+     "median": 6.5,
+     "worst": 6.9,
+     "best": 6.2
     },
     "encMs": {
-     "median": 62.6,
-     "worst": 76.4,
-     "best": 58.7
+     "median": 54.3,
+     "worst": 68.1,
+     "best": 51.7
     },
     "decMs": {
-     "median": 83.5,
-     "worst": 105.2,
-     "best": 80.1
+     "median": 49.3,
+     "worst": 53.6,
+     "best": 45.8
     },
     "totalMs": {
-     "median": 157.6,
-     "worst": 190.9,
-     "best": 146.6
+     "median": 110.9,
+     "worst": 120.7,
+     "best": 105.9
     },
-    "xRealTime": 44.4,
+    "xRealTime": 63.1,
     "textStable": true,
-    "wasmHeapMb": 62,
-    "wasmHeapUsedMb": 37.4
+    "wasmHeapMb": 38,
+    "wasmHeapUsedMb": 16
    },
    {
     "clip": "a14",
     "seconds": 13.69,
     "firstInPage": false,
     "firstRunMs": {
-     "pre": 13.3,
-     "enc": 94.7,
-     "dec": 150.4,
-     "total": 258.4
+     "pre": 13.8,
+     "enc": 86.8,
+     "dec": 89.1,
+     "total": 189.7
     },
     "startToFirstTranscriptMs": null,
     "decSteps": 90,
@@ -103,39 +105,39 @@
     "matchesNative": true,
     "warmRuns": 10,
     "preMs": {
-     "median": 12.2,
-     "worst": 12.9,
-     "best": 11.9
+     "median": 11.8,
+     "worst": 12.1,
+     "best": 11.5
     },
     "encMs": {
-     "median": 86.9,
-     "worst": 90.9,
-     "best": 85.6
+     "median": 83,
+     "worst": 84.7,
+     "best": 82.7
     },
     "decMs": {
-     "median": 145.6,
-     "worst": 166.6,
-     "best": 141.5
+     "median": 83.4,
+     "worst": 87.2,
+     "best": 78.6
     },
     "totalMs": {
-     "median": 247,
-     "worst": 267,
-     "best": 239.1
+     "median": 179,
+     "worst": 182.3,
+     "best": 173.1
     },
-    "xRealTime": 55.4,
+    "xRealTime": 76.5,
     "textStable": true,
-    "wasmHeapMb": 62,
-    "wasmHeapUsedMb": 38.7
+    "wasmHeapMb": 46,
+    "wasmHeapUsedMb": 17.4
    },
    {
     "clip": "a56",
     "seconds": 56.1,
     "firstInPage": false,
     "firstRunMs": {
-     "pre": 56.1,
-     "enc": 473.8,
-     "dec": 538.4,
-     "total": 1068.3
+     "pre": 55.5,
+     "enc": 467.1,
+     "dec": 288.7,
+     "total": 811.3
     },
     "startToFirstTranscriptMs": null,
     "decSteps": 312,
@@ -143,29 +145,29 @@
     "matchesNative": false,
     "warmRuns": 10,
     "preMs": {
-     "median": 50.8,
-     "worst": 54.8,
-     "best": 49.6
+     "median": 49.9,
+     "worst": 51.8,
+     "best": 49
     },
     "encMs": {
-     "median": 443.9,
-     "worst": 446.5,
-     "best": 441.8
+     "median": 439.6,
+     "worst": 441.9,
+     "best": 437.9
     },
     "decMs": {
-     "median": 522.9,
-     "worst": 549.3,
-     "best": 502.3
+     "median": 290.2,
+     "worst": 297.3,
+     "best": 270.8
     },
     "totalMs": {
-     "median": 1018.8,
-     "worst": 1041,
-     "best": 997.4
+     "median": 779.6,
+     "worst": 787.6,
+     "best": 761.1
     },
-    "xRealTime": 55.1,
+    "xRealTime": 72,
     "textStable": true,
-    "wasmHeapMb": 107,
-    "wasmHeapUsedMb": 47
+    "wasmHeapMb": 80,
+    "wasmHeapUsedMb": 25.6
    }
   ],
   "adapter": {
@@ -207,108 +209,113 @@
    "maxStorageBufferBindingSizeMb": 2048
   },
   "jspi": true,
+  "shaderF16Used": true,
   "load": {
-   "fetchMs": 2004,
-   "loadMs": 844,
+   "fetchMs": 3580,
+   "loadMs": 825,
    "from": "network, streamed to OPFS",
    "fileMb": 437.5,
-   "wasmHeapMb": 62,
-   "wasmHeapUsedMb": 36,
+   "wasmHeapMb": 32,
+   "wasmHeapUsedMb": 14.6,
    "backend": "WebGPU: WebGPU"
   },
   "session": {
-   "totalMs": 844
+   "totalMs": 825
   },
-  "startToLoadedMs": 3225
+  "startToLoadedMs": 4791
  },
  "steps": [
   {
    "t": 0,
-   "name": "start: Q4_0 (4-bit weights), flash=off, store=opfs, asyncify"
+   "name": "start: 0.6b v2, Q4_0 (4-bit weights), flash=off, store=opfs, asyncify"
   },
   {
-   "t": 375,
+   "t": 384,
    "name": "WASM module ready",
-   "ms": 46.6,
+   "ms": 55,
    "detail": "heap 32 MB; JSPI available"
   },
   {
-   "t": 375,
+   "t": 384,
    "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 present; fallback=false"
   },
   {
-   "t": 3225,
+   "t": 384,
+   "name": "shader path: f16"
+  },
+  {
+   "t": 4791,
    "name": "model file ready (network, streamed to OPFS)",
-   "ms": 2004.2,
+   "ms": 3579.8,
    "detail": "438 MB"
   },
   {
-   "t": 3225,
+   "t": 4791,
    "name": "model loaded on WebGPU: WebGPU",
-   "ms": 843.6,
-   "detail": "WASM heap 62 MB, 36 MB in use"
+   "ms": 825.1,
+   "detail": "WASM heap 32 MB, 14.6 MB in use"
   },
   {
-   "t": 5052,
+   "t": 6533,
    "name": "a07 (7.0 s) first run (cold)",
-   "ms": 420.9,
-   "detail": "mel 13.1 ms, encoder 253 ms, decode 155 ms, heap 62 MB (37.4 in use)"
+   "ms": 336,
+   "detail": "mel 14 ms, encoder 225 ms, decode 97.1 ms, heap 38 MB (16 in use)"
   },
   {
-   "t": 5052,
-   "name": "a07 transcript matches the native one",
+   "t": 6533,
+   "name": "a07 transcript matches the reference",
    "detail": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day ..."
   },
   {
-   "t": 6876,
+   "t": 7785,
    "name": "a07 warm x10",
-   "ms": 157.6,
-   "detail": "total median/worst 157.6 / 190.9 ms; encoder 62.6 / 76.4 ms; mel 6.3 ms; decode 83.5 ms; 44.4x real time; text stable=true"
+   "ms": 110.9,
+   "detail": "total median/worst 110.9 / 120.7 ms; encoder 54.3 / 68.1 ms; mel 6.5 ms; decode 49.3 ms; 63.1x real time; text stable=true"
   },
   {
-   "t": 7144,
+   "t": 7983,
    "name": "a14 (13.7 s) first run",
-   "ms": 258.4,
-   "detail": "mel 13.3 ms, encoder 94.7 ms, decode 150 ms, heap 62 MB (38.7 in use)"
+   "ms": 189.7,
+   "detail": "mel 13.8 ms, encoder 86.8 ms, decode 89.1 ms, heap 46 MB (17.4 in use)"
   },
   {
-   "t": 7144,
-   "name": "a14 transcript matches the native one",
+   "t": 7983,
+   "name": "a14 transcript matches the reference",
    "detail": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day ..."
   },
   {
-   "t": 9931,
+   "t": 9981,
    "name": "a14 warm x10",
-   "ms": 247,
-   "detail": "total median/worst 247 / 267 ms; encoder 86.9 / 90.9 ms; mel 12.2 ms; decode 145.6 ms; 55.4x real time; text stable=true"
+   "ms": 179,
+   "detail": "total median/worst 179 / 182.3 ms; encoder 83 / 84.7 ms; mel 11.8 ms; decode 83.4 ms; 76.5x real time; text stable=true"
   },
   {
-   "t": 11021,
+   "t": 10813,
    "name": "a56 (56.1 s) first run",
-   "ms": 1068.3,
-   "detail": "mel 56.1 ms, encoder 474 ms, decode 538 ms, heap 107 MB (47 in use)"
+   "ms": 811.3,
+   "detail": "mel 55.5 ms, encoder 467 ms, decode 289 ms, heap 80 MB (25.6 in use)"
   },
   {
-   "t": 11021,
-   "name": "a56 transcript DIFFERS from the native one",
+   "t": 10814,
+   "name": "a56 transcript DIFFERS from the reference",
    "detail": "Welcome to QuirkQuidQuill Inc., where finance meets innovation. Explore diverse offerings ..."
   },
   {
-   "t": 22274,
+   "t": 19429,
    "name": "a56 warm x10",
-   "ms": 1018.8,
-   "detail": "total median/worst 1018.8 / 1041 ms; encoder 443.9 / 446.5 ms; mel 50.8 ms; decode 522.9 ms; 55.1x real time; text stable=true"
+   "ms": 779.6,
+   "detail": "total median/worst 779.6 / 787.6 ms; encoder 439.6 / 441.9 ms; mel 49.9 ms; decode 290.2 ms; 72x real time; text stable=true"
   },
   {
-   "t": 22274,
+   "t": 19429,
    "name": "done",
-   "ms": 22274.1
+   "ms": 19429.3
   }
  ],
  "console": [],
  "machineAtEnd": {
-  "loadavg": "3.80 3.79 3.87 4/2016 2593594",
-  "cpuPressure": "some avg10=0.20 avg60=0.71 avg300=0.84 total=10040149987"
+  "loadavg": "2.57 3.33 3.53 4/2049 1638723",
+  "cpuPressure": "some avg10=0.17 avg60=0.52 avg300=0.90 total=10089622895"
  },
  "chromeGpu": {
   "devices": [

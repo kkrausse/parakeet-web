@@ -1,57 +1,104 @@
-# Parakeet TDT 0.6b v2 in a browser tab on transcribe.cpp + ggml WebGPU
+# Parakeet in a browser tab on transcribe.cpp + ggml WebGPU
 
-transcribe.cpp (`c63b18e2`) with ggml's WebGPU backend, compiled to WASM (Emscripten 6.0.12,
-emdawnwebgpu), running in real Chrome 154 on diesel2 (RTX 2080 Ti, driver 580, Vulkan). The
-quantized GGUF weights (Q8_0, Q4_0) stay packed in GPU memory; a new matmul shader reads the
-blocks directly. The encoder (all 1293 nodes) runs on WebGPU, mel and the TDT decoder on WASM
-(one thread). The comparison is the onnxruntime-web page in `../parakeet-webgpu-bench/`
-("In the browser" in its README), same clips, same driver script, same metrics.
+transcribe.cpp (`c63b18e2` + the patches here) with ggml's WebGPU backend, compiled to WASM
+(Emscripten 6.0.12, emdawnwebgpu), running in real Chrome 154 on diesel2 (RTX 2080 Ti, driver 580,
+Vulkan). Quantized GGUF weights (Q8_0, Q4_0) stay packed in GPU memory; a matmul shader reads the
+blocks directly. The encoder runs on WebGPU, mel and the TDT decoder on one WASM thread. Two models:
+NVIDIA `parakeet-tdt_ctc-110m` (the page default) and `parakeet-tdt-0.6b-v2`. The comparison is the
+onnxruntime-web page in `../parakeet-webgpu-bench/` (same clips, same driver, same metrics).
 
-Short answer: it works, on the real adapter, with the native transcript. On the 7 s clip Q4_0 is as
-fast as onnxruntime-web's fp16 (144 vs 145 ms total, encoder 56 vs 67 ms) with **250 MiB of
-renderer memory instead of 2.4-4.4 GB**, 0.5 GB of GPU memory instead of 1.2-2.4 GB, and a model
-that is ready 0.9 s after its bytes are local. On the 56 s clip it is slower than onnxruntime-web
-(1.0 s vs 0.75 s). Nothing was run on a phone.
+Short answer (10 Oct, second pass):
+
+- **It starts in stock Chrome now.** `shader-f16` is optional: without it the backend compiles
+  f32-only shaders. Stock Chrome on this box (no Dawn flag, no `shader-f16`) went from 24.7 s on one
+  WASM thread to 106 ms for the 7 s clip (0.6b Q4_0), same text, same memory as the f16 path.
+- **110M model, Q8_0, the default**: 135 MB download, 7 s clip in **62 ms**, 56 s clip in **319 ms**
+  (176x real time), 199 MiB of GPU memory after load, 303 MiB renderer RSS peak, and the text of the
+  fp32 reference on all three clips. onnxruntime-web with the same model: 174 ms / 498 ms on WebGPU
+  fp32 (1.2 GB renderer), 1122 ms / 10.7 s on WASM int8 (0.8 GB).
+- **0.6b, Q4_0**: 7 s clip 144 -> **104 ms**, 56 s clip 1022 -> **784 ms** (onnxruntime-web fp16:
+  145 / 753 ms), GPU peak 969 -> 799 MiB, renderer RSS peak 319 MiB (onnxruntime-web: 2657).
+  The decoder went from 80 to 45 ms on the 7 s clip; the 56 s encoder is still 435 ms against 232.
+
+Nothing was run on a phone.
 
 Published (tailnet only): https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-ggml-browser/
 
 ## Results
 
 Chrome 154, headed on Xvfb, `--enable-unsafe-webgpu --ignore-gpu-blocklist --enable-features=Vulkan
---use-angle=vulkan --enable-dawn-features=vulkan_enable_f16_on_nvidia`, fresh profile per row, one
-discarded warm-up then 10 warm runs, **median / worst** in ms. "enc" is everything up to the encoder
-output being on the CPU (wall - mel - decode; it includes the read-back, as the ORT rows do).
-Pass of 10 Oct 02:59-03:01, load average about 4, CPU pressure under 1.2% (`results/browser/machine-load.txt`).
+--use-angle=vulkan`; the "f16" rows add `--enable-dawn-features=vulkan_enable_f16_on_nvidia`, the
+"stock" rows do not (adapter then has no `shader-f16`). Fresh profile per row, one discarded warm-up
+then 10 warm runs, **median / worst** in ms. "enc" is everything up to the encoder output being on
+the CPU (wall - mel - decode; it includes the read-back, as the ORT rows do). Pass of 10 Oct
+03:54-03:58, load average 2.7-4.1, CPU pressure avg10 under 0.4% (`results/browser/machine-load.txt`).
+"Before" rows are the first pass (02:59-03:01, same method, load about 4).
 
 | Runtime | 7.0 s enc | 7.0 s total | 13.7 s enc | 13.7 s total | 56.1 s enc | 56.1 s total | x real time, 56 s |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| **ggml WebGPU, Q4_0** (JSPI build) | 56 / 71 | 144 / 161 | 85 / 92 | 244 / 272 | 440 / 443 | 1022 / 1050 | 55 |
-| **ggml WebGPU, Q8_0** | 64 / 82 | 146 / 196 | 87 / 94 | 247 / 263 | 404 / 417 | 979 / 1011 | 57 |
-| **ggml WebGPU, F16** | 78 / 85 | 162 / 197 | 94 / 96 | 260 / 280 | 515 / 517 | 1096 / 1121 | 51 |
-| ggml WebGPU, Q4_0, flash attention on (`flash=1`, after the fix below) | 74 / 82 | 154 / 176 | 97 / 100 | 250 / 273 | 620 / 624 | 1172 / 1218 | 48 |
-| ggml WebGPU, Q8_0, flash attention on | 64 / 80 | 158 / 175 | 99 / 102 | 265 / 287 | 582 / 586 | 1151 / 1205 | 49 |
-| ggml WebGPU, Q4_0, ASYNCIFY build | 63 / 76 | 158 / 191 | 87 / 91 | 247 / 267 | 444 / 447 | 1019 / 1041 | 55 |
-| ORT-web WebGPU, fp16 encoder, decoder on WASM (9-10 Oct, other README) | 67 / 113 | 145 / 210 | 95 / 127 | 225 / 248 | 232 / 240 | 753 / 830 | 75 |
-| ORT-web WebGPU, fp32 encoder | 90 / 145 | 173 / 263 | 108 / 149 | 262 / 296 | 314 / 339 | 897 / 1037 | 63 |
-| ORT-web all WASM, int8, 1 thread (its smallest configuration) | 2083 / 2192 | 2232 / 2327 | 4200 / 4522 | 4435 / 4734 | 20223 / 20937 | 21084 / 21694 | 3 |
-| ggml, stock Chrome (no `shader-f16`): silently on one WASM thread | 24693 / 24737 | 24773 / 24825 | | | | | |
+| **ggml, 110m Q8_0**, f16 (`ggml-s8`) | 32 / 34 | 62 / 64 | 35 / 38 | 93 / 97 | 102 / 103 | 319 / 322 | 176 |
+| **ggml, 110m Q8_0, stock Chrome** | 31 / 33 | 62 / 65 | 35 / 37 | 93 / 96 | 115 / 119 | 333 / 338 | 168 |
+| ggml, 110m Q4_0, f16 | 30 / 34 | 62 / 69 | 37 / 39 | 94 / 97 | 111 / 134 | 331 / 354 | 169 |
+| ggml, 110m Q4_0, stock Chrome | 31 / 34 | 63 / 69 | 37 / 39 | 95 / 98 | 124 / 125 | 341 / 350 | 164 |
+| ORT-web, 110m, WebGPU fp32 encoder, decoder on WASM (other README) | 117 / 190 | 174 / 277 | 131 / 153 | 228 / 250 | 134 / 141 | 498 / 517 | 113 |
+| ORT-web, 110m, WebGPU fp16 encoder (needs the Chrome flag) | 125 / 147 | 192 / 220 | 123 / 153 | 220 / 259 | 121 / 145 | 503 / 527 | 112 |
+| ORT-web, 110m, all WASM, int8, 1 thread | 1056 / 1064 | 1122 / 1143 | 2102 / 2421 | 2249 / 2567 | 10147 / 10550 | 10700 / 11207 | 5 |
+| ORT-web, 110m, all WASM, fp32, 4 threads | 225 / 282 | 274 / 335 | 434 / 461 | 512 / 561 | 2296 / 2412 | 2586 / 2733 | 22 |
+| **ggml, 0.6b Q4_0**, f16 (JSPI build) | 55 / 66 | 104 / 116 | 82 / 83 | 176 / 183 | 435 / 437 | 784 / 793 | 72 |
+| **ggml, 0.6b Q4_0, stock Chrome** | 54 / 59 | 106 / 116 | 84 / 87 | 179 / 183 | 474 / 476 | 813 / 833 | 69 |
+| ggml, 0.6b Q8_0, f16 | 56 / 64 | 110 / 114 | 85 / 87 | 179 / 185 | 399 / 403 | 738 / 758 | 76 |
+| ggml, 0.6b Q8_0, stock Chrome | 57 / 74 | 109 / 123 | 87 / 89 | 182 / 186 | 437 / 438 | 782 / 789 | 72 |
+| ggml, 0.6b F16, f16 | 73 / 83 | 155 / 182 | 93 / 94 | 250 / 263 | 510 / 511 | 1061 / 1094 | 53 |
+| ggml, 0.6b F16, stock Chrome | 61 / 78 | 149 / 163 | 95 / 97 | 254 / 273 | 551 / 552 | 1105 / 1138 | 51 |
+| ggml, 0.6b Q4_0, ASYNCIFY build | 54 / 68 | 111 / 121 | 83 / 85 | 179 / 182 | 440 / 442 | 780 / 788 | 72 |
+| before: ggml, 0.6b Q4_0 | 56 / 71 | 144 / 161 | 85 / 92 | 244 / 272 | 440 / 443 | 1022 / 1050 | 55 |
+| before: ggml, 0.6b Q8_0 | 64 / 82 | 146 / 196 | 87 / 94 | 247 / 263 | 404 / 417 | 979 / 1011 | 57 |
+| before: ggml, 0.6b Q4_0, stock Chrome: silently on one WASM thread | 24693 / 24737 | 24773 / 24825 | | | | | |
+| before: ggml, 0.6b Q4_0 / Q8_0, flash attention on (`flash=1`) | 74 / 82, 64 / 80 | 154 / 176, 158 / 175 | 97 / 100, 99 / 102 | 250 / 273, 265 / 287 | 620 / 624, 582 / 586 | 1172 / 1218, 1151 / 1205 | 48, 49 |
+| ORT-web, 0.6b, WebGPU fp16 encoder, decoder on WASM | 67 / 113 | 145 / 210 | 95 / 127 | 225 / 248 | 232 / 240 | 753 / 830 | 75 |
+| ORT-web, 0.6b, WebGPU fp32 encoder | 90 / 145 | 173 / 263 | 108 / 149 | 262 / 296 | 314 / 339 | 897 / 1037 | 63 |
+| ORT-web, 0.6b, all WASM, int8, 1 thread | 2083 / 2192 | 2232 / 2327 | 4200 / 4522 | 4435 / 4734 | 20223 / 20937 | 21084 / 21694 | 3 |
 
-| Runtime | Model load (bytes local to ready) | First 7 s transcribe (encoder part) | Page start to first transcript, localhost | GPU memory after load / peak | Renderer RSS after load / peak | Chrome GPU process RSS peak | WASM heap (malloc in use) |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| **ggml Q4_0** | 0.87 s | 343 ms (200) | 5.0 s | **501** / 969 MiB | **250 / 343 MiB** | 341 MiB | 107 (47) MB |
-| **ggml Q8_0** | 1.15 s | 357 ms (211) | 6.5 s | 760 / 1229 MiB | 313 / 410 MiB | 413 MiB | 107 (47) MB |
-| **ggml F16** | 1.75 s | 347 ms (201) | 11.4 s | 1244 / 1709 MiB | 313 / 446 MiB | 407 MiB | 107 (47) MB |
-| ggml Q4_0 ASYNCIFY | 0.84 s | 421 ms (253) | 5.1 s | 506 / 973 MiB | 247 / 580 MiB | 344 MiB | 107 (47) MB |
-| ORT-web WebGPU fp16 | 3.9 s | 497 ms (403) | 8.0 s | 1245 / 1544 MiB | renderer peak 2657 MiB | 1045 MiB | |
-| ORT-web WebGPU fp32 | 6.7 s | 661 ms (544) | 16.7 s | 2423 / 2771 MiB | renderer peak 4375 MiB | 1734 MiB | |
-| ORT-web WASM int8, 1 thread | 3.6 s | 2086 ms (1972) | 7.7-9.5 s | none | renderer peak 2341 MiB | 255 MiB | |
+Where the time goes now (median ms; mel / encoder / decoder): 110m Q8_0 7 s 5.7 / 32 / 24, 56 s
+45 / 102 / 172; 0.6b Q4_0 7 s 6 / 55 / 45, 56 s 49 / 435 / 300. The decoder is the largest part of
+the 110m long clip, the encoder matmul of the 0.6b one.
 
-Peaks are over all three clips; the 56 s clip sets them (+470 MiB of GPU memory, WASM heap
-62 -> 107 MB). For the 7 s clip alone Q4_0 peaks at 541 MiB GPU and 355 MiB renderer RSS
-(`published-q4.json`). A blank page with the worker and module loaded is about 145-175 MiB of
-renderer RSS and 57 MiB of GPU memory, so the model costs roughly 100 MiB of renderer memory.
+| Runtime | Download | Model load (bytes local to ready) | First 7 s transcribe (encoder part) | Page start to first transcript, localhost | GPU memory after load / peak | Renderer RSS after load / peak | Chrome GPU process RSS peak | WASM heap (malloc in use) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| **ggml 110m Q8_0** | 129 MiB | 0.33 s | 214 ms (146) | 3.0 s | **199** / 386 MiB | **212 / 303 MiB** | 322 MiB | 55 (16) MB |
+| ggml 110m Q8_0, stock Chrome | 129 MiB | 0.34 s | 217 ms (147) | 2.8 s | 199 / 347 MiB | 213 / 302 MiB | 322 MiB | 55 (16) MB |
+| ggml 110m Q4_0 | 81 MiB | 0.30 s | 219 ms (148) | 2.7 s | 151 / 299 MiB | 212 / 306 MiB | 320 MiB | 55 (16) MB |
+| ORT-web 110m WebGPU fp32 | 455 MiB | 3.5 s | 520 ms (445) | 6.7 s | 495 / 1091 MiB | 1196 / 1200 MiB | 675 MiB | |
+| ORT-web 110m WASM int8, 1 thread | 130 MiB | 2.2 s | 1232 ms (1133) | 5.6 s | none | 801 / 804 MiB | 253 MiB | |
+| **ggml 0.6b Q4_0** | 438 MiB | 0.81 s | 313 ms (204) | 5.0 s | **501** / 799 MiB | **225 / 319 MiB** | 340 MiB | 80 (26) MB |
+| ggml 0.6b Q4_0, stock Chrome | 438 MiB | 0.80 s | 309 ms (211) | 4.5 s | 501 / 799 MiB | 233 / 317 MiB | 344 MiB | 80 (26) MB |
+| ggml 0.6b Q8_0 | 696 MiB | 1.00 s | 298 ms (196) | 6.3 s | 760 / 1057 MiB | 278 / 388 MiB | 408 MiB | 67 (26) MB |
+| ggml 0.6b F16 | 1.2 GiB | 1.78 s | 348 ms (202) | 8.8 s | 1243 / 1479 MiB | 316 / 457 MiB | 407 MiB | 107 (47) MB |
+| ggml 0.6b Q4_0 ASYNCIFY | 438 MiB | 0.83 s | 336 ms (225) | 6.5 s | 502 / 799 MiB | 212 / 622 MiB | 342 MiB | 80 (26) MB |
+| before: ggml 0.6b Q4_0 | 438 MiB | 0.87 s | 343 ms (200) | 5.0 s | 501 / 969 MiB | 250 / 343 MiB | 341 MiB | 107 (47) MB |
+| ORT-web 0.6b WebGPU fp16 | | 3.9 s | 497 ms (403) | 8.0 s | 1245 / 1544 MiB | renderer peak 2657 MiB | 1045 MiB | |
+| ORT-web 0.6b WebGPU fp32 | | 6.7 s | 661 ms (544) | 16.7 s | 2423 / 2771 MiB | renderer peak 4375 MiB | 1734 MiB | |
+| ORT-web 0.6b WASM int8, 1 thread | | 3.6 s | 2086 ms (1972) | 7.7-9.5 s | none | renderer peak 2341 MiB | 255 MiB | |
 
-### Where the model file lives (Q4_0, 7 s clip, 3 warm runs)
+Peaks are over all three clips in one page; the 56 s clip sets them. The GPU peak is weights + one
+compute buffer (0.6b at 56 s: 230 MiB, of which the first subsampling conv's output is 175 MB) plus
+whatever is in transit when the clip length changes; before the buffer cache it was weights + two.
+A blank page with the worker and module loaded is about 145-175 MiB of renderer RSS and 57 MiB of
+GPU memory.
+
+### Transcripts
+
+- 0.6b: F16 and Q8_0 give the native F16 text on all three clips; Q4_0 is identical on the 7 s and
+  13.7 s clips and says "E3Equity." for "E3 Equity." on the 56 s clip (the quantization: native CPU
+  Q4_0 gives the same bytes). Every change in this pass kept each weight type's text byte-identical
+  and stable over the warm runs, on the f16 and the f32-only path.
+- 110m: reference is onnx-asr 0.12 / ONNX Runtime fp32 (`../parakeet-webgpu-bench/results/110m/`).
+  The **F32 and Q8_0** GGUFs reproduce it exactly on all three clips (native and Chrome, f16 and
+  stock). **Q4_0 does not**: "fortnight," for "fortnight.", a trailing comma on the 13.7 s clip, and
+  on the 56 s clip "Inc, where" / "Quatro, a unique" / "Wrap Z, and" / "Unifund" (reference: "Inc.
+  where", "Quatro a unique", "Wrap Z and", "unifund"). Words are the same. That is why Q8_0 is the default.
+
+### Where the model file lives (0.6b Q4_0, 7 s clip, 3 warm runs, first pass)
 
 | `store=` | Model load | Renderer RSS after load / peak |
 | --- | ---: | ---: |
@@ -71,19 +118,16 @@ garbage and is as fast as MEMFS. The file also persists, so a second visit does 
 - Adapter: `nvidia / turing / NVIDIA GeForce RTX 2080 Ti`, `isFallbackAdapter` false; Chrome's GPU
   process holds 0.5 GB (Q4_0) to 1.24 GB (F16) in `nvidia-smi`. ggml reports backend `WebGPU: WebGPU`
   and the native scheduler dump shows all 1293 encoder nodes on it, 0 on CPU (no-flash path).
-- **Decoder is on the CPU already.** The feasibility note's "5-13 ms per token on WebGPU" was a
-  load artifact: `decoder.cpp` always builds its LSTM and joint graphs on a CPU backend. Native:
-  58 ms for the 7 s clip on one thread, 30 ms on four. In the browser (one WASM thread, SIMD): 78-83 ms
-  for 47 tokens / 88 frames, now more than half of the 7 s total. About 455 M multiply-adds; it is
-  arithmetic-bound, so the remaining lever is threads (needs COOP/COEP) -- not done.
-- Mel is transcribe.cpp's own (C++ in WASM): 6.5 ms for 7 s, 53 ms for 56 s.
-- `shader-f16`: required (`ggml-webgpu.cpp` puts it in `required_features`; 27 of 44 shaders have
-  `enable f16;`). Stock Chrome on this box lacks it (NVIDIA driver 580 < 615.71), the WebGPU device
-  is then not registered and **transcribe.cpp silently falls back to the CPU backend**: correct
-  text, 24.7 s for the 7 s clip, 0.94 GB renderer. The page prints a warning when the backend is not WebGPU.
-- Transcripts: F16 and Q8_0 give the native F16 text on all three clips, stable over the runs.
-  Q4_0 is identical on the 7 s and 13.7 s clips and says "E3Equity." for "E3 Equity." on the 56 s
-  clip; native CPU Q4_0 gives byte-identical text to the browser, so that is the quantization, not the kernel.
+- **Decoder is on the CPU**: `decoder.cpp` always builds its LSTM and joint graphs on a CPU backend
+  (the feasibility note's "5-13 ms per token on WebGPU" was a load artifact). It was memory bound on
+  fp32 mirrors of the weights, and the WASM build was missing ggml's SIMD quant kernels; both fixed
+  below (0.6b 7 s: 80 -> 45 ms; 110m: 24 ms). Still one thread.
+- Mel is transcribe.cpp's own (C++ in WASM): 6 ms for 7 s, 45-49 ms for 56 s.
+- `shader-f16`: **optional now.** Stock Chrome on this box lacks it (NVIDIA driver 580 < 615.71);
+  the page says which path is in use ("shader path: f16" / "f32 only"). On the f32-only path the
+  adapter line reads "shader-f16 absent (f32-only shaders)" and the backend still reports `WebGPU`.
+  Cost of not having it here: nothing on short clips, +9% on the 56 s encoder (0.6b 435 -> 474 ms,
+  110m 102 -> 115 ms), no memory difference.
 
 ## What was changed in transcribe.cpp / ggml
 
@@ -118,6 +162,31 @@ as `patches/000*.patch` (apply on `c63b18e2` with `git am`).
 7. `ggml_backend_sched_new`: 256-split budget in WASM. It malloc'ed 165 MB for split-input copies;
    native never touches it, the WASM heap grew from 64 to 182 MB on the first run.
 
+8. **`shader-f16` optional** (patch 0007). The feature is requested only when the adapter has it
+   (`GGML_WEBGPU_NO_F16=1` forces the f32-only path; `=2` keeps the device feature and only swaps
+   the shaders). Without it every shader is preprocessed with `NO_F16` and the macro `f16=f32`, and
+   its `enable f16;` line is dropped, so workgroup staging and block scales are f32. Buffers that
+   really hold half floats cannot be bound as `array<f16>` then: `supports_op` rejects F16-typed
+   ops and operands, except as the weights of `mul_mat_direct`, `conv_2d` and `conv_2d_dw`, which
+   read them as packed `u32` + `unpack2x16float`. `TRANSCRIBE_F32_POINTWISE=1` (the page sets it on
+   this path) makes the two pre-encode pointwise convs use an F32 im2col: `ggml_conv_2d` hardcodes
+   an F16 one, which would bounce to the CPU and back (+10 ms on the 7 s clip, measured).
+   Not covered: the IQ quant types (their shaders use `bitcast<vec2<f16>>`), flash attention (F16
+   masks; the page turns it off on this path), any graph with F16 activations.
+9. **Decoder weights stay packed on the CPU** (patch 0008). The LSTM and joint matrices were
+   dequantized to fp32 at load (0.6b: 26 MB walked once per emitted token). They now stay Q8_0
+   blocks (a Q4_0 matrix is rewritten losslessly: same scale, nibble - 8 as int8) and the CPU
+   backend's integer dot kernels run on them, as for any quantized ggml CPU model.
+   `TRANSCRIBE_DECODER_F32=1` restores the old behaviour. F16/F32 models are unchanged.
+10. **WASM SIMD quant kernels were never compiled** (same patch): the Emscripten toolchain reports
+   `CMAKE_SYSTEM_PROCESSOR=x86`, ggml-cpu's CMake wants "wasm", so `arch/wasm/quants.c` was left out
+   and every quantized dot was scalar. One-line CMake fix.
+11. **Compute buffer reuse** (patch 0009). transcribe.cpp frees its graph allocator after each run;
+   Dawn releases a destroyed buffer only after a later submit completes, so back-to-back runs held
+   two compute buffers. The backend keeps the last freed compute buffer and gives it to the next
+   allocation that fits (`GGML_WEBGPU_BUFFER_CACHE=0` off; `ggml_backend_webgpu_trim()` /
+   `pk_trim` / `trim=1` on the page drop it). `GGML_WEBGPU_LOG_ALLOC=1` prints every buffer.
+
 ## Attempt log (encoder, 7 s clip unless noted)
 
 Native numbers are `transcribe-bench` on Dawn/Vulkan with `GGML_WEBGPU_BROWSER=1`, min of 10; text
@@ -145,6 +214,26 @@ checked each time. Chrome numbers are medians from this page.
 | Chrome: sched split budget | heap 182 MB | 62 MB | yes |
 | Chrome: OPFS in-place reads | load 4.9 s, peak 856 MiB | 1.2 s, 419 MiB (Q8_0) | yes |
 
+Second pass (10 Oct, 03:12-04:00). Native = `nb.sh` / `deccmp.sh` / `gpupeak.sh`; Chrome = this page, medians.
+
+| Change | Before | After | Kept |
+| --- | --- | --- | --- |
+| f32-only shaders, native browser-like, encoder min ms Q4_0 / Q8_0 / F16 | 46.5 / 51.5 / 54.0 (f16) | 47.3 / 52.1 / 54.6 | yes |
+| same, but the pointwise convs left on ggml_conv_2d (F16 im2col falls to the CPU, 5 splits) | 46 / 51 / 53 | 56.5 / 62 / 64 | no: `TRANSCRIBE_F32_POINTWISE=1` |
+| `TRANSCRIBE_F32_POINTWISE=1` with f16 available | 46.2 / 51.0 / 53.4 | 46.4 / 51.2 / 53.6 | not set on the f16 path (no gain, larger im2col) |
+| Chrome stock (no `shader-f16`), 0.6b Q4_0, 7 s total | 24773 (one WASM thread) | 148, then 106 with the decoder work | yes |
+| Chrome f32-only vs f16, 56 s encoder, 0.6b Q4_0 / Q8_0 / F16; 110m Q8_0 | 435 / 399 / 510; 102 | 474 / 437 / 551; 115 | cost of no f16, not traced |
+| Decoder: packed weights, native 1 thread, decode ms 7 / 13.7 / 56 s (0.6b Q4_0) | 54 / 104 / 361 | 21 / 44 / 142 | superseded |
+| Decoder: packed weights in Chrome **before** the CMake fix (scalar quant kernels) | 74 / 146 / 580 | 195 / 362 / 1273 (Q4_0), 156 / 293 / 1031 (Q8_0) | no |
+| WASM SIMD quant kernels compiled in (CMake fix) | 81 / 145 / 547 (fp32 mirrors) | 64 / 107 / 395 (Q4_0), 43 / 90 / 303 (Q8_0) | yes |
+| Q4_0 decoder weights rewritten as Q8_0 blocks (lossless) | 64 / 107 / 395 | 48 / 85 / 293 | yes |
+| WASM heap in use after the decoder change (0.6b) | 37-47 MB | 16-26 MB | yes |
+| 110m natively: F32 / Q8_0 / Q4_0, 7 s encoder ms (browser-like), 1-thread decode | | 32.6 / 20.2 / 21.2, decode 25 / 10 / 10 | |
+| GPU peak, 56 s clip, native (weights 437 MiB, compute buffer 230 MiB): 1 run / repeated runs | 693 / 923 MiB | 693 / 693 MiB (buffer cache) | yes |
+| same, 110m Q8_0 | 438 | 295 | yes |
+| Chrome GPU peak over the three clips, 0.6b Q4_0 / 110m Q8_0 | 969 / 490 MiB | 799 / 347-386 MiB | yes |
+| Buffer cache, encoder time | 418 ms (56 s, native) | 419 ms | no speed effect |
+
 Findings worth keeping:
 
 - After the direct kernel the Q8_0/Q4_0 matmul is about 33-40 ms of a 45-51 ms native encoder
@@ -161,30 +250,46 @@ Findings worth keeping:
 - Tint/Dawn pitfall: a `var s: array<vec4<f32>, N>;` declared inside a loop body was **not**
   re-zeroed per iteration (wrong transcript); `var s = array<vec4<f32>, N>();` is. Not reported upstream.
 - Q4_K_M: Q4_K blocks have no direct kernel, so it runs the old shader (enc 137 / 213 / 765 ms). Use Q4_0.
+- **The long-clip GPU growth is the compute buffer, twice.** `GGML_WEBGPU_LOG_ALLOC=1`: one 437 MiB
+  weight buffer at load, then one compute buffer per run, allocated and freed each time: 29 MiB for
+  7 s, 230 MiB for 56 s (0.6b). nvidia-smi: 491 / 575 / 923 MiB for 7 / 13.7 / 56 s with repeated
+  runs, 693 for a single 56 s run. So the "+470 MiB" was 2 x 230: the previous run's buffer was
+  still awaiting deletion. Inside the 230 MiB the scheduler dump shows the first subsampling conv's
+  output at 175 MB (256 channels x T/2 x 64 fp32), then 43 MB after the stride-2 depthwise conv;
+  attention is not it.
+- The decoder is mostly the LSTM: native 56 s, 0.6b, packed, 4 threads: enc_proj 7.7 ms, pred 45,
+  joint 8.7, confidence 3.8 (the library's own debug line; `verbose=1` shows it in the page).
+- A zsh trap that cost a wrong reading: `scripts/nb.sh $e` with `e="A=1 B=1"` passes one argument
+  (zsh does not word-split), so the second variable was silently not set.
 
 ## Phone page
 
-`web/` is the page: idle on open, three one-tap presets with the smallest first (Q4_0, 438 MB
-download), adapter line with `shader-f16` present/absent and JSPI present/absent, every finished
-step written to the screen and to `localStorage` ("Earlier runs" after a reload shows the last
-step a killed tab reached), model kept in OPFS. It picks the JSPI build when
-`WebAssembly.Suspending` exists and the ASYNCIFY build otherwise. No threads are used, so it needs
-no COOP/COEP headers and no service worker.
+`web/` is the page: idle on open, one-tap presets with the smallest verified configuration first
+(110m Q8_0, 129 MiB download; then 110m Q4_0, 0.6b Q4_0, Q8_0, F16), an adapter line with
+`shader-f16` present / absent and JSPI present / absent, the shader path in use as a step, every
+finished step written to the screen and to `localStorage` ("Earlier runs" after a reload shows the
+last step a killed tab reached), model kept in OPFS. It picks the JSPI build when
+`WebAssembly.Suspending` exists and the ASYNCIFY build otherwise, and the f32-only shader path
+when the adapter has no `shader-f16`. No threads, so no COOP/COEP headers and no service worker.
 
-Verified from Chrome on diesel2 against the published link: Q4_0 with both builds loads from the
-Pi, runs on WebGPU and gives the native transcript (JSPI total 165 ms, ASYNCIFY 191 ms).
+Verified from Chrome on diesel2 against the published link, **stock Chrome with no Dawn flag**:
+the default (110m Q8_0) loads from the Pi, runs on WebGPU with f32-only shaders and gives the
+reference text (7 s total 70 ms, GPU peak 227 MiB; `results/browser/published-default-stock.json`);
+0.6b Q4_0 the same way before the decoder work (178 ms, `published-q4-stock.json`).
 
 **Nothing was run on a phone, Safari or Firefox.** What bears on it, from documentation only:
 
 - JSPI: shipped in Chrome 137. One (unofficial) source says it is in Safari 27 beta and not in
   earlier Safari; no WebKit release note was found. The ASYNCIFY build exists for that case and is
-  measured above (same speed class, 6.0 MB wasm instead of 4.3 MB).
-- `shader-f16` on iOS Safari: not confirmed either way. Without it the page falls back to one WASM
-  thread with the weights in the heap, which will not be usable on a phone.
+  measured above (same speed, 6.0 MB wasm instead of 4.3 MB, renderer RSS peak 622 MiB instead of 319).
+- `shader-f16` on iOS Safari: not confirmed either way, and it no longer decides whether the page starts.
+  The f32-only shaders rely on `unpack2x16float` and on nothing outside core WGSL; they were compiled
+  by Tint only, never by WebKit's WGSL compiler.
 - OPFS `createSyncAccessHandle` is worker-only and documented by WebKit; the page uses it in the
   worker. `store=blob` in the query string is the fallback to try if it fails there.
-- Desktop numbers that bear on a phone: Q4_0 needs about 0.5 GB of GPU memory and 0.1 GB of
-  renderer memory over a blank page for the 7 s clip; long clips add GPU memory (56 s: +470 MiB).
+- Desktop numbers that bear on a phone: 110m Q8_0 needs about 0.2 GB of GPU memory after load
+  (0.35-0.39 with a 56 s clip) and 0.3 GB of renderer memory at peak, about 0.15 GB over a blank
+  page; 0.6b Q4_0 0.5 GB / 0.8 GB of GPU memory.
 
 ## Build, run, deploy
 
@@ -206,44 +311,56 @@ scripts/prof.sh Q8_0 [ENV=1 ...]   # per-shader GPU ms per run (native, browser-
 
 cd web && bun install && bun build.ts            # dist/: page, worker, wasm, clips, hard-linked GGUFs
 tmux new -d -s pkg-serve 'bun serve.ts 8791'     # local server (running now in tmux session pkg-serve)
-scripts/cr.sh NAME "model=q4&clip=a07&runs=5"    # one Chrome run -> results/browser/NAME.json
+scripts/cr.sh NAME "model=q4&clip=a07&runs=5"    # one Chrome run -> results/browser/NAME.json; STOCK=1 drops the Dawn f16 flag
+scripts/deccmp.sh [MODEL_PREFIX] [THREADS]       # decoder A/B (fp32 mirrors vs packed): text + decode ms, 3 clips
+$R/scripts/gpupeak.sh GGUF CLIP [ENV=1 ...]      # native GPU peak (nvidia-smi) of repeated runs; ITERS=1 for one
 web/bench.sh [row ...]                           # the table rows, quiet-window wait, systemd slice
 bun scripts/table.ts [row ...]                   # tables from results/browser
 ~/devfs/repos/kkrausse/random/scripts/deploy-artifact.sh "$PWD/web/dist" parakeet-ggml-browser   # private shelf
 ```
 
-Query string: `model=q4|q8|f16`, `clip=a07|a14|a56|all`, `runs=N`, `store=opfs|opfs-blob|blob|memfs`,
+Models: 0.6b GGUFs as before; 110m from `handy-computer/parakeet-tdt_ctc-110m-gguf` (F32 and Q8_0
+downloaded into `$R/gguf/`), Q4_0 made locally: `build-webgpu/bin/transcribe-quantize
+gguf/parakeet-tdt_ctc-110m-F32.gguf gguf/parakeet-tdt_ctc-110m-Q4_0.gguf --quant Q4_0`.
+
+Query string: `model=s8|s4|q4|q8|f16` (s = the 110m model), `f16=0` (f32-only shaders even where
+`shader-f16` exists), `trim=1`, `clip=a07|a14|a56|all`, `runs=N`, `store=opfs|opfs-blob|blob|memfs`,
 `flash=0|1`, `variant=jspi|asyncify|prof`, `verbose=1`, `env=NAME=VALUE` (repeatable, passed to
 `setenv` before load: `GGML_WEBGPU_NO_DIRECT=1`, `GGML_WEBGPU_LAZY_SYNC=0`, ...), `auto=1`.
-Chrome on this box needs `--enable-dawn-features=vulkan_enable_f16_on_nvidia` (the scripts pass it).
+Chrome on this box has `shader-f16` only with `--enable-dawn-features=vulkan_enable_f16_on_nvidia`
+(the scripts pass it unless `STOCK=1`; `bench.sh` has `-stock` rows without it).
+Environment knobs added in this pass: `GGML_WEBGPU_NO_F16`, `TRANSCRIBE_F32_POINTWISE`,
+`TRANSCRIBE_DECODER_F32`, `GGML_WEBGPU_BUFFER_CACHE=0`, `GGML_WEBGPU_LOG_ALLOC`.
 
 ## Not measured, not done
 
-- Any phone, Safari, Firefox; a second visit (model already in OPFS, warm shader cache); WER.
+- Any phone, Safari, Firefox; WebKit's WGSL compiler on the f32-only shaders; a second visit (model
+  already in OPFS, warm shader cache); WER (three clips only: "identical text" means these three).
+- 110m F32 / F16 in the browser (native F32 only); 110m with flash attention; `trim=1` memory after
+  the release (the knob is wired and builds, its effect was not sampled).
+- Why the f32-only path costs 9% on the 56 s encoder (suspects: f32 workgroup staging in
+  `mul_mat_reg_tile` for attention, the F32 im2col of the pointwise convs).
+- Decoder threads (pthreads, COOP/COEP); relaxed-SIMD dot kernels; streaming.
 - The flash vec/split shaders (`T_q == 1` paths) still ignore the head in the mask offset; not reached here.
-- The `shader-f16` dependency was not removed.
-- Threads for the decoder; streaming; the smaller model.
-- The machine was shared (load average about 4); CPU-bound numbers (decode, mel, load, worst cases) are the soft ones.
+- The machine was shared (load average 3-4); CPU-bound numbers (decode, mel, load, worst cases) are the soft ones.
 
 ## Next
 
 In the order I would take them:
 
-1. **Long-clip GPU memory.** The +430-470 MiB at 56 s is not attention (flash on or off peaks the
-   same). Not traced further; the suspects are the subsampling convolutions' activations
-   (256 channels x T/2 x 64, about 184 MB per tensor at 56 s). Chunking long audio (the library's
-   streaming/longform paths) is the likely answer for a phone, and it was not tried in the browser.
-2. **`shader-f16`** (backlog 6): decides whether the page starts at all where the feature is missing.
-   Looks tractable for quantized models with f32 activations: make the feature optional, strip
-   `enable f16;` and map `f16` to `f32` in the shader preprocessor when it is absent, read F16
-   weights as `u32` + `unpack2x16float` (or convert the few F16 tensors, conv weights and biases,
-   to F32 at load), and reject F16-typed ops in `supports_op`. `mul_mat_direct` for Q8_0/Q4_0 needs
-   f16 only for the `enable` line.
-3. **Decoder threads**: 80 of 144 ms on the 7 s clip. A pthreads build needs `crossOriginIsolated`
-   (the other page's `sw.js` shows how on the header-less shelf). Native says 58 -> 30 ms with four threads.
-4. **Matmul, long clips**: the direct kernel is 252 of 389 ms on the 56 s clip. Ideas not tried:
-   f16 activations (halves the dominant activation traffic), `dot4I8Packed` with quantized
-   activations (ggml already has a `quantize_q8` path for mat-vec), a Q4_K direct kernel so
-   Q4_K_M is usable, quantizing the F16 conv weights (144 MB of the Q4_0 file).
-5. Fuse ADD/MUL/SCALE/NORM chains: the non-matmul floor is 14 ms native over ~950 dispatches.
-6. Smaller model (backlog 8): not looked at.
+1. **Decoder, long clips** (172 of 319 ms for 110m at 56 s; 300 of 784 for 0.6b). Not tried:
+   `enc_proj` (T x d_enc x joint_h fp32 GEMM on one WASM thread, 460 M multiply-adds for 0.6b at
+   56 s) as a last node of the encoder graph on the GPU, so only the projection is read back;
+   caching `pred_w @ pred_out` across blank steps; `-msimd128` for the transcribe.cpp sources
+   themselves (only ggml-cpu gets it; mel is 45 ms at 56 s); pthreads if a COOP/COEP path is acceptable.
+2. **The 230 MiB compute buffer** for long clips: it is the first subsampling conv's output
+   (175 MB at 56 s for 0.6b, 110 MB for 110m). Running conv0 -> ReLU -> depthwise conv2 in time
+   tiles inside the graph would be exact and cap it; chunked encoding would not be exact.
+3. **0.6b encoder matmul, long clips** (435 vs 232 ms for onnxruntime-web at 56 s): the direct
+   kernel is 252 of 389 ms of GPU time. Not tried: f16 activations where available,
+   `dot4I8Packed` with quantized activations, a Q4_K direct kernel, quantizing the F16 pointwise
+   conv weights (144 MB of the 0.6b Q4_0 file; they already go through `mul_mat_direct`, so a
+   requantized file may simply work).
+4. Fuse ADD/MUL/SCALE/NORM chains: the non-matmul floor is 14 ms native over ~950 dispatches (0.6b);
+   for 110m at 7 s the whole encoder is 20 ms native and 32 in Chrome, so dispatch count is the next thing there.
+5. IQ quant types and flash attention on the f32-only path, if either is ever wanted.

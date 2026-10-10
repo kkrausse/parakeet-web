@@ -1,0 +1,185 @@
+From f9608c798a7db888bcba7179a5a4b44e4927b1b1 Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 03:54:20 -0700
+Subject: [PATCH 9/9] ggml-webgpu: keep the last freed compute buffer for the
+ next allocation; pk_trim
+
+transcribe.cpp frees its graph allocator after every run. Dawn releases a
+destroyed buffer only after a later submit completes, so back-to-back runs
+held two compute buffers: 0.6b on a 56 s clip peaked at 923 MiB of GPU memory
+with 437 MiB of weights and a 230 MiB compute buffer (traced with the new
+GGML_WEBGPU_LOG_ALLOC=1; one run alone peaks at 693). The backend now keeps
+the last freed compute buffer and reuses it when the next one fits
+(GGML_WEBGPU_BUFFER_CACHE=0 turns it off, ggml_backend_webgpu_trim() / pk_trim
+drop it).
+
+Native GPU peak, 56 s clip: 0.6b Q4_0 923 -> 693 MiB, 110m Q8_0 438 -> 295.
+Chrome: 970 -> 799 and 490 -> 347. Encoder time unchanged, same text.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ examples/web/pk_web.cpp              |  9 ++++
+ ggml/include/ggml-webgpu.h           |  4 ++
+ ggml/src/ggml-webgpu/ggml-webgpu.cpp | 72 ++++++++++++++++++++++++++--
+ 3 files changed, 81 insertions(+), 4 deletions(-)
+
+diff --git a/examples/web/pk_web.cpp b/examples/web/pk_web.cpp
+index 2b804d31..7a3db17a 100644
+--- a/examples/web/pk_web.cpp
++++ b/examples/web/pk_web.cpp
+@@ -8,6 +8,7 @@
+ //   pk_load(path, n_threads)   0 on success; model read from the Emscripten FS
+ //   pk_run(pcm, n)             0 on success; then pk_text() / pk_json()
+ //   pk_json()                  {"text","mel_ms","encode_ms","decode_ms","load_ms","n_tokens","backend"}
++//   pk_trim()                  drop the GPU compute buffer kept between runs
+ //   pk_log()                   library log lines since the last call (errors, backend notes)
+ 
+ #include "transcribe.h"
+@@ -55,6 +56,8 @@ std::string json_escape(const char * s) {
+ }
+ }  // namespace
+ 
++extern "C" void ggml_backend_webgpu_trim(void);
++
+ extern "C" {
+ 
+ EMSCRIPTEN_KEEPALIVE void pk_setenv(const char * k, const char * v) {
+@@ -117,6 +120,12 @@ EMSCRIPTEN_KEEPALIVE double pk_heap_in_use(void) {
+     return static_cast<double>(mallinfo().uordblks);
+ }
+ 
++// Releases the GPU compute buffer the backend keeps between runs (as large as
++// the longest recent clip needed). The next run allocates it again.
++EMSCRIPTEN_KEEPALIVE void pk_trim(void) {
++    ggml_backend_webgpu_trim();
++}
++
+ EMSCRIPTEN_KEEPALIVE const char * pk_json(void) {
+     return g_json.c_str();
+ }
+diff --git a/ggml/include/ggml-webgpu.h b/ggml/include/ggml-webgpu.h
+index 65b8ed9b..1e42c348 100644
+--- a/ggml/include/ggml-webgpu.h
++++ b/ggml/include/ggml-webgpu.h
+@@ -14,6 +14,10 @@ GGML_BACKEND_API ggml_backend_t ggml_backend_webgpu_init(void);
+ 
+ GGML_BACKEND_API ggml_backend_reg_t ggml_backend_webgpu_reg(void);
+ 
++// Drops the compute buffer kept for reuse between graph allocations (it is the
++// size of the largest recent graph). Safe to call at any time between computes.
++GGML_BACKEND_API void ggml_backend_webgpu_trim(void);
++
+ #ifdef  __cplusplus
+ }
+ #endif
+diff --git a/ggml/src/ggml-webgpu/ggml-webgpu.cpp b/ggml/src/ggml-webgpu/ggml-webgpu.cpp
+index 7662a902..12ed1f52 100644
+--- a/ggml/src/ggml-webgpu/ggml-webgpu.cpp
++++ b/ggml/src/ggml-webgpu/ggml-webgpu.cpp
+@@ -222,7 +222,14 @@ struct webgpu_global_context_struct {
+     wgpu::Buffer debug_dev_buf;
+ #endif
+ 
++    // The most recently freed compute buffer, kept for the next allocation
++    // (see ggml_backend_webgpu_buffer_free_buffer).
++    wgpu::Buffer cached_compute_buf;
++
+     ~webgpu_global_context_struct() {
++        if (this->cached_compute_buf) {
++            this->cached_compute_buf.Destroy();
++        }
+         if (this->get_tensor_staging_buf) {
+             this->get_tensor_staging_buf.Destroy();
+             this->get_tensor_staging_buf = nullptr;
+@@ -3770,7 +3777,32 @@ static ggml_backend_i ggml_backend_webgpu_i = {
+ static void ggml_backend_webgpu_buffer_free_buffer(ggml_backend_buffer_t buffer) {
+     ggml_backend_webgpu_buffer_context * ctx = static_cast<ggml_backend_webgpu_buffer_context *>(buffer->context);
+     if (ctx != nullptr && ctx->buffer != nullptr) {
+-        ctx->buffer.Destroy();
++        // A caller that frees its graph allocator after every run (transcribe.cpp
++        // does, so one long utterance does not pin the high-water mark) allocates
++        // the same compute buffer again milliseconds later. Dawn only releases
++        // destroyed memory after a later submit has completed, so back-to-back
++        // runs held two of them (0.6b, 56 s clip: 2 x 230 MiB), and every fresh
++        // buffer is zero-filled on first use. Keep the last compute buffer and
++        // hand it to the next allocation that fits. GGML_WEBGPU_BUFFER_CACHE=0
++        // disables it; ggml_backend_webgpu_trim() drops the cached buffer.
++        static const bool cache_on  = std::getenv("GGML_WEBGPU_BUFFER_CACHE") == nullptr ||
++                                      std::getenv("GGML_WEBGPU_BUFFER_CACHE")[0] != '0';
++        static const bool log_alloc = std::getenv("GGML_WEBGPU_LOG_ALLOC") != nullptr;
++        if (cache_on && buffer->usage == GGML_BACKEND_BUFFER_USAGE_COMPUTE && ctx->global_ctx != nullptr) {
++            wgpu::Buffer & slot = ctx->global_ctx->cached_compute_buf;
++            if (slot) {
++                slot.Destroy();
++            }
++            slot = ctx->buffer;
++            if (log_alloc) {
++                GGML_LOG_INFO("ggml_webgpu: cached %.1f MiB\n", slot.GetSize() / 1048576.0);
++            }
++        } else {
++            if (log_alloc) {
++                GGML_LOG_INFO("ggml_webgpu: free %.1f MiB\n", ctx->buffer.GetSize() / 1048576.0);
++            }
++            ctx->buffer.Destroy();
++        }
+         delete ctx;
+     }
+ }
+@@ -3938,12 +3970,35 @@ static ggml_backend_buffer_t ggml_backend_webgpu_buffer_type_alloc_buffer(ggml_b
+     int                     buffer_id = buffer_count++;
+     std::string             buf_name  = "tensor_buf" + std::to_string(buffer_id);
+     WEBGPU_LOG_DEBUG("ggml_backend_webgpu_buffer_type_alloc_buffer_" << buffer_id << ": " << size << " bytes");
++    // GGML_WEBGPU_LOG_ALLOC=1: one line per buffer (weights and each compute-buffer growth)
++    static const bool log_alloc = std::getenv("GGML_WEBGPU_LOG_ALLOC") != nullptr;
++    if (log_alloc) {
++        GGML_LOG_INFO("ggml_webgpu: alloc %s %.1f MiB\n", buf_name.c_str(), size / 1048576.0);
++    }
+ 
+     ggml_backend_webgpu_device_context * ctx = static_cast<ggml_backend_webgpu_device_context *>(buft->device->context);
+     wgpu::Buffer                         buf;
+-    ggml_webgpu_create_buffer(ctx->webgpu_global_ctx->device, buf, ROUNDUP_POW2(size, WEBGPU_STORAGE_BUF_BINDING_MULT),
+-                              wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc | wgpu::BufferUsage::CopyDst,
+-                              buf_name.c_str());
++    const size_t                         want   = ROUNDUP_POW2(size, WEBGPU_STORAGE_BUF_BINDING_MULT);
++    wgpu::Buffer &                       cached = ctx->webgpu_global_ctx->cached_compute_buf;
++    if (cached) {
++        // Reuse when it fits without wasting more than half of it; otherwise it
++        // goes first so the two are not alive together longer than necessary.
++        const size_t have = cached.GetSize();
++        if (have >= want && have <= 2 * want + (16u << 20)) {
++            buf = cached;
++            if (log_alloc) {
++                GGML_LOG_INFO("ggml_webgpu: reused the cached %.1f MiB buffer\n", have / 1048576.0);
++            }
++        } else {
++            cached.Destroy();
++        }
++        cached = nullptr;
++    }
++    if (!buf) {
++        ggml_webgpu_create_buffer(ctx->webgpu_global_ctx->device, buf, want,
++                                  wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc | wgpu::BufferUsage::CopyDst,
++                                  buf_name.c_str());
++    }
+ 
+     ggml_backend_webgpu_buffer_context * buf_ctx =
+         new ggml_backend_webgpu_buffer_context(buf, buf_name, ctx->webgpu_global_ctx);
+@@ -4974,6 +5029,15 @@ ggml_backend_reg_t ggml_backend_webgpu_reg() {
+     return &reg;
+ }
+ 
++void ggml_backend_webgpu_trim(void) {
++    ggml_backend_reg_t reg = ggml_backend_webgpu_reg();
++    auto *             ctx = static_cast<ggml_backend_webgpu_reg_context *>(reg->context);
++    if (ctx != nullptr && ctx->webgpu_global_ctx != nullptr && ctx->webgpu_global_ctx->cached_compute_buf) {
++        ctx->webgpu_global_ctx->cached_compute_buf.Destroy();
++        ctx->webgpu_global_ctx->cached_compute_buf = nullptr;
++    }
++}
++
+ ggml_backend_t ggml_backend_webgpu_init(void) {
+     ggml_backend_reg_t reg = ggml_backend_webgpu_reg();
+     if (ggml_backend_reg_dev_count(reg) == 0) {
+-- 
+2.53.0
+

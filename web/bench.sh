@@ -27,6 +27,10 @@ ONLY="$*"
 mkdir -p ../results/browser
 systemctl --user start parakeetbench.slice 2>/dev/null
 systemctl --user set-property --runtime parakeetbench.slice CPUWeight=10000 2>/dev/null
+row ggml-s8            "model=s8&$Q" $F16                    # parakeet-tdt_ctc-110m, the page default
+row ggml-s8-stock      "model=s8&$Q"
+row ggml-s4            "model=s4&$Q" $F16
+row ggml-s4-stock      "model=s4&$Q"
 row ggml-q4            "model=q4&$Q" $F16
 row ggml-q8            "model=q8&$Q" $F16
 row ggml-f16           "model=f16&$Q" $F16
