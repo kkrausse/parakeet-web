@@ -1,0 +1,65 @@
+RUN 2026-10-10T12:32:32.318Z s8 asyncify done= True error= None
+UA Mozilla/5.0 (iPhone; CPU iPhone OS 18_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Mobile/15E148 Safari/604.1
+    0.0s  start: 110M, Q8_0 (8-bit weights), flash=off, store=opfs, asyncify
+    0.2s  WASM module ready: 171 ms  (heap 32 MB; JSPI absent)
+    0.2s  no WebGPU adapter: requestAdapter() returned null (no usable GPU, or the browser blocks this one)
+    0.2s  WebGPU is unavailable: the model would run on one WASM thread (very slow)
+    0.2s  shader path: f32 only (adapter has no shader-f16)
+    4.1s  model file ready (network, streamed to OPFS): 3831 ms  (129 MB)
+    4.1s  model loaded on CPU: 80 ms  (WASM heap 239 MB, 189.9 MB in use)
+    4.1s  WARNING: not on WebGPU (backend "CPU"). Everything runs on one WASM thread and the weights sit in the WASM heap.
+    4.1s  library log: ggml_webgpu: Failed to get an adapter: WebGPU not available on this browser (requestAdapter returned null)
+parakeet: promoted 34 conv pointwise weights from F16 → F32 for CPU backend
+    6.7s  library: mel: 701 frames, stft 13.0 ms, total to log-mel 14.0 ms
+    6.7s  library: decoder: 61 iters, 42 tokens, T_enc=88  enc_proj=0.0 ms  pred=19.0 ms  joint=5.0 ms  conf=1.0 ms  total=25.0 ms  per_iter=393 us
+    6.7s  a07 (7.0 s) first run (cold): 1155 ms  (mel 14 ms, encoder 1116 ms, decode 25 ms, heap 287 MB (216.9 in use))
+    6.7s  a07 transcript DIFFERS from the reference  (going along slushy country roads and speaking to damp audiences in draughty schoolrooms da...)
+    8.3s  library: mel: 701 frames, stft 3.0 ms, total to log-mel 4.0 ms
+    8.3s  library: decoder: 61 iters, 42 tokens, T_enc=88  enc_proj=0.0 ms  pred=8.0 ms  joint=7.0 ms  conf=1.0 ms  total=16.0 ms  per_iter=246 us
+    9.7s  library: mel: 701 frames, stft 4.0 ms, total to log-mel 4.0 ms
+    9.7s  library: decoder: 61 iters, 42 tokens, T_enc=88  enc_proj=0.0 ms  pred=5.0 ms  joint=8.0 ms  conf=1.0 ms  total=14.0 ms  per_iter=213 us
+   10.8s  library: mel: 701 frames, stft 3.0 ms, total to log-mel 3.0 ms
+   10.8s  library: decoder: 61 iters, 42 tokens, T_enc=88  enc_proj=0.0 ms  pred=7.0 ms  joint=5.0 ms  conf=0.0 ms  total=12.0 ms  per_iter=197 us
+   11.9s  library: mel: 701 frames, stft 3.0 ms, total to log-mel 3.0 ms
+   11.9s  library: decoder: 61 iters, 42 tokens, T_enc=88  enc_proj=0.0 ms  pred=8.0 ms  joint=4.0 ms  conf=1.0 ms  total=13.0 ms  per_iter=197 us
+   11.9s  a07 warm x3: 1127 ms  (total median/worst 1127 / 1385 ms; encoder 1111 / 1367 ms; mel 4 ms; decode 13 ms; 6.2x real time; text stable=true)
+   11.9s  done: 11930 ms
+RUN 2026-10-10T13:18:00.945Z s8 asyncify done= False error= None
+UA Mozilla/5.0 (iPhone; CPU iPhone OS 18_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Mobile/15E148 Safari/604.1
+    0.0s  start: 110M, Q8_0 (8-bit weights), flash=off, store=opfs, asyncify
+    0.1s  WASM module ready: 111 ms  (heap 32 MB; JSPI absent)
+    0.1s  no WebGPU adapter: navigator.gpu is undefined in the worker (WebGPU is not enabled in this browser, or not exposed to workers)
+    0.1s  WebGPU is unavailable: the model would run on one WASM thread (very slow)
+    0.1s  shader path: f32 only (adapter has no shader-f16)
+    0.5s  model file ready (OPFS (already stored)): 16 ms  (129 MB)
+    0.5s  model loaded on CPU: 342 ms  (WASM heap 239 MB, 189.9 MB in use)
+    0.5s  WARNING: not on WebGPU (backend "CPU"). Everything runs on one WASM thread and the weights sit in the WASM heap.
+    0.5s  library log: ggml_webgpu: Failed to get an adapter: WebGPU not available on this browser (navigator.gpu is not available)
+    5.7s  a14 (13.7 s) first run (cold): 3763 ms  (mel 82 ms, encoder 3627 ms, decode 54 ms, heap 287 MB (217.8 in use))
+    5.7s  a14 transcript matches the reference  (going along slushy country roads and speaking to damp audiences in draughty schoolrooms da...)
+RUN 2026-10-10T13:18:50.843Z s8 asyncify done= False error= None
+UA Mozilla/5.0 (iPhone; CPU iPhone OS 18_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Mobile/15E148 Safari/604.1
+    0.0s  start: 110M, Q8_0 (8-bit weights), flash=off, store=opfs, asyncify
+    0.4s  WASM module ready: 304 ms  (heap 32 MB; JSPI absent)
+    0.4s  no WebGPU adapter: navigator.gpu is undefined in the worker (WebGPU is not enabled in this browser, or not exposed to workers)
+    0.4s  WebGPU is unavailable: the model would run on one WASM thread (very slow)
+    0.4s  shader path: f32 only (adapter has no shader-f16)
+    1.2s  model file ready (OPFS (already stored)): 139 ms  (129 MB)
+    1.2s  model loaded on CPU: 687 ms  (WASM heap 239 MB, 189.9 MB in use)
+    1.2s  WARNING: not on WebGPU (backend "CPU"). Everything runs on one WASM thread and the weights sit in the WASM heap.
+    1.2s  library log: ggml_webgpu: Failed to get an adapter: WebGPU not available on this browser (navigator.gpu is not available)
+   16.4s  a14 (13.7 s) first run (cold): 13678 ms  (mel 313 ms, encoder 13.2 s, decode 183 ms, heap 287 MB (217.8 in use))
+   16.4s  a14 transcript matches the reference  (going along slushy country roads and speaking to damp audiences in draughty schoolrooms da...)
+RUN 2026-10-10T13:19:37.206Z s8 asyncify done= False error= None
+UA Mozilla/5.0 (iPhone; CPU iPhone OS 18_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3 Mobile/15E148 Safari/604.1
+    0.0s  start: 110M, Q8_0 (8-bit weights), flash=off, store=opfs, asyncify
+    0.5s  WASM module ready: 341 ms  (heap 32 MB; JSPI absent)
+    0.5s  no WebGPU adapter: navigator.gpu is undefined in the worker (WebGPU is not enabled in this browser, or not exposed to workers)
+    0.5s  WebGPU is unavailable: the model would run on one WASM thread (very slow)
+    0.5s  shader path: f32 only (adapter has no shader-f16)
+    1.6s  model file ready (OPFS (already stored)): 321 ms  (129 MB)
+    1.6s  model loaded on CPU: 753 ms  (WASM heap 239 MB, 189.9 MB in use)
+    1.6s  WARNING: not on WebGPU (backend "CPU"). Everything runs on one WASM thread and the weights sit in the WASM heap.
+    1.6s  library log: ggml_webgpu: Failed to get an adapter: WebGPU not available on this browser (navigator.gpu is not available)
+   15.7s  a14 (13.7 s) first run (cold): 12616 ms  (mel 277 ms, encoder 12.2 s, decode 162 ms, heap 287 MB (217.8 in use))
+   15.7s  a14 transcript matches the reference  (going along slushy country roads and speaking to damp audiences in draughty schoolrooms da...)

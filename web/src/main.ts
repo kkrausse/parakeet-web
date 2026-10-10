@@ -158,6 +158,7 @@ async function run() {
     TRANSCRIBE_PRE_ENCODE_TILE: "128", // clips over 15 s: subsampling convs in 10 s time tiles (exact): their activations no longer grow with the clip
     TRANSCRIBE_ENC_PROJ_GPU: "1", // the joint's encoder projection as the last encoder node; only it is read back
     // clips over 60 s: encoder in 30 s windows with 4 s of audio either side, stitched and decoded once, so GPU memory is that of one window
+    TRANSCRIBE_MEL_REAL_FFT: "1", // STFT through a half-size complex FFT (the frame is real); same text on every clip checked
     TRANSCRIBE_PARAKEET_CHUNK_S: "30", TRANSCRIBE_PARAKEET_CHUNK_HALO_S: "4", TRANSCRIBE_PARAKEET_CHUNK_MIN_S: "60",
     ...(a.plan?.limits === "default" ? { GGML_WEBGPU_LIMITS: "default" } : {}), ...cfg.env };
   const ld = await call("load", { url: new URL(cfg.base + model.file, location.href).href, name: model.file, store: cfg.store, env, threads: cfg.threads, verbose: cfg.verbose });

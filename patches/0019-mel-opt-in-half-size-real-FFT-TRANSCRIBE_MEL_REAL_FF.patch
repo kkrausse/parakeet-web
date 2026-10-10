@@ -1,0 +1,102 @@
+From 237d972550a36eb51dc5a954014bdf5433a34094 Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 06:27:38 -0700
+Subject: [PATCH] mel: opt-in half-size real FFT (TRANSCRIBE_MEL_REAL_FFT=1),
+ mel checksum line
+
+The windowed frame is real, so its n_fft-point spectrum comes from one complex
+FFT of n_fft/2 points (even samples as real parts, odd as imaginary) plus one
+twiddle per bin. Still fp64; the power differs from the full transform in the
+last bits, so it is opt-in. Without the variable the transform is unchanged
+(log-mel hash identical).
+
+Native mel ms, 56 s / 4.4 min / 8.9 min: 12.1 / 107 / 215 -> 10.5 / 54 / 116.
+Chrome (WASM): 56 s 31-33 -> 24, 8.9 min 296 -> 228. Text identical on the 15
+model x clip reference pairs and on the 4.4 and 8.9 min chunked clips (110m
+Q8_0, 0.6b Q4_0).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ src/transcribe-mel.cpp | 48 ++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 41 insertions(+), 7 deletions(-)
+
+diff --git a/src/transcribe-mel.cpp b/src/transcribe-mel.cpp
+index 1180eabb..82b1477b 100644
+--- a/src/transcribe-mel.cpp
++++ b/src/transcribe-mel.cpp
+@@ -721,6 +721,23 @@ transcribe_status MelFrontend::compute(const float *        pcm,
+             }
+             return use_reflect ? emph_at(n_samples - 2 - (i - upad - n_samples)) : 0.0;
+         };
++        // TRANSCRIBE_MEL_REAL_FFT=1: the windowed frame is real, so its n_fft-point
++        // spectrum comes from one complex FFT of half the size (even samples as the
++        // real parts, odd samples as the imaginary parts) and a twiddle per bin.
++        // Half the butterflies, still fp64. Not bit-identical to the full transform
++        // (the power differs in the last bits), hence opt-in.
++        const bool          real_fft = std::getenv("TRANSCRIBE_MEL_REAL_FFT") != nullptr && n_fft >= 8;
++        const int           st       = real_fft ? 1 : 2;  // stride of the real samples in frame[]
++        std::vector<double> bin_cos, bin_sin;
++        if (real_fft) {
++            bin_cos.resize(static_cast<size_t>(n_freq));
++            bin_sin.resize(static_cast<size_t>(n_freq));
++            for (int k = 0; k < n_freq; ++k) {
++                const double ang                 = -2.0 * M_PI * static_cast<double>(k) / static_cast<double>(n_fft);
++                bin_cos[static_cast<size_t>(k)] = std::cos(ang);
++                bin_sin[static_cast<size_t>(k)] = std::sin(ang);
++            }
++        }
+         int  blk0   = 0;  // first frame of the block being transformed
+         int  blk_n  = 0;
+         auto worker = [&](int tid) {
+@@ -732,24 +749,41 @@ transcribe_status MelFrontend::compute(const float *        pcm,
+                     const float * src = pcm + (start - upad);
+                     if (emph_on) {
+                         for (int k = 0; k < n_fft; ++k) {
+-                            frame[2 * static_cast<size_t>(k)] =
++                            frame[static_cast<size_t>(st * k)] =
+                                 (static_cast<double>(src[k]) - emph_alpha * static_cast<double>(src[k - 1])) * window_[k];
+-                            frame[2 * static_cast<size_t>(k) + 1] = 0.0;
+                         }
+                     } else {
+                         for (int k = 0; k < n_fft; ++k) {
+-                            frame[2 * static_cast<size_t>(k)]     = static_cast<double>(src[k]) * window_[k];
+-                            frame[2 * static_cast<size_t>(k) + 1] = 0.0;
++                            frame[static_cast<size_t>(st * k)] = static_cast<double>(src[k]) * window_[k];
+                         }
+                     }
+                 } else {
+                     for (int k = 0; k < n_fft; ++k) {
+-                        frame[2 * static_cast<size_t>(k)]     = padded_at(start + static_cast<size_t>(k)) * window_[k];
+-                        frame[2 * static_cast<size_t>(k) + 1] = 0.0;
++                        frame[static_cast<size_t>(st * k)] = padded_at(start + static_cast<size_t>(k)) * window_[k];
+                     }
+                 }
+-                fft_radix2(frame.data(), n_fft);
+                 float * pwr_row = power.data() + static_cast<size_t>(t - blk0) * n_freq;
++                if (real_fft) {
++                    const int h = n_fft / 2;
++                    fft_radix2(frame.data(), h);  // Z = FFT of (even + i * odd)
++                    for (int k = 0; k < n_freq; ++k) {
++                        const size_t ia = 2 * static_cast<size_t>(k % h);
++                        const size_t ib = 2 * static_cast<size_t>((h - k) % h);
++                        const double ar = frame[ia], ai = frame[ia + 1];
++                        const double br = frame[ib], bi = -frame[ib + 1];  // conj(Z[h - k])
++                        const double er = (ar + br) * 0.5, ei = (ai + bi) * 0.5;  // spectrum of the even samples
++                        const double o_r = (ai - bi) * 0.5, o_i = -(ar - br) * 0.5;  // ... of the odd samples
++                        const double wr = bin_cos[static_cast<size_t>(k)], wi = bin_sin[static_cast<size_t>(k)];
++                        const double re = er + wr * o_r - wi * o_i;
++                        const double im = ei + wr * o_i + wi * o_r;
++                        pwr_row[k]      = static_cast<float>(re * re + im * im);
++                    }
++                    continue;
++                }
++                for (int k = 0; k < n_fft; ++k) {
++                    frame[2 * static_cast<size_t>(k) + 1] = 0.0;
++                }
++                fft_radix2(frame.data(), n_fft);
+                 for (int k = 0; k < n_freq; ++k) {
+                     const double re = frame[2 * static_cast<size_t>(k)];
+                     const double im = frame[2 * static_cast<size_t>(k) + 1];
+-- 
+2.53.0
+

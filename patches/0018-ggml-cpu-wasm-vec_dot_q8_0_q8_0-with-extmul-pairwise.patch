@@ -1,0 +1,63 @@
+From 8a137d0f359fbf9de1ebc51fc4fb8a2cbbfa368e Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 06:20:52 -0700
+Subject: [PATCH] ggml-cpu wasm: vec_dot_q8_0_q8_0 with extmul + pairwise
+ widening
+
+Per 32-byte block: 4 i16x8.extmul, 2 i16 adds (two products of values in
+[-127, 127] fit i16), 2 i32x4.extadd_pairwise, 1 add, instead of 8 extends,
+4 i32x4.dot_i16x8 and 3 adds. Same integer sum per block; the four float
+lanes group the integers differently, so the result can differ in the last
+bit.
+
+Chrome 154 on x86 (parakeet decoder, one thread, 56 s clip, warm median):
+110m Q8_0 decode 101 -> 94 ms, 0.6b Q4_0 218 -> 190 ms; transcripts
+unchanged on the reference clips. On ARM every one of these ops is a single
+NEON instruction (dot_i16x8 is three); measured only in the iOS simulator's
+Safari on a loaded M4 (74, 76 ms before; 57, 76 after): inconclusive.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ ggml/src/ggml-cpu/arch/wasm/quants.c | 26 +++++++-------------------
+ 1 file changed, 7 insertions(+), 19 deletions(-)
+
+diff --git a/ggml/src/ggml-cpu/arch/wasm/quants.c b/ggml/src/ggml-cpu/arch/wasm/quants.c
+index ef19a1ef..60f54d6f 100644
+--- a/ggml/src/ggml-cpu/arch/wasm/quants.c
++++ b/ggml/src/ggml-cpu/arch/wasm/quants.c
+@@ -646,25 +646,13 @@ void ggml_vec_dot_q8_0_q8_0(int n, float * GGML_RESTRICT s, size_t bs, const voi
+         const v128_t y0_0 = wasm_v128_load(y0->qs);
+         const v128_t y0_1 = wasm_v128_load(y0->qs + 16);
+ 
+-        // Extend 8-bit to 16-bit
+-        const v128_t x0_0l = wasm_i16x8_extend_low_i8x16(x0_0);
+-        const v128_t x0_0h = wasm_i16x8_extend_high_i8x16(x0_0);
+-        const v128_t x0_1l = wasm_i16x8_extend_low_i8x16(x0_1);
+-        const v128_t x0_1h = wasm_i16x8_extend_high_i8x16(x0_1);
+-
+-        const v128_t y0_0l = wasm_i16x8_extend_low_i8x16(y0_0);
+-        const v128_t y0_0h = wasm_i16x8_extend_high_i8x16(y0_0);
+-        const v128_t y0_1l = wasm_i16x8_extend_low_i8x16(y0_1);
+-        const v128_t y0_1h = wasm_i16x8_extend_high_i8x16(y0_1);
+-
+-        // Compute dot products
+-        const v128_t dx0_0 = wasm_i32x4_dot_i16x8(x0_0l, y0_0l);
+-        const v128_t dx0_1 = wasm_i32x4_dot_i16x8(x0_0h, y0_0h);
+-        const v128_t dx1_0 = wasm_i32x4_dot_i16x8(x0_1l, y0_1l);
+-        const v128_t dx1_1 = wasm_i32x4_dot_i16x8(x0_1h, y0_1h);
+-
+-        // Sum all dot products
+-        const v128_t sum_dots = wasm_i32x4_add(wasm_i32x4_add(dx0_0, dx0_1), wasm_i32x4_add(dx1_0, dx1_1));
++        // i8 x i8 products as i16 (extmul), the two halves of each 16 bytes added in i16
++        // (|q| <= 127, so a pair of products is at most 32258), then pairwise-widened to i32.
++        // 9 SIMD ops per block instead of 15; on ARM each is one instruction, where
++        // extend + i32x4.dot_i16x8 needed 23.
++        const v128_t p0 = wasm_i16x8_add(wasm_i16x8_extmul_low_i8x16(x0_0, y0_0), wasm_i16x8_extmul_high_i8x16(x0_0, y0_0));
++        const v128_t p1 = wasm_i16x8_add(wasm_i16x8_extmul_low_i8x16(x0_1, y0_1), wasm_i16x8_extmul_high_i8x16(x0_1, y0_1));
++        const v128_t sum_dots = wasm_i32x4_add(wasm_i32x4_extadd_pairwise_i16x8(p0), wasm_i32x4_extadd_pairwise_i16x8(p1));
+ 
+         // Convert to float and accumulate
+         const float scale = GGML_CPU_FP16_TO_FP32(x0->d) * GGML_CPU_FP16_TO_FP32(y0->d);
+-- 
+2.53.0
+

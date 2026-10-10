@@ -1,0 +1,310 @@
+{
+ "name": "t5-s8-l10",
+ "url": "http://127.0.0.1:8791/?model=s8&clip=l10&runs=3&auto=1",
+ "chromeArgs": [
+  "--enable-dawn-features=vulkan_enable_f16_on_nvidia"
+ ],
+ "machineAtStart": {
+  "loadavg": "4.12 4.05 3.43 7/2034 1755310",
+  "cpuPressure": "some avg10=0.64 avg60=1.51 avg300=1.61 total=10222549196"
+ },
+ "chrome": "154.0.8037.97",
+ "error": null,
+ "memory": {
+  "gpuProcessGpuMibAfterLoad": 199,
+  "gpuProcessGpuMibPeak": 246,
+  "rendererRssMibAfterLoad": 212,
+  "rendererRssMibPeak": 539,
+  "gpuProcessRssMibAfterLoad": 296,
+  "gpuProcessRssMibPeak": 345
+ },
+ "pids": {
+  "gpu": 1755238,
+  "renderers": [
+   1755312,
+   1755286,
+   1755277
+  ]
+ },
+ "page": {
+  "config": {
+   "model": "s8",
+   "clip": "l10",
+   "runs": 3,
+   "threads": 1,
+   "store": "opfs",
+   "f16": true,
+   "flash": false,
+   "variant": "jspi",
+   "verbose": false,
+   "base": "models/",
+   "env": {}
+  },
+  "model": {
+   "label": "110M, Q8_0 (8-bit weights)",
+   "file": "parakeet-tdt_ctc-110m-Q8_0.gguf",
+   "mb": 129,
+   "family": "110m"
+  },
+  "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "crossOriginIsolated": true,
+  "clips": [
+   {
+    "clip": "l10",
+    "seconds": 531.59,
+    "firstInPage": true,
+    "firstRunMs": {
+     "pre": 282.8,
+     "enc": 1247.5,
+     "dec": 1053.6,
+     "total": 2583.9
+    },
+    "startToFirstTranscriptMs": 5602,
+    "decSteps": 2829,
+    "text": "Welcome to Quirk Quid Quill Inc. where finance meets innovation. Explore diverse offerings from the P three Quatro, a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and our and experience non standard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier our forward thinking financial forecasting tool. Explore Venture Capital World with U three Unifund or move your money with the M three mover, our sophisticated monetary transfer module. At CorkidQuill Inc. we turn complex finance into creative solutions. Join us in redefining financial services. Going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning and he can come to us immediately afterwards. Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatre a unique investment portfolio Quadrant to the O three Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and experience non standard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier, our forward thinking financial forecasting tool. Explore venture capital world with U three Unifund or move your money with the M three Mover, our sophisticated monetary transfer module. At Cork Quid Quill Inc. We turn complex finance into creative solutions. Join us in redefining financial services. Going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. Welcome to Quirk Quid Quill Inc. where finance meets innovation. Explore diverse offerings from the P three Quatre, a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and our and experience non standard equity trading with E three equity, personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier, our forward thinking financial forecasting tool. Explore venture capital world with U three unifund or move your money with the M three Mover, our sophisticated monetary transfer module. At Cork Quid Quill Inc. we turn complex finance into creative solutions. Join us in redefining financial services. Going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards. Welcome to Quirk Quid Quill Inc. where finance meets innovation. Explore our diverse offerings from the P three Quatro, a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and experience non standard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier our forward thinking financial forecasting tool. Explore Venture Capital World with U three Unifund or move your money with the M three mover, our sophisticated monetary transfer module at Quirk Quid Quill Inc. we turn complex finance into creative solutions. Join us in redefining financial services going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. Welcome to Quirk Quid Quill Inc. where finance meets innovation. Explore diverse offerings from the P three Quatre a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and our and experience nonstandard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier our forward thinking financial forecasting tool. Explore venture capital world with U three unifund or move your money with the M three Mover sophisticated monetary transfer module. At CorkidQuill Inc. We turn complex finance into creative solutions. Join us in redefining financial services going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning and he can come to us immediately afterwards Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatro a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and experience non standard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier our forward thinking financial forecasting tool. Explore venture capital world with U three unifund or move your money with the M three mover our sophisticated monetary transfer module at CorkidQuill Inc, we turn complex finance into creative solutions. Join us in redefining financial services going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. Welcome to Quirk Quid Quill Inc. where finance meets innovation. Explore diverse offerings from the P three Quatre a unique investment portfolio quadrant to the O three Omni a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and experience non standard equity trading with E three equity, personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier our forward thinking financial forecasting tool. Explore venture capital world with U three unifund or move your money with the M three Mover sophisticated monetary transfer module at Quirk Quid Quill Inc. we turn complex finance into creative solutions. Join us in redefining financial services going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning and he can come to us immediately afterwards. Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatre a unique investment portfolio Quadrant to the O three Omni, a platform for intricate derivative trading strategies delve into unconventional bond markets with our B three Bond X and our and experience non standard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier our forward thinking financial forecasting tool. Explore venture capital world with U three unifund or move your money with the M three Mover our sophisticated monetary transfer module at CorkidQuill Inc, we turn complex finance into creative solutions. Join us in redefining financial services Going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight.",
+    "matchesNative": false,
+    "hasReference": true,
+    "wordDiff": {
+     "differing": 8,
+     "words": 1202
+    },
+    "warmRuns": 3,
+    "preMs": {
+     "median": 228.5,
+     "worst": 230.1,
+     "best": 227.1
+    },
+    "encMs": {
+     "median": 1058.6,
+     "worst": 1065.5,
+     "best": 1057.9
+    },
+    "decMs": {
+     "median": 912.2,
+     "worst": 920.4,
+     "best": 908.4
+    },
+    "totalMs": {
+     "median": 2197.8,
+     "worst": 2214.4,
+     "best": 2196.3
+    },
+    "xRealTime": 241.9,
+    "textStable": true,
+    "wasmHeapMb": 178,
+    "wasmHeapUsedMb": 51.3
+   }
+  ],
+  "adapter": {
+   "available": true,
+   "vendor": "nvidia",
+   "architecture": "turing",
+   "device": "0x1e07",
+   "description": "NVIDIA GeForce RTX 2080 Ti",
+   "isFallbackAdapter": false,
+   "shaderF16": true,
+   "features": [
+    "bgra8unorm-storage",
+    "chromium-experimental-multi-draw-indirect",
+    "chromium-experimental-sampling-resource-table",
+    "chromium-experimental-subgroup-matrix",
+    "chromium-experimental-timestamp-query-inside-passes",
+    "clip-distances",
+    "core-features-and-limits",
+    "depth-clip-control",
+    "depth32float-stencil8",
+    "dual-source-blending",
+    "float32-blendable",
+    "float32-filterable",
+    "indirect-first-instance",
+    "primitive-index",
+    "rg11b10ufloat-renderable",
+    "shader-f16",
+    "subgroup-size-control",
+    "subgroups",
+    "texture-component-swizzle",
+    "texture-compression-bc",
+    "texture-compression-bc-sliced-3d",
+    "texture-compression-unaligned",
+    "texture-formats-tier1",
+    "texture-formats-tier2",
+    "timestamp-query"
+   ],
+   "wgslLanguageFeatures": [
+    "buffer_view",
+    "immediate_address_space",
+    "linear_indexing",
+    "packed_4x8_integer_dot_product",
+    "pointer_composite_access",
+    "readonly_and_readwrite_storage_textures",
+    "subgroup_id",
+    "subgroup_uniformity",
+    "swizzle_assignment",
+    "texture_and_sampler_let",
+    "texture_formats_tier1",
+    "uniform_buffer_standard_layout",
+    "unrestricted_pointer_parameters"
+   ],
+   "limits": {
+    "maxStorageBufferBindingSize": 2147483644,
+    "maxBufferSize": 4294967292,
+    "maxComputeInvocationsPerWorkgroup": 1024,
+    "maxComputeWorkgroupSizeX": 1024,
+    "maxComputeWorkgroupStorageSize": 49152,
+    "maxStorageBuffersPerShaderStage": 16,
+    "maxComputeWorkgroupsPerDimension": 65535,
+    "maxBindGroups": 4,
+    "minStorageBufferOffsetAlignment": 256,
+    "minUniformBufferOffsetAlignment": 256
+   },
+   "belowSpecDefault": [],
+   "requested": {
+    "requiredFeatures": [
+     "shader-f16"
+    ],
+    "requiredLimits": {
+     "maxStorageBufferBindingSize": 1073741824,
+     "maxBufferSize": 1073741824,
+     "maxComputeInvocationsPerWorkgroup": 256,
+     "maxComputeWorkgroupSizeX": 256
+    }
+   },
+   "deviceProbe": "ok: binding 1024 MiB, buffer 1024 MiB, 256 invocations",
+   "deviceError": null,
+   "probeErrors": [],
+   "plan": {
+    "limits": "",
+    "f16": true
+   },
+   "maxBufferSizeMb": 4096,
+   "maxStorageBufferBindingSizeMb": 2048
+  },
+  "jspi": true,
+  "shaderF16Used": true,
+  "load": {
+   "fetchMs": 607,
+   "loadMs": 331,
+   "from": "network, streamed to OPFS",
+   "fileMb": 129.1,
+   "wasmHeapMb": 32,
+   "wasmHeapUsedMb": 9.9,
+   "backend": "WebGPU: WebGPU"
+  },
+  "session": {
+   "totalMs": 331
+  },
+  "startToLoadedMs": 1441
+ },
+ "steps": [
+  {
+   "t": 0,
+   "name": "start: 110M, Q8_0 (8-bit weights), flash=off, store=opfs, jspi"
+  },
+  {
+   "t": 501,
+   "name": "WASM module ready",
+   "ms": 35.6,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 502,
+   "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 present; fallback=false"
+  },
+  {
+   "t": 502,
+   "name": "adapter limits: binding 2048 MiB, buffer 4096 MiB, 1024 invocations/workgroup, workgroup storage 49152 B, 16 storage buffers/stage",
+   "detail": "all at or above the WebGPU spec defaults, which is all this page needs"
+  },
+  {
+   "t": 502,
+   "name": "device probe ok: binding 1024 MiB, buffer 1024 MiB, 256 invocations",
+   "detail": "requested {\"maxStorageBufferBindingSize\":1073741824,\"maxBufferSize\":1073741824,\"maxComputeInvocationsPerWorkgroup\":256,\"maxComputeWorkgroupSizeX\":256} shader-f16"
+  },
+  {
+   "t": 502,
+   "name": "shader path: f16"
+  },
+  {
+   "t": 1441,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 606.6,
+   "detail": "129 MB"
+  },
+  {
+   "t": 1441,
+   "name": "model loaded on WebGPU: WebGPU",
+   "ms": 331.1,
+   "detail": "WASM heap 32 MB, 9.9 MB in use"
+  },
+  {
+   "t": 5601,
+   "name": "l10 (8.9 min) first run (cold)",
+   "ms": 2583.9,
+   "detail": "mel 283 ms, encoder 1247 ms, decode 1054 ms, heap 148 MB (51.3 in use)"
+  },
+  {
+   "t": 5611,
+   "name": "l10 transcript (chunked encoding): 8 of 1202 words differ from the native build's chunked transcript",
+   "detail": "Welcome to Quirk Quid Quill Inc. where finance meets innovation. Explore diverse offerings..."
+  },
+  {
+   "t": 14632,
+   "name": "l10 warm x3",
+   "ms": 2197.8,
+   "detail": "total median/worst 2197.8 / 2214.4 ms; encoder 1058.6 / 1065.5 ms; mel 228.5 ms; decode 912.2 ms; 241.9x real time; text stable=true"
+  },
+  {
+   "t": 14633,
+   "name": "done",
+   "ms": 14632.6
+  }
+ ],
+ "console": [],
+ "machineAtEnd": {
+  "loadavg": "3.86 4.00 3.42 3/2076 1769327",
+  "cpuPressure": "some avg10=0.33 avg60=1.28 avg300=1.56 total=10222677730"
+ },
+ "chromeGpu": {
+  "devices": [
+   {
+    "vendorId": 4318,
+    "deviceId": 7687,
+    "vendorString": "Google Inc. (NVIDIA)",
+    "deviceString": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+    "driverVendor": "NVIDIA",
+    "driverVersion": "580.178.4.0"
+   }
+  ],
+  "featureStatus": {
+   "2d_canvas": "enabled",
+   "direct_rendering_display_compositor": "disabled_off_ok",
+   "gpu_compositing": "enabled",
+   "multiple_raster_threads": "enabled_on",
+   "opengl": "enabled_on",
+   "rasterization": "enabled",
+   "raw_draw": "disabled_off_ok",
+   "skia_graphite": "disabled_off",
+   "trees_in_viz": "disabled_off",
+   "video_decode": "enabled",
+   "video_encode": "disabled_software",
+   "vulkan": "enabled_on",
+   "webgl": "enabled",
+   "webgpu": "enabled",
+   "webgpu_on_vk_via_gl_interop": "disabled_off",
+   "webnn": "disabled_off"
+  },
+  "auxAttributes": {
+   "directRenderingVersion": "",
+   "displayType": "ANGLE_VULKAN",
+   "glRenderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+   "glVendor": "Google Inc. (NVIDIA)",
+   "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "glWsVendor": "Google Inc. (NVIDIA)",
+   "glWsVersion": "1.5 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "hardwareSupportsVulkan": true,
+   "passthroughCmdDecoder": true,
+   "pixelShaderVersion": "3.00",
+   "vertexShaderVersion": "3.00"
+  }
+ }
+}

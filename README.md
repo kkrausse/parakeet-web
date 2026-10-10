@@ -7,7 +7,25 @@ blocks directly. The encoder runs on WebGPU, mel and the TDT decoder on one WASM
 NVIDIA `parakeet-tdt_ctc-110m` (the page default) and `parakeet-tdt-0.6b-v2`. The comparison is the
 onnxruntime-web page in `../parakeet-webgpu-bench/` (same clips, same driver, same metrics).
 
-Short answer (10 Oct, third pass; the second pass is the "before" in the tables):
+Short answer, fourth pass (10 Oct 05:30-06:35; details under "Fourth pass" below, the third-pass
+summary follows unchanged):
+
+- **Long audio no longer grows GPU memory.** Clips over 60 s are encoded in 30 s windows with 4 s of
+  real audio either side, stitched and decoded once. Chrome, 110m Q8_0: GPU peak **248 / 247 / 246
+  MiB at 2.1 / 4.4 / 8.9 min** (unchunked: 616 MiB at 2.1 min, 1330 at 4.4), **231 / 232 / 242x real
+  time**. 0.6b Q4_0: 577 / 579 / 579 MiB, 75 / 78 / 72x. The text is not the single-shot text
+  (see "Long audio"). Tab memory still grows, slowly: WASM heap 80 / 115 / 178 MB.
+- **WebKit: the iOS 18.3 simulator's Safari cannot create a WebGPU adapter.** With the feature flag
+  on, `navigator.gpu` exists but `requestAdapter()` returns null on the main thread and in a worker.
+  The page loaded over the tailnet, picked the ASYNCIFY build, stored the model in OPFS and ran on
+  the CPU, reporting each of those facts as designed. **No WGSL shader was compiled by WebKit.**
+  macOS Safari 26.6 is on that Mac but the sandboxed user cannot drive it.
+- A ggml bug in the WASM build found on the way: Q8_0 activation quantization truncated instead of
+  rounding. Fixed; long transcripts in Chrome now agree with the native build's.
+- Reference clips, 110m Q8_0 (default): 7 s 49 -> **47 ms**, 56 s 226 -> **216 ms**; 0.6b Q4_0: 87 ->
+  87, 670 -> **646 ms** (decoder dot kernel, real FFT in mel). Same text for every weight type.
+
+Third pass (the second pass is the "before" in the tables):
 
 - **Nothing above the WebGPU spec defaults is required any more.** The backend used to pass the
   adapter's whole limits struct to `requestDevice`; it now raises only the two byte-size limits (at
@@ -158,10 +176,136 @@ garbage and is as fast as MEMFS. The file also persists, so a second visit does 
   Cost of not having it here: nothing on short clips, +9% on the 56 s encoder (0.6b 435 -> 474 ms,
   110m 102 -> 115 ms), no memory difference.
 
+## Fourth pass
+
+### Long audio (patch 0015)
+
+`TRANSCRIBE_PARAKEET_CHUNK_S=30`, `TRANSCRIBE_PARAKEET_CHUNK_HALO_S=4`, `TRANSCRIBE_PARAKEET_CHUNK_MIN_S=60`
+(the page sets all three). A clip longer than 60 s is split into equal windows of at most 30 s of
+encoder frames; each window is encoded with 4 s of real audio on each side and only its own frames
+are kept. The mel is computed and normalized once over the whole clip, windows start on a multiple
+of the subsampling factor (so kept frames sit on the single-shot grid), and the stitched encoder
+output is decoded in one pass, so the decoder state runs through the cuts and no text is merged.
+The library has a long-form mode (`longform.cpp`) but only for checkpoints with a VAD head, and
+ChunkedLimited attention only for streaming checkpoints; neither applies to these two models.
+Clips of 60 s or less are untouched, which keeps the three reference clips byte-identical.
+
+Test clips are the fixtures concatenated with no pause: `l2` = a56 a14 a56 (125.9 s), `l5` = a56 a14
+a56 a07 twice (265.8 s), `l10` = that twice (531.6 s). Chrome 154, f16 path, fresh profile, first run
++ warm-up + 3 warm runs, medians; 06:00-06:27, load average 2.2-4.4.
+
+| Model, clip | mel / enc / dec ms | total ms | x real time | GPU after load / peak MiB | renderer RSS peak MiB | WASM heap MB |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 110m Q8_0, 56 s (single shot) | 26 / 94 / 96 | 216 | 260 | 198 / 268-303 | 314 | 67 |
+| 110m Q8_0, 2.1 min | 69 / 249 / 227 | 546 | 231 | 199 / **248** | 384 | 80 |
+| 110m Q8_0, 4.4 min | 150 / 522 / 482 | 1148 | 232 | 199 / **247** | 425 | 115 |
+| 110m Q8_0, 8.9 min | 229 / 1059 / 912 | 2198 | 242 | 199 / **246** | 539 | 178 |
+| 110m Q8_0, 2.1 min, **unchunked** | 71 / 272 / 228 | 571 | 221 | 200 / 616 | 394 | 96 |
+| 110m Q8_0, 4.4 min, **unchunked** | 145 / 804 / 485 | 1430 | 186 | 200 / 1330 | 467 | 128 |
+| 110m Q8_0, 4.4 min, stock Chrome (f32-only) | 143 / 587 / 483 | 1213 | 219 | 198 / 250 | 428 | 115 |
+| 110m Q8_0, 8.9 min, stock Chrome, published link | 245 / 1179 / 938 | 2375 | 224 | 195 / 248 | 540 | 178 |
+| 0.6b Q4_0, 56 s (single shot) | 28 / 424 / 193 | 646 | 87 | 501 / 590 | 332 | 96 |
+| 0.6b Q4_0, 2.1 min | 79 / 1096 / 494 | 1673 | 75 | 501 / **577** | 398 | 96 |
+| 0.6b Q4_0, 4.4 min | 135 / 2323 / 969 | 3427 | 78 | 501 / **579** | 464 | 170 |
+| 0.6b Q4_0, 8.9 min | 327 / 4989 / 2073 | 7398 | 72 | 501 / **579** | 598 | 229 |
+
+The 8.9 min 110m row and the 4.4 min 0.6b row are from the final build (real FFT, new dot kernel);
+the other long rows are one build earlier (mel and decode 5-25% slower than they would be now).
+Unchunked 8.9 min was not run: one relative-position score tensor would be 1.4 GiB, above the 1 GiB
+binding the backend requests. Native (Dawn, `scripts/lt.sh`): 110m 192 / 193 / 193 MiB and 339 / 330 /
+331x at 2.1 / 4.4 / 8.9 min against 558 / 1276 MiB unchunked; 0.6b Q4_0 576 / 529 / 529 MiB, 95 / 93 / 92x,
+against 763 / 1657 unchunked.
+
+**What still grows with the clip** is host memory, linearly: the PCM (64 kB/s, and the page holds it
+twice plus the copy in the heap), the mel (32 kB/s) and the stitched encoder projection (32 kB/s).
+The heap figure is the high-water mark; a WASM heap does not shrink. Nothing streams audio in.
+
+**Text.** Chunked text is not the single-shot text: frames near a cut see 4 s of context instead of
+the whole clip, and the differences are mostly punctuation and capitalisation. There is no ground
+truth for these clips, so the yardstick is the fixtures' own single-shot transcripts joined (word
+errors after dropping punctuation and case; native build):
+
+| Clip | 110m Q8_0 unchunked | 110m Q8_0 chunked 30+4 | 0.6b Q4_0 unchunked | 0.6b Q4_0 chunked 30+4 |
+| --- | ---: | ---: | ---: | ---: |
+| 56 s forced through chunking | 0 of 122 | 3 of 122 | | |
+| 2.1 min | 6 of 286 (2.1%) | 10 (3.5%) | 14 of 248 (5.6%) | 20 (8.1%) |
+| 4.4 min | 12 of 610 (2.0%) | 14 (2.3%) | 37 of 534 (6.9%) | 30 (5.6%) |
+| 8.9 min | not run | 37 of 1220 (3.0%) | not run | 63 of 1068 (5.9%) |
+
+So unchunked long audio is itself 2-7% away from the short-clip transcripts (the model was not
+trained on minutes of audio, and the fixtures are butted together mid-breath), and chunking is in
+the same range: worse on the 2.1 min clip, better for 0.6b at 4.4 min. The recurring word-level
+change is the invented name "Cork Quid Quill" becoming "CorkidQuill". Other settings tried on 110m
+(word errors at 2.1 / 4.4 min): 20+4 11 / 16, 40+4 11 / 13, 30+8 9 / 10 (encoder +20-28%). This is
+three fixtures, not a WER measurement.
+
+For the long clips the page compares with the native build's chunked transcript and prints the
+number of differing words (0 / 3 / 8 of 281 / 604 / 1202 on the f16 path for 110m, 0 on the f32-only
+path at 4.4 and 8.9 min; 0 / 0 / 6 for 0.6b Q4_0): the remaining differences are the decoder's
+WASM-vs-AVX2 rounding.
+
+### WebKit attempt (what was run, what it showed)
+
+From diesel2 with `ios-build` (Mac reachable, macOS 26.6.2, M4 Pro; scripts in `scripts/webkit-sim/`,
+output in `results/webkit-sim/`):
+
+- Booted the "iPhone 16" simulator (iOS 18.3.1), set the WebGPU feature flag in simulator Safari's
+  preferences with `simctl spawn ... defaults write` (seven candidate key spellings at once; which
+  one took effect was not isolated) and opened the published link with `simctl openurl`. The
+  simulator reaches the tailnet URL. The step trail was read back from Safari's localStorage
+  database on the Mac's disk (`ls.sh`), which is why the page keeps one.
+- Result: `navigator.gpu` is defined, `wgslLanguageFeatures` lists `packed_4x8_integer_dot_product,
+  pointer_composite_access, readonly_and_readwrite_storage_textures, unrestricted_pointer_parameters`,
+  and **`requestAdapter()` returns null** with default options, `high-performance` and
+  `forceFallbackAdapter`, on the main thread and in a worker (`probe.html`). WebGL2 works there
+  ("WebKit WebGL"). The simulator's WebGPU.framework contains the string "No adapters present";
+  the likeliest reading is that the simulator's Metal device does not meet WebKit's requirements.
+  So nothing reached WebKit's WGSL compiler.
+- The page said exactly that ("no WebGPU adapter: requestAdapter() returned null ...", "WARNING: not
+  on WebGPU (backend "CPU")") and ran on one WASM thread: JSPI absent, so the ASYNCIFY build; model
+  streamed to OPFS and read through a sync access handle (3.8 s for 129 MB); 7 s clip in 1127 ms
+  (encoder 1111, mel 4, decode 13); 56 s clip in 7.9-10.1 s (decode 57-76 ms, mel 19-32 ms). That is
+  JavaScriptCore on Apple silicon running the mel and decoder code a phone would run, on a Mac that
+  other jobs were loading (load average 9 to 80). It says nothing about a phone's speed or memory.
+- On the CPU backend the 110m Q8_0 transcript of the 7 s clip **differs from the reference**
+  ("draughty" for "drafty"); the page flagged it. Not investigated: the CPU path promotes the F16
+  pointwise conv weights to F32 and uses different kernels throughout.
+- macOS Safari: `safaridriver` answers "not configured correctly or you need to authenticate", and
+  `safaridriver --enable` asks for a password the sandboxed `ios-agent` user does not have;
+  `osascript ... open location` fails with -10810 (no GUI session for that user). Not worked around.
+- The simulator was shut down, the Mac-side server stopped and the feature-flag keys removed.
+
+What this leaves: a run in Safari on a real device or on a Mac with a GUI session (Safari 26 has
+WebGPU on by default). An iOS 26/27 simulator runtime was not installed (a multi-GB download onto
+the user's Mac, and the same Metal limitation may apply).
+
+### Fourth-pass rows (Chrome 154, 10 warm runs, median / worst ms; 06:27-06:30, load 2.8-3.7)
+
+| Runtime | 7.0 s enc | 7.0 s total | 13.7 s enc | 13.7 s total | 56.1 s enc | 56.1 s total | x real time, 56 s |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| **ggml, 110m Q8_0**, f16 | 30 / 33 | 47 / 51 | 30 / 31 | 63 / 66 | 94 / 98 | 216 / 220 | 260 |
+| **ggml, 110m Q8_0, stock Chrome** | 30 / 34 | 47 / 51 | 30 / 34 | 63 / 68 | 108 / 110 | 227 / 234 | 247 |
+| ggml, 110m Q4_0, f16 | 28 / 33 | 48 / 53 | 29 / 32 | 63 / 65 | 102 / 106 | 226 / 239 | 248 |
+| ggml, 110m Q4_0, stock Chrome | 25 / 32 | 42 / 50 | 28 / 29 | 60 / 63 | 116 / 119 | 237 / 242 | 237 |
+| **ggml, 0.6b Q4_0**, f16 | 49 / 68 | 87 / 104 | 78 / 82 | 143 / 148 | 424 / 427 | 646 / 667 | 87 |
+| **ggml, 0.6b Q4_0, stock Chrome** | 51 / 60 | 88 / 104 | 81 / 82 | 145 / 149 | 462 / 465 | 693 / 711 | 81 |
+| ggml, 0.6b Q8_0, f16 | 54 / 72 | 89 / 116 | 81 / 82 | 147 / 151 | 387 / 389 | 610 / 624 | 92 |
+| ggml, 0.6b Q8_0, stock Chrome | 55 / 62 | 89 / 96 | 83 / 85 | 147 / 152 | 425 / 426 | 645 / 650 | 87 |
+| ggml, 0.6b F16, f16 | 57 / 80 | 128 / 159 | 89 / 92 | 207 / 227 | 499 / 501 | 918 / 956 | 61 |
+| ggml, 0.6b Q4_0, ASYNCIFY build | 52 / 72 | 90 / 118 | 80 / 85 | 148 / 162 | 430 / 440 | 660 / 671 | 85 |
+
+The third-pass rows in the first table above are the "before" (JSON kept in `results/browser-pass3/`).
+Every row's text is byte-identical to its third-pass text on all three clips and stable over the
+warm runs. Where the time goes now, 56 s, mel / encoder / decoder: 110m Q8_0 26 / 94 / 96 (was 33 /
+93 / 98), 0.6b Q4_0 28 / 424 / 193 (was 37 / 425 / 206). The F16 model did not gain: its decoder runs on fp32 weights, which nothing here touched, and its
+decode time is noisy (56 s: 375 -> 389 ms median, 348-434 over the ten runs). Memory is unchanged except that two of six
+110m runs sampled a GPU peak of 301-303 MiB instead of 268 (a freed buffer still awaiting deletion
+when nvidia-smi was read; the published-link check was one of them).
+
 ## What was changed in transcribe.cpp / ggml
 
 Branch `webgpu-browser` in `~/devfs/cache/parakeet-ggml-webgpu/transcribe.cpp` (local only), exported
-as `patches/00*.patch` (0001-0014; apply on `c63b18e2` with `git am`).
+as `patches/00*.patch` (0001-0019; apply on `c63b18e2` with `git am`).
 
 1. `examples/web/`: `pk-web` Emscripten module (ES6, MODULARIZE; JSPI or ASYNCIFY per
    `GGML_WEBGPU_JSPI`) exporting `pk_load / pk_run / pk_json / pk_setenv / pk_heap_in_use`.
@@ -249,6 +393,28 @@ Third pass (patches 0010-0014):
    for TDT/RNNT heads (plain runs: no prompt, no length masking, no dumps). Not bit-identical to
    the CPU fp32 GEMM (the direct kernel sums per 32-element block), text identical.
 
+Fourth pass (patches 0015-0019):
+
+17. **Chunked long-audio encoding** (patch 0015): see "Long audio" above. `run_chunked` in
+   `src/arch/parakeet/model.cpp`; `run_one_shot_inner` takes a mel slice and returns after the encoder
+   read-back. Off unless `TRANSCRIBE_PARAKEET_CHUNK_S` is set; skipped for VAD-head, prompted,
+   length-masked and limited-context checkpoints and under debug dumps.
+18. **WASM `quantize_row_q8_0` / `q8_1` rounded by truncation** (patch 0016, a ggml bug): the SIMD
+   path called `i32x4.trunc_sat_f32x4` on the scaled value, so every activation quantized for a Q8_0
+   dot product was biased towards zero; the reference uses `roundf`, AVX2 rounds to nearest and the
+   Q8_K kernel in the same file calls `f32x4.nearest` first. It showed as text drift in the decoder
+   on long clips only. Not reported upstream.
+19. **Mel without whole-clip fp64 copies** (patch 0017, bit-identical): the radix-2 path built
+   `emph[]` and `padded[]` (16 bytes per sample) and a whole-clip power spectrogram (1 kB per frame),
+   190 MB of transient heap for 8.9 min. Samples are now read from the PCM on the fly and the STFT
+   runs 1024 frames at a time. `TRANSCRIBE_MEL_HASH=1` prints an FNV hash of the log-mel bits.
+20. **WASM `ggml_vec_dot_q8_0_q8_0`** (patch 0018): `i16x8.extmul` + `i32x4.extadd_pairwise` instead
+   of extend + `i32x4.dot_i16x8` (9 SIMD ops per block instead of 15). Same integer sums; float
+   lanes group them differently.
+21. **Real FFT in mel** (patch 0019, `TRANSCRIBE_MEL_REAL_FFT=1`, set by the page): the frame is real,
+   so one complex FFT of half the size plus a twiddle per bin gives its spectrum. Still fp64; not
+   bit-identical, text identical on everything checked.
+
 ## Attempt log (encoder, 7 s clip unless noted)
 
 Native numbers are `transcribe-bench` on Dawn/Vulkan with `GGML_WEBGPU_BROWSER=1`, min of 10; text
@@ -333,7 +499,40 @@ Chrome = this page, warm medians. Every kept row: text identical on all 15 model
 | enc_proj in the encoder graph, native decode 56 s 110m / 0.6b Q4_0 | 47 / 100 | 44 / 89 (encoder unchanged) | yes |
 | same in Chrome, total 56 s, 110m / 0.6b Q4_0 | 244.6 / 698 | 225.9 / 672.5 | yes |
 
+Fourth pass (10 Oct, 05:30-06:35). Native = `scripts/lt.sh` / `scripts/nt.sh` (browser-like, 1 decoder
+thread); Chrome = this page, warm medians. Every kept row: text identical on the 15 model/clip
+reference pairs natively and on the 10 Chrome rows above.
+
+| Change | Before | After | Kept |
+| --- | --- | --- | --- |
+| iOS 18.3 simulator Safari, WebGPU flag on, published page | | `requestAdapter()` null; page ran on CPU (ASYNCIFY, OPFS), 7 s clip 1127 ms | could not test WebGPU |
+| macOS Safari 26.6 via `safaridriver` / `osascript` as `ios-agent` | | needs a password / error -10810 | could not run |
+| Chunked encoding, native GPU peak 110m Q8_0 at 2.1 / 4.4 min | 558 / 1276 MiB | 192 / 193 MiB (8.9 min: 193) | yes |
+| same, 0.6b Q4_0 | 763 / 1657 MiB | 576 / 529 MiB (8.9 min: 529) | yes |
+| same, native total ms 110m at 2.1 / 4.4 min | 392 / 1076 | 368 / 804 | yes |
+| same in Chrome, 110m GPU peak and total at 2.1 / 4.4 min | 616 / 1330 MiB, 571 / 1430 ms | 248 / 247 MiB, 546 / 1148 ms | yes |
+| Window / halo seconds, native 110m, encoder ms and word errors at 4.4 min | 30+4: 481, 14 | 20+4: 562, 16; 40+4: 479, 13 (GPU 235 MiB); 30+8: 580, 10 | 30+4 |
+| 56 s clip forced through chunking (no 60 s floor), 110m | reference text | 3 of 122 words differ | no: clips up to 60 s stay single-shot |
+| Chrome vs native chunked transcript, 110m, differing spans at 2.1 / 4.4 / 8.9 min | 1 / 3 / 19 | 0 / 1 / 2 with `f32x4.nearest` in the WASM quantizer | yes |
+| what moved that number in Chrome at 8.9 min: lazy sync off, f32-only shaders, CPU enc_proj, buffer cache off | 19 | 19 each; `TRANSCRIBE_DECODER_F32=1`: 1 | located the bug |
+| same perturbations natively at 8.9 min (f32-only shaders, robustness toggles, CPU enc_proj, memo off, fp32 decoder) | | 0 / 0 / 0 / 0 / 1 spans | native text is stable |
+| Mel without whole-clip copies, Chrome WASM heap at 2.1 / 4.4 / 8.9 min | 124 / 184 / 282 MB | 80 / 115 / 178 MB; renderer RSS peak 413 / 459 / 650 -> 384 / 425 / 540 MiB | yes (bit-identical) |
+| Dot kernel extmul + extadd, Chrome x86 decode ms at 56 s, 110m Q8_0 / 0.6b Q4_0 | 101 / 218 | 94 / 190 | yes |
+| same in simulator Safari (ARM64 JavaScriptCore, CPU fallback, Mac loaded), 110m 56 s decode | 74, 76 | 57, 76 | inconclusive on ARM |
+| Real FFT, native mel ms at 56 s / 4.4 min / 8.9 min | 12.1 / 107 / 215 | 10.5 / 54 / 116 | yes |
+| same in Chrome, 110m mel at 56 s / 8.9 min; totals 56 s 110m / 0.6b Q4_0 | 31-33 / 296; 221 / 647 | 24-26 / 229; 213-216 / 645 | yes |
+| 0.6b Q4_0 per-shader GPU ms, 56 s vs 7 s (`CLIP=a56 scripts/prof.sh Q4_0`) | 7 s: 52.2 total, direct q4 33.1, direct f16 5.7 | 56 s: 413 total, direct q4 291, attention reg_tile 48, direct f16 34, ADD 12 | measurement |
+
 Findings worth keeping:
+
+- **The 0.6b encoder has no long-clip pathology.** The direct Q4_0 matmul costs 0.376 ms per encoder
+  frame at 7 s and 0.415 at 56 s (+10%), and attention is 48 of 413 ms. The 425 vs 232 ms gap to
+  onnxruntime-web at 56 s is the kernel's throughput at every length (ORT is overhead-bound on short
+  clips, which hides it there). Chunking does not change it: windows cost the same per frame.
+- Long transcripts are a sharper numerics test than the three short clips: a decoder rounding bug
+  that left 15 model/clip pairs byte-identical moved 19 places in 1200 words.
+- The simulator is useful for one thing: it runs the WASM CPU paths (mel, decoder, ASYNCIFY, OPFS)
+  in JavaScriptCore on ARM64 and its localStorage can be read from the Mac's disk.
 
 - After the direct kernel the Q8_0/Q4_0 matmul is about 33-40 ms of a 45-51 ms native encoder
   (1.2 T multiply-adds/s, roughly 18% of the card's FP32 peak); everything else is a 14 ms floor.
@@ -420,7 +619,8 @@ shader; the one function-scope array that relies on implicit zero-init (`acc` in
 `mul_mat_reg_tile`) is declared outside loops, which the spec guarantees, and the in-loop case that
 Tint got wrong uses an explicit `array<...>()` initializer.
 
-**Nothing was run on a phone or in Safari, and no browser other than Chrome ran the model.**
+**Nothing was run on a phone, and no browser other than Chrome ran the model on WebGPU.** Fourth
+pass: simulator Safari (iOS 18.3) ran it on the CPU only; see "WebKit attempt" above.
 
 - Second WGSL compiler: naga 30.0.1 (the compiler Firefox uses) validates all 42 distinct sources
   and translates them to MSL, HLSL and SPIR-V. WebKit's WGSL compiler was not available: there is no
@@ -469,6 +669,9 @@ PLAYWRIGHT_BROWSERS_PATH=$R/pw-browsers bun web/drive-ff.ts ff-s8 "model=s8&clip
 for f in $R/out/wgsl-uniq1/*.wgsl; do $R/naga/bin/naga $f /tmp/x.metal; done   # second WGSL compiler; sources from GGML_WEBGPU_DUMP_SHADERS=<dir>
 scripts/deccmp.sh [MODEL_PREFIX] [THREADS]       # decoder A/B (fp32 mirrors vs packed): text + decode ms, 3 clips
 $R/scripts/gpupeak.sh GGUF CLIP [ENV=1 ...]      # native GPU peak (nvidia-smi) of repeated runs; ITERS=1 for one
+scripts/lt.sh NAME s8 l5 [ENV=1 ...]             # long-audio native run: text to out/lt/NAME.txt, GPU peak, word diff vs REF=name, word errors vs joined fixtures
+python3 scripts/cmpn.py RESULT NAME              # a Chrome result's last clip against out/lt/NAME.txt
+(cd ~/devfs/cache/parakeet-ggml-webgpu/pk-webkit && ios-build sync && ios-build sh sh go.sh "model=s8&clip=a07&runs=3&auto=1" 45 run1)   # simulator Safari on the Mac; scripts/webkit-sim/ holds the files
 web/bench.sh [row ...]                           # the table rows, quiet-window wait, systemd slice
 bun scripts/table.ts [row ...]                   # tables from results/browser
 ~/devfs/repos/kkrausse/random/scripts/deploy-artifact.sh "$PWD/web/dist" parakeet-ggml-browser   # private shelf
@@ -491,8 +694,27 @@ Third pass: `GGML_WEBGPU_LIMITS=default`, `GGML_WEBGPU_WG_SIZE`, `GGML_WEBGPU_CH
 `TRANSCRIBE_ENC_PROJ_GPU` (page: 1), `TRANSCRIBE_DECODER_NO_WX_CACHE`. Any of them can be overridden
 from the query string, e.g. `env=GGML_WEBGPU_LIMITS=default`, `env=TRANSCRIBE_PRE_ENCODE_TILE=0`.
 `verbose=1` now also shows the library's `mel:` timing line beside `decoder:`.
+Fourth pass: `clip=l2|l5|l10` (2.1 / 4.4 / 8.9 min; `clip=all` is still the three short clips);
+`TRANSCRIBE_PARAKEET_CHUNK_S` (page: 30), `TRANSCRIBE_PARAKEET_CHUNK_HALO_S` (4),
+`TRANSCRIBE_PARAKEET_CHUNK_MIN_S` (60), `TRANSCRIBE_MEL_REAL_FFT` (1), `TRANSCRIBE_MEL_HASH`.
+`env=TRANSCRIBE_PARAKEET_CHUNK_S=` turns chunking off. The long clips' expected text is read by
+`build.ts` from `out/lt/<model>-<clip>-chunk.txt` (make them with `lt.sh` before building; long
+`.wav`/`.f32`/`.seq` files are in `$R/audio/`).
 
 ## Not measured, not done
+
+Fourth pass:
+
+- WebGPU in any WebKit build; any shader through WebKit's WGSL compiler; any phone. The simulator
+  result is a CPU-path run only.
+- Audio longer than 8.9 min; unchunked audio longer than 4.4 min; real speech with pauses (the long
+  clips are three fixtures repeated, so "word errors" is a consistency measure, not WER).
+- Long clips for 110m Q4_0, 0.6b Q8_0 / F16, and the ASYNCIFY build; the long-clip table mixes two builds.
+- The new dot kernel on ARM under quiet conditions; the decoder mat-vec that extends the activation
+  once was not written (the kernel change is the smaller cousin of it).
+- Why the CPU backend's 110m text differs on the 7 s clip.
+- Op fusion and quantizing the F16 conv weights (backlog item 5): not started.
+- Third-pass list (still true unless contradicted above):
 
 - Any phone, Safari, or any browser other than Chrome running the model; WebKit's WGSL compiler on
   any shader; WER (three clips only: "identical text" means these three).
@@ -513,23 +735,28 @@ from the query string, e.g. `env=GGML_WEBGPU_LIMITS=default`, `env=TRANSCRIBE_PR
 
 In the order I would take them:
 
-1. **A WebKit compile of the shaders.** Cheapest route found: the iOS 18.3 simulator on the Mac
-   (`ios-build`), WebGPU feature flag on, opening the published link; the page's step trail and
-   `GPU ERROR` steps are the output. Then a real phone.
-2. **0.6b encoder matmul at 56 s** (425 vs 232 ms for onnxruntime-web): `scripts/prof.sh` with
-   `CLIP=a56`; the direct kernel was tuned on the 7 s shape (last profile: `mul_mat_direct_q8_0`
-   252 of 389 ms of GPU time, attention `mul_mat_reg_tile_f32_f32` 48, F16 conv 34). Not tried:
-   f16 activations where available, `dot4I8Packed` with quantized activations, a Q4_K direct
-   kernel, quantizing the F16 pointwise conv weights (144 MB of the 0.6b Q4_0 file).
-3. **Decoder dot kernel**: a Q8_0 mat-vec that extends the activation to i16 once per vector and
-   keeps the activation's block scales as fp32 (estimated 15-20% of pred + joint, which are 51 + 40
-   of the 226 ms 110m 56 s total); relaxed SIMD `i32x4.relaxed_dot_i8x16_i7x16_add_s` where present.
-4. **Mel**: a single-precision real FFT (22 of 33 ms at 56 s is the fp64 complex FFT). Not
-   bit-identical, so it needs the text check on more than three clips.
-5. **Long audio**: application-level chunking with the model's context for clips over a minute
-   (attention memory is quadratic), or the library's ChunkedLimited attention if the checkpoint allows.
-6. Fuse ADD/MUL/SCALE/NORM chains: the non-matmul floor is 14 ms native over ~950 dispatches (0.6b);
-   for 110m at 7 s the whole encoder is 19 ms native and 30 in Chrome.
+1. **WebGPU in real WebKit.** The simulator cannot do it. Options: open the published link in Safari
+   on the phone (the step trail and "Copy this run" are the output), or in Safari 26 on the Mac from
+   a logged-in GUI session. Expect the ASYNCIFY build (no JSPI before Safari 27) and look first at
+   the adapter line, the device probe ladder and any `GPU ERROR` step.
+2. **Decoder** is now as large as the encoder for 110m (96 vs 94 ms at 56 s, 912 vs 1059 at 8.9 min).
+   Take the LSTM and joint out of per-step ggml graphs: one Q8 mat-vec that quantizes and extends
+   the activation once per vector with weight scales pre-converted to fp32, plain loops for the
+   gates. The per-step `graph_compute` overhead (774 graph runs at 56 s) has not been measured;
+   measure it first with `variant=prof&verbose=1`.
+3. **Streaming input for long audio**: host memory is still linear (PCM twice in JS, once in the
+   heap, mel, encoder projection). Feed PCM in blocks, keep running per-bin mean/variance in a first
+   pass or accept per-window normalization (changes text), and decode window by window carrying the
+   LSTM state so the encoder projection need not be kept.
+4. **Encoder matmul throughput** (0.6b: 0.4 ms per frame at any length, 2x behind what subgroup-matrix
+   gets natively): f16 activations where available, `dot4I8Packed` with quantized activations (WebKit's
+   simulator build lists `packed_4x8_integer_dot_product`), a Q4_K direct kernel, quantizing the F16
+   pointwise conv weights (34 ms of 413 at 56 s; 144 MB of the 0.6b Q4_0 file).
+5. Fuse ADD/MUL/SCALE/NORM chains: ADD alone is 12 ms of 413 at 56 s for 0.6b; the non-matmul floor is
+   14 ms native over ~950 dispatches at 7 s.
+6. Mel: 24 ms at 56 s is now about half STFT, half filterbank + log; a float32 SIMD filterbank is the
+   next step, not the FFT.
 7. Fill the per-token memo for the whole vocabulary at load (1026 mat-vecs, about 175 ms in WASM)
    if first-utterance decode time matters more than load time.
-8. IQ quant types and flash attention on the f32-only path, if either is ever wanted.
+8. Report the WASM `quantize_row_q8_0` truncation and the Tint in-loop array zero-init upstream.
+9. IQ quant types and flash attention on the f32-only path, if either is ever wanted.
