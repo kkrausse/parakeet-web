@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Parakeet on ggml WebGPU</title>
+<style>
+  :root { color-scheme: light dark; --bg: #fafaf8; --fg: #1c1c1a; --mut: #6b6b66; --line: #d9d9d3; --card: #fff; --bad: #b3261e; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #161615; --fg: #ecece8; --mut: #9c9c95; --line: #33332f; --card: #1f1f1d; --bad: #ff8a80; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg); font: 15px/1.45 system-ui, sans-serif; max-width: 860px; margin-inline: auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; } h2 { font-size: 15px; margin: 22px 0 8px; }
+  p { margin: 6px 0; } .mut { color: var(--mut); font-size: 13px; }
+  .presets { display: grid; gap: 8px; margin: 12px 0; }
+  .preset { display: block; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: inherit; text-decoration: none; }
+  .preset span { display: block; color: var(--mut); font-size: 13px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; }
+  select, button { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: inherit; max-width: 100%; }
+  button#go { font-weight: 600; }
+  pre { white-space: pre-wrap; word-break: break-word; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: 12px/1.45 ui-monospace, Menlo, monospace; margin: 6px 0; }
+  #status { font-weight: 600; min-height: 1.4em; }
+  table { border-collapse: collapse; font-size: 13px; width: 100%; } th, td { border-bottom: 1px solid var(--line); padding: 5px 6px; text-align: right; } th:first-child, td:first-child { text-align: left; }
+  .wrap { overflow-x: auto; } .text { font-size: 13px; } .bad { color: var(--bad); }
+  summary { cursor: pointer; font-size: 13px; padding: 4px 0; }
+</style>
+<h1>Parakeet TDT 0.6b v2 on ggml WebGPU</h1>
+<p class="mut">transcribe.cpp + ggml WebGPU backend compiled to WASM; quantized weights stay packed on the GPU. The model file is fetched from this server and kept in this browser (OPFS). Tap a configuration to load it and run; every finished step is saved, so if the tab dies, reload and look under "Earlier runs".</p>
+<div class="presets" id="presets"></div>
+<h2>Or choose</h2>
+<div class="controls">
+  <select id="model"></select><select id="clip"></select><select id="runs"></select>
+  <select id="store"></select><select id="flash"></select><select id="variant"></select>
+  <button id="go">Run this configuration</button>
+</div>
+<p class="mut" id="env"></p>
+<h2>This run</h2>
+<p id="status">idle</p>
+<pre id="steps"></pre>
+<div class="wrap" id="summary"></div>
+<h2>Earlier runs in this browser</h2>
+<div id="history"></div>
+<p><button id="clear">Clear stored runs and stored model files</button> <button id="copy">Copy this run</button></p>
+<h2>Full result</h2>
+<pre id="result"></pre>
+<script type="module" src="main.js"></script>
+</html>

@@ -1,0 +1,38 @@
+From 417ccf84a8b0c7e2bfca81ea99ff25205823e3fd Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 01:55:02 -0700
+Subject: [PATCH 1/2] conformer: env-gated F32 mask concat (WebGPU CONCAT has
+ no F16 variant)
+
+Feasibility experiment carried over: TRANSCRIBE_F32_MASK_CONCAT=1 concatenates
+the per-head rel-pos masks in F32 and casts once.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ src/conformer/conformer.cpp | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/src/conformer/conformer.cpp b/src/conformer/conformer.cpp
+index 953b689b..781b2fb1 100644
+--- a/src/conformer/conformer.cpp
++++ b/src/conformer/conformer.cpp
+@@ -825,9 +825,15 @@ ggml_tensor * rel_pos_mhsa(ggml_context *      ctx,
+             head_mask               = shifted_view(head_mask, 1);
+             head_mask               = ggml_cont(ctx, head_mask);
+             head_mask               = ggml_scale(ctx, head_mask, scale);
+-            head_mask               = ggml_cast(ctx, head_mask, GGML_TYPE_F16);
++            // EXPERIMENT (webgpu feasibility): WebGPU CONCAT has no F16 variant; concat in F32, cast once.
++            if (std::getenv("TRANSCRIBE_F32_MASK_CONCAT") == nullptr) {
++                head_mask = ggml_cast(ctx, head_mask, GGML_TYPE_F16);
++            }
+             matrix_bd = matrix_bd == nullptr ? head_mask : ggml_concat(ctx, matrix_bd, head_mask, /*dim=*/2);
+         }
++        if (std::getenv("TRANSCRIBE_F32_MASK_CONCAT") != nullptr) {
++            matrix_bd = ggml_cast(ctx, matrix_bd, GGML_TYPE_F16);
++        }
+     } else {
+         // Compute position scores; shifted_view narrows and shifts them below.
+         matrix_bd = ggml_mul_mat(ctx, p, q_v);
+-- 
+2.53.0
+

@@ -1,0 +1,7 @@
+{
+  "name": "parakeet-ggml-web",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "bun build.ts", "serve": "bun serve.ts", "bench": "bun drive.ts" },
+  "devDependencies": { "@types/bun": "latest", "@webgpu/types": "latest", "playwright-core": "latest", "typescript": "latest" }
+}
