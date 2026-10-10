@@ -1,0 +1,386 @@
+From 74ddc26aaf0021bfcdf5b6d9ff8d212a8b434eae Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 03:24:26 -0700
+Subject: [PATCH 7/7] ggml-webgpu: shader-f16 is optional (f32-only shader
+ variants)
+
+Without the feature the device was not registered at all and transcribe.cpp
+silently ran on the CPU backend (24.7 s for a 7 s clip in stock Chrome on an
+NVIDIA driver without f16).
+
+- capabilities.supports_f16; the feature is requested only when the adapter has
+  it. GGML_WEBGPU_NO_F16=1 forces the f32-only path (=2 keeps the device feature
+  on, to isolate the shader cost).
+- every shader is preprocessed with NO_F16 and the macro f16=f32, and the
+  'enable f16;' line is dropped: workgroup staging and block scales become f32.
+- real half-float buffers must not be bound as array<f16> then: supports_op
+  rejects F16-typed ops/operands except as the weight of mul_mat_direct,
+  conv_2d and conv_2d_dw, which read them as packed u32 + unpack2x16float.
+- conformer: TRANSCRIBE_F32_POINTWISE=1 uses the F32 im2col for the two
+  pre-encode pointwise convs (ggml_conv_2d hardcodes an F16 im2col, which would
+  bounce to the CPU: +10 ms on a 7 s clip).
+
+Native browser-like, 7 s clip, encoder min ms f16 / no-f16:
+Q4_0 46.5 / 47.3, Q8_0 51.5 / 52.1, F16 54.0 / 54.6; identical text.
+Not covered: IQ types (bitcast<vec2<f16>> in their shaders), F16 activations.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ .../ggml-webgpu/ggml-webgpu-shader-lib.hpp    | 40 +++++++++++++-
+ ggml/src/ggml-webgpu/ggml-webgpu.cpp          | 55 +++++++++++++++++--
+ ggml/src/ggml-webgpu/pre_wgsl.hpp             |  9 +++
+ ggml/src/ggml-webgpu/wgsl-shaders/conv2d.wgsl | 13 ++++-
+ .../ggml-webgpu/wgsl-shaders/conv2d_dw.wgsl   | 15 ++++-
+ .../wgsl-shaders/mul_mat_direct.wgsl          | 27 +++++++--
+ src/conformer/conformer.cpp                   |  9 ++-
+ 7 files changed, 152 insertions(+), 16 deletions(-)
+
+diff --git a/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp b/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
+index 5a068cf2..03aa41ec 100644
+--- a/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
++++ b/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
+@@ -1290,7 +1290,25 @@ class ggml_webgpu_shader_lib {
+         upscale_pipelines;
+ 
+   public:
+-    ggml_webgpu_shader_lib(wgpu::Device device) { this->device = device; }
++    // no_f16: the device lacks shader-f16. Every shader is preprocessed with
++    // NO_F16 defined, the type name f16 mapped to f32 (workgroup staging and
++    // scale factors simply become f32) and its `enable f16;` line removed.
++    // A buffer that really holds half floats must not be bound as array<f16>
++    // then: supports_op rejects those, and the kernels that take F16 weights
++    // (mul_mat_direct, conv_2d, conv_2d_dw) read them as packed u32.
++    bool no_f16 = false;
++
++    ggml_webgpu_shader_lib(wgpu::Device device, bool no_f16 = false) {
++        this->device = device;
++        this->no_f16 = no_f16;
++        if (no_f16) {
++            pre_wgsl::Options opts;
++            opts.macros.push_back("NO_F16");
++            opts.macros.push_back("f16=f32");
++            opts.strip_enable_f16 = true;
++            preprocessor          = pre_wgsl::Preprocessor(opts);
++        }
++    }
+ 
+     webgpu_pipeline get_sum_rows_pipeline(const ggml_webgpu_shader_lib_context & context) {
+         auto it = sum_rows_pipelines.find(1);
+@@ -2137,6 +2155,10 @@ class ggml_webgpu_shader_lib {
+         }
+ 
+         key.direct = !key.use_subgroup_matrix && !src_overlap && context.mul_mat_direct_ok;
++        if (no_f16 && !key.direct && (context.src0->type == GGML_TYPE_F16 || context.src1->type == GGML_TYPE_F16)) {
++            GGML_ABORT("ggml_webgpu: F16 mul_mat needs the direct shader on a device without shader-f16 "
++                       "(operand offset or overlap ruled it out)");
++        }
+         if (key.direct) {
+             it = mul_mat_fast_pipelines.find(key);
+             if (it != mul_mat_fast_pipelines.end()) {
+@@ -3317,7 +3339,13 @@ class ggml_webgpu_shader_lib {
+             if (type == GGML_TYPE_F32) {
+                 defines.push_back(s_prefix + "=f32");
+             } else if (type == GGML_TYPE_F16) {
+-                defines.push_back(s_prefix + "=f16");
++                if (no_f16) {
++                    GGML_ASSERT(s_prefix == "WEIGHT_TYPE");
++                    defines.push_back("WEIGHT_TYPE=u32");
++                    defines.push_back("WEIGHT_F16_PACKED");
++                } else {
++                    defines.push_back(s_prefix + "=f16");
++                }
+             } else {
+                 GGML_ABORT("Unsupported type for CONV_2D shader");
+             }
+@@ -3359,7 +3387,13 @@ class ggml_webgpu_shader_lib {
+             if (type == GGML_TYPE_F32) {
+                 defines.push_back(s_prefix + "=f32");
+             } else if (type == GGML_TYPE_F16) {
+-                defines.push_back(s_prefix + "=f16");
++                if (no_f16) {
++                    GGML_ASSERT(s_prefix == "WEIGHT_TYPE");
++                    defines.push_back("WEIGHT_TYPE=u32");
++                    defines.push_back("WEIGHT_F16_PACKED");
++                } else {
++                    defines.push_back(s_prefix + "=f16");
++                }
+             } else {
+                 GGML_ABORT("Unsupported type for CONV_2D shader");
+             }
+diff --git a/ggml/src/ggml-webgpu/ggml-webgpu.cpp b/ggml/src/ggml-webgpu/ggml-webgpu.cpp
+index 0c42cf28..7662a902 100644
+--- a/ggml/src/ggml-webgpu/ggml-webgpu.cpp
++++ b/ggml/src/ggml-webgpu/ggml-webgpu.cpp
+@@ -174,6 +174,10 @@ struct webgpu_capabilities {
+     bool         supports_subgroups       = false;
+     bool         supports_subgroup_matrix = false;
+     bool         supports_dot_product     = false;
++    // shader-f16 is optional: without it every shader is compiled with NO_F16
++    // (no `enable f16;`), F16 weights are read as packed u32 words, and ops
++    // that would need f16 storage for activations are left to the CPU.
++    bool         supports_f16             = true;
+ 
+     uint32_t sg_mat_m = 0;
+     uint32_t sg_mat_n = 0;
+@@ -4213,7 +4217,19 @@ static void create_webgpu_device(ggml_backend_webgpu_reg_context * ctx) {
+     ctx->webgpu_global_ctx->capabilities.min_subgroup_size = info.subgroupMinSize;
+     ctx->webgpu_global_ctx->capabilities.max_subgroup_size = info.subgroupMaxSize;
+     // Initialize device
+-    std::vector<wgpu::FeatureName> required_features       = { wgpu::FeatureName::ShaderF16 };
++    std::vector<wgpu::FeatureName> required_features;
++    // GGML_WEBGPU_NO_F16=1 forces the f32-only path on an adapter that has shader-f16.
++    ctx->webgpu_global_ctx->capabilities.supports_f16 =
++        ctx->webgpu_global_ctx->adapter.HasFeature(wgpu::FeatureName::ShaderF16) &&
++        std::getenv("GGML_WEBGPU_NO_F16") == nullptr;
++    if (ctx->webgpu_global_ctx->capabilities.supports_f16 ||
++        (std::getenv("GGML_WEBGPU_NO_F16") && std::getenv("GGML_WEBGPU_NO_F16")[0] == '2' &&
++         ctx->webgpu_global_ctx->adapter.HasFeature(wgpu::FeatureName::ShaderF16))) {
++        // (=2: f32-only shaders on a device that still has the feature enabled; isolates the shader cost)
++        required_features.push_back(wgpu::FeatureName::ShaderF16);
++    } else {
++        GGML_LOG_INFO("ggml_webgpu: shader-f16 not in use, compiling the f32-only shader variants\n");
++    }
+ 
+ #ifndef __EMSCRIPTEN__
+     required_features.push_back(wgpu::FeatureName::ImplicitDeviceSynchronization);
+@@ -4298,7 +4314,8 @@ static webgpu_context initialize_webgpu_context(ggml_backend_dev_t dev) {
+     ggml_backend_webgpu_device_context * dev_ctx    = (ggml_backend_webgpu_device_context *) dev->context;
+     webgpu_context                       webgpu_ctx = std::make_shared<webgpu_context_struct>();
+     webgpu_ctx->global_ctx                          = dev_ctx->webgpu_global_ctx;
+-    webgpu_ctx->shader_lib = std::make_unique<ggml_webgpu_shader_lib>(dev_ctx->webgpu_global_ctx->device);
++    webgpu_ctx->shader_lib = std::make_unique<ggml_webgpu_shader_lib>(
++        dev_ctx->webgpu_global_ctx->device, !dev_ctx->webgpu_global_ctx->capabilities.supports_f16);
+     webgpu_ctx->param_arena.init(
+         webgpu_ctx->global_ctx->device, WEBGPU_PARAMS_BUF_SIZE_BYTES,
+         webgpu_ctx->global_ctx->command_submit_batch_size + WEBGPU_NUM_PARAM_SLOT_SAFETY_MARGIN,
+@@ -4788,6 +4805,35 @@ static bool ggml_backend_webgpu_device_supports_op(ggml_backend_dev_t dev, const
+         WEBGPU_LOG_DEBUG("ggml_webgpu op not supported due to size: ");
+     }
+ 
++    if (supports_op && !ctx->webgpu_global_ctx->capabilities.supports_f16) {
++        // No shader-f16: F16 is accepted only as a weight operand of the kernels
++        // that read it as packed u32 (mul_mat_direct, conv_2d, conv_2d_dw), and
++        // through the ops that never touch the data.
++        const bool passthrough = op->op == GGML_OP_NONE || op->op == GGML_OP_VIEW || op->op == GGML_OP_PERMUTE ||
++                                 op->op == GGML_OP_TRANSPOSE || op->op == GGML_OP_RESHAPE;
++        if (!passthrough) {
++            bool ok = op->type != GGML_TYPE_F16;
++            for (int i = 0; ok && i < GGML_MAX_SRC; i++) {
++                const ggml_tensor * s = op->src[i];
++                if (s == nullptr || s->type != GGML_TYPE_F16) {
++                    continue;
++                }
++                if (i != 0) {
++                    ok = false;
++                } else if (op->op == GGML_OP_MUL_MAT) {
++                    // must be able to take the direct shader (offsets are checked at dispatch)
++                    ok = src1->type == GGML_TYPE_F32 && s->ne[0] % 4 == 0 && ggml_is_contiguous(s) &&
++                         ggml_is_contiguous(src1) && std::getenv("GGML_WEBGPU_NO_DIRECT") == nullptr;
++                } else if (op->op == GGML_OP_CONV_2D || op->op == GGML_OP_CONV_2D_DW) {
++                    ok = src1->type == GGML_TYPE_F32;
++                } else if (op->op != GGML_OP_IM2COL) {
++                    ok = false;
++                }
++            }
++            supports_op = ok;
++        }
++    }
++
+     if (!supports_op) {
+         WEBGPU_LOG_DEBUG("ggml_webgpu op not supported: "
+                          << ggml_op_name(op->op) << " with types dst: " << ggml_type_name(op->type)
+@@ -4915,8 +4961,9 @@ ggml_backend_reg_t ggml_backend_webgpu_reg() {
+         ggml_backend_webgpu_request_adapter(ctx->webgpu_global_ctx->instance, adapter);
+     }
+ 
+-    // WebGPU backend requires f16 support and, on native, implicit device synchronization.
+-    if (adapter != nullptr && adapter.HasFeature(wgpu::FeatureName::ShaderF16)
++    // shader-f16 is optional (see webgpu_capabilities::supports_f16); native needs
++    // implicit device synchronization.
++    if (adapter != nullptr
+ #ifndef __EMSCRIPTEN__
+         && adapter.HasFeature(wgpu::FeatureName::ImplicitDeviceSynchronization)
+ #endif
+diff --git a/ggml/src/ggml-webgpu/pre_wgsl.hpp b/ggml/src/ggml-webgpu/pre_wgsl.hpp
+index fb41a961..40990869 100644
+--- a/ggml/src/ggml-webgpu/pre_wgsl.hpp
++++ b/ggml/src/ggml-webgpu/pre_wgsl.hpp
+@@ -19,6 +19,9 @@ namespace pre_wgsl {
+ struct Options {
+     std::string              include_path = ".";
+     std::vector<std::string> macros;
++    // devices without shader-f16: the caller defines the macro f16=f32; this removes
++    // the `enable f16;` line (which that macro turned into `enable f32;`)
++    bool                     strip_enable_f16 = false;
+ };
+ 
+ //==============================================================
+@@ -471,6 +474,12 @@ class Preprocessor {
+         buildMacros(additional_macros, macros, predefined);
+ 
+         std::string result = processString(contents, macros, predefined, include_stack, DirectiveMode::All);
++        if (opts_.strip_enable_f16) {
++            static const std::string needle = "enable f32;";  // f16 is mapped to f32 by the NO_F16 macro set
++            for (size_t pos = result.find(needle); pos != std::string::npos; pos = result.find(needle, pos)) {
++                result.erase(pos, needle.size());
++            }
++        }
+         return result;
+     }
+ 
+diff --git a/ggml/src/ggml-webgpu/wgsl-shaders/conv2d.wgsl b/ggml/src/ggml-webgpu/wgsl-shaders/conv2d.wgsl
+index 38c714ba..2ed34c19 100644
+--- a/ggml/src/ggml-webgpu/wgsl-shaders/conv2d.wgsl
++++ b/ggml/src/ggml-webgpu/wgsl-shaders/conv2d.wgsl
+@@ -36,6 +36,17 @@ struct Params {
+ @group(0) @binding(3)
+ var<uniform> params: Params;
+ 
++#ifdef WEIGHT_F16_PACKED
++// no shader-f16: the F16 kernel is bound as u32 words, two half floats each
++fn load_w(i: u32) -> f32 {
++    return unpack2x16float(weights[i >> 1u])[i & 1u];
++}
++#else
++fn load_w(i: u32) -> f32 {
++    return f32(weights[i]);
++}
++#endif
++
+ fn ceil_div_u32(x: u32, y: u32) -> u32 {
+     return (x + y - 1) / y;
+ }
+@@ -117,7 +128,7 @@ fn main(
+                 let iw = u32(ow_base + i32(kw * params.d0));
+                 let w_idx = w_row_base + kw * params.sw0;
+                 let in_idx = in_row_base + iw * params.si0;
+-                sum += f32(weights[w_idx]) * f32(input[in_idx]);
++                sum += load_w(w_idx) * f32(input[in_idx]);
+             }
+         }
+     }
+diff --git a/ggml/src/ggml-webgpu/wgsl-shaders/conv2d_dw.wgsl b/ggml/src/ggml-webgpu/wgsl-shaders/conv2d_dw.wgsl
+index fc028e42..2223c489 100644
+--- a/ggml/src/ggml-webgpu/wgsl-shaders/conv2d_dw.wgsl
++++ b/ggml/src/ggml-webgpu/wgsl-shaders/conv2d_dw.wgsl
+@@ -31,6 +31,17 @@ struct Params {
+ @group(0) @binding(3)
+ var<uniform> params: Params;
+ 
++#ifdef WEIGHT_F16_PACKED
++// no shader-f16: the F16 kernel is bound as u32 words, two half floats each
++fn load_w(i: u32) -> f32 {
++    return unpack2x16float(weights[i >> 1u])[i & 1u];
++}
++#else
++fn load_w(i: u32) -> f32 {
++    return f32(weights[i]);
++}
++#endif
++
+ #if defined(WHCN)
+ // Input/output/kernel contiguous in [W, H, C, N] order (kernel [KW,KH,C]).
+ fn conv_2d_dw(idx: u32) -> f32 {
+@@ -53,7 +64,7 @@ fn conv_2d_dw(idx: u32) -> f32 {
+             let src_x = i32(dst_x) * params.stride_x + i32(kx) * params.dilation_x - params.pad_x;
+             if (src_x < 0 || src_x >= i32(params.src_w)) { continue; }
+             let v = f32(input[src_i + u32(src_y) * params.src_w + u32(src_x)]);
+-            let k = f32(weights[knl_i + ky * params.knl_w + kx]);
++            let k = load_w(knl_i + ky * params.knl_w + kx);
+             sum += v * k;
+         }
+     }
+@@ -81,7 +92,7 @@ fn conv_2d_dw(idx: u32) -> f32 {
+             let src_x = i32(dst_x) * params.stride_x + i32(kx) * params.dilation_x - params.pad_x;
+             if (src_x < 0 || src_x >= i32(params.src_w)) { continue; }
+             let v = f32(input[src_i + u32(src_y) * src_row + u32(src_x) * params.channels + c]);
+-            let k = f32(weights[params.offset_w + ky * knl_row + kx * params.channels + c]);
++            let k = load_w(params.offset_w + ky * knl_row + kx * params.channels + c);
+             sum += v * k;
+         }
+     }
+diff --git a/ggml/src/ggml-webgpu/wgsl-shaders/mul_mat_direct.wgsl b/ggml/src/ggml-webgpu/wgsl-shaders/mul_mat_direct.wgsl
+index ccd661b8..42343d13 100644
+--- a/ggml/src/ggml-webgpu/wgsl-shaders/mul_mat_direct.wgsl
++++ b/ggml/src/ggml-webgpu/wgsl-shaders/mul_mat_direct.wgsl
+@@ -19,8 +19,14 @@ enable f16;
+ #define SRC0_TYPE vec4<f32>
+ #endif
+ #ifdef DIRECT_F16
++#ifdef NO_F16
++// no shader-f16: four half floats are two words, unpacked with unpack2x16float
++#define SRC0_TYPE vec2<u32>
++#define DIRECT_F16_PACKED
++#else
+ #define SRC0_TYPE vec4<f16>
+ #endif
++#endif
+ #ifdef DIRECT_Q8_0
+ #define SRC0_TYPE u32
+ #define DIRECT_QUANT
+@@ -56,6 +62,19 @@ struct MulMatParams {
+ 
+ const TOTAL_WORKGROUP_SIZE = WORKGROUP_SIZE_M * WORKGROUP_SIZE_N;
+ 
++#ifndef DIRECT_QUANT
++#ifdef DIRECT_F16_PACKED
++fn load_w4(i: u32) -> vec4<f32> {
++    let p = src0[i];
++    return vec4<f32>(unpack2x16float(p.x), unpack2x16float(p.y));
++}
++#else
++fn load_w4(i: u32) -> vec4<f32> {
++    return vec4<f32>(src0[i]);
++}
++#endif
++#endif
++
+ #ifdef DIRECT_QUANT
+ // Portable unpack (no packed_4x8_integer_dot_product requirement).
+ fn unpack_i8(w: u32) -> vec4<f32> {
+@@ -188,10 +207,10 @@ fn main(@builtin(workgroup_id) wg_id: vec3<u32>,
+     let n_quads = params.k >> 2u;
+     for (var q = 0u; q < n_quads; q++) {
+         let x = mat4x4<f32>(src1[x0 + q], src1[x1 + q], src1[x2 + q], src1[x3 + q]);
+-        acc0 += vec4<f32>(src0[r0 + q]) * x;
+-        acc1 += vec4<f32>(src0[r1 + q]) * x;
+-        acc2 += vec4<f32>(src0[r2 + q]) * x;
+-        acc3 += vec4<f32>(src0[r3 + q]) * x;
++        acc0 += load_w4(r0 + q) * x;
++        acc1 += load_w4(r1 + q) * x;
++        acc2 += load_w4(r2 + q) * x;
++        acc3 += load_w4(r3 + q) * x;
+     }
+ #endif
+ 
+diff --git a/src/conformer/conformer.cpp b/src/conformer/conformer.cpp
+index 781b2fb1..0fa35e8c 100644
+--- a/src/conformer/conformer.cpp
++++ b/src/conformer/conformer.cpp
+@@ -1231,8 +1231,13 @@ ggml_tensor * build_pre_encode(ggml_context *        ctx,
+         x = apply_valid_mask(x, valid_masks ? &valid_masks->mask_s2 : nullptr, "pre_encode.valid_mask.s2");
+     }
+ 
++    // TRANSCRIBE_F32_POINTWISE=1 forces the F32 im2col for the two pointwise
++    // convs. ggml_conv_2d hardcodes an F16 im2col, which a WebGPU device
++    // without shader-f16 cannot produce (the op would bounce to the CPU).
++    const bool f32_pointwise = policy.pre_encode_f32_pointwise || std::getenv("TRANSCRIBE_F32_POINTWISE") != nullptr;
++
+     // conv3 (pointwise: channels -> channels, k=1 s=1 p=0)
+-    x = policy.pre_encode_f32_pointwise ?
++    x = f32_pointwise ?
+             conv_2d_f32(ctx, pe.conv3_w, x, /*s0=*/1, /*s1=*/1, /*p0=*/0, /*p1=*/0, /*d0=*/1, /*d1=*/1) :
+             ggml_conv_2d(ctx, pe.conv3_w, x,
+                          /*s0=*/1, /*s1=*/1,
+@@ -1267,7 +1272,7 @@ ggml_tensor * build_pre_encode(ggml_context *        ctx,
+         x = apply_valid_mask(x, valid_masks ? &valid_masks->mask_s3 : nullptr, "pre_encode.valid_mask.s3");
+     }
+ 
+-    x = policy.pre_encode_f32_pointwise ?
++    x = f32_pointwise ?
+             conv_2d_f32(ctx, pe.conv6_w, x, /*s0=*/1, /*s1=*/1, /*p0=*/0, /*p1=*/0, /*d0=*/1, /*d1=*/1) :
+             ggml_conv_2d(ctx, pe.conv6_w, x,
+                          /*s0=*/1, /*s1=*/1,
+-- 
+2.53.0
+

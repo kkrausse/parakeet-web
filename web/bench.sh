@@ -33,7 +33,10 @@ row ggml-f16           "model=f16&$Q" $F16
 row ggml-q4km          "model=q4km&$Q" $F16   # needs PK_EXTRA_MODELS at build time
 row ggml-q4-flash      "model=q4&flash=1&$Q" $F16
 row ggml-q8-flash      "model=q8&flash=1&$Q" $F16
-row ggml-q4-stock      "model=q4&clip=a07&runs=3"            # no Dawn toggle: no shader-f16 on driver 580
+row ggml-q4-stock      "model=q4&$Q"                         # no Dawn toggle: stock Chrome, no shader-f16 on driver 580 -> f32-only shaders
+row ggml-q8-stock      "model=q8&$Q"
+row ggml-f16-stock     "model=f16&$Q"
+row ggml-q4-nof16      "model=q4&f16=0&$Q" $F16              # f16 available but not used (same Chrome flags as the f16 rows)
 row ggml-q4-blob       "model=q4&store=blob&clip=a07&runs=3" $F16
 row ggml-q4-opfs-blob  "model=q4&store=opfs-blob&clip=a07&runs=3" $F16
 row ggml-q4-memfs      "model=q4&store=memfs&clip=a07&runs=3" $F16

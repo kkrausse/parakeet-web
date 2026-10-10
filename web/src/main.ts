@@ -13,6 +13,7 @@ declare const MODELS: Record<string, { label: string; file: string; mb: number }
 interface Config {
   model: string; clip: string; runs: number; threads: number;
   store: "opfs" | "opfs-blob" | "blob" | "memfs"; // where the model file lives while it is loaded
+  f16: boolean; // false (f16=0): do not use shader-f16 even where the adapter has it (the f32-only shader path)
   flash: boolean; // ggml FLASH_ATTN_EXT in the encoder (off: plain matmul + softmax attention)
   variant: "jspi" | "asyncify" | "prof"; // prof: JSPI build with ggml CPU-side profiling (use with verbose=1)
   verbose: boolean; base: string; env: Record<string, string>;
@@ -29,6 +30,7 @@ function readConfig(): Config {
     runs: Math.max(0, Number(params.get("runs") ?? 10) | 0),
     threads: Math.max(1, Number(params.get("threads") ?? 1) | 0),
     store: pick("store", ["opfs", "opfs-blob", "blob", "memfs"], "opfs"),
+    f16: params.get("f16") !== "0",
     flash: params.get("flash") === "1",
     variant: pick("variant", ["jspi", "asyncify", "prof"], "Suspending" in WebAssembly ? "jspi" : "asyncify"),
     verbose: params.get("verbose") === "1",
@@ -112,13 +114,21 @@ async function run() {
 
   w.__pkb.phase = "sessions";
   status("fetching and loading the model");
-  const env: Record<string, string> = { TRANSCRIBE_NO_FLASH: cfg.flash ? "" : "1", TRANSCRIBE_F32_MASK_CONCAT: cfg.flash ? "1" : "", ...cfg.env };
+  // Without shader-f16 the backend compiles f32-only shaders; the two pointwise convs must then use an F32 im2col
+  // (ggml_conv_2d's F16 one would bounce to the CPU). Flash attention needs F16 masks, so it is off on that path.
+  const useF16 = !!a.shaderF16 && cfg.f16;
+  result.shaderF16Used = useF16;
+  const flash = cfg.flash && useF16;
+  if (cfg.flash && !flash) step("flash attention needs shader-f16: using matmul + softmax attention instead");
+  step(useF16 ? "shader path: f16" : `shader path: f32 only (${a.shaderF16 ? "f16=0 requested" : "adapter has no shader-f16"})`);
+  const env: Record<string, string> = { TRANSCRIBE_NO_FLASH: flash ? "" : "1", TRANSCRIBE_F32_MASK_CONCAT: flash ? "1" : "",
+    GGML_WEBGPU_NO_F16: useF16 ? "" : "1", TRANSCRIBE_F32_POINTWISE: useF16 ? "" : "1", ...cfg.env };
   const ld = await call("load", { url: new URL(cfg.base + model.file, location.href).href, name: model.file, store: cfg.store, env, threads: cfg.threads, verbose: cfg.verbose });
   result.load = { fetchMs: Math.round(ld.fetchMs), loadMs: Math.round(ld.loadMs), from: ld.from, fileMb: r1(ld.mb), wasmHeapMb: ld.heapMb, wasmHeapUsedMb: ld.heapUsedMb, backend: ld.backend };
   result.session = { totalMs: Math.round(ld.loadMs) };
   step(`model file ready (${ld.from})`, ld.fetchMs, `${ld.mb.toFixed(0)} MB`);
   step(`model loaded on ${ld.backend}`, ld.loadMs, `WASM heap ${ld.heapMb} MB, ${ld.heapUsedMb} MB in use`);
-  if (!/webgpu/i.test(ld.backend)) step(`WARNING: not on WebGPU (backend "${ld.backend}"). The ggml WebGPU backend needs shader-f16; without it everything runs on one WASM thread and the weights sit in the WASM heap.`);
+  if (!/webgpu/i.test(ld.backend)) step(`WARNING: not on WebGPU (backend "${ld.backend}"). Everything runs on one WASM thread and the weights sit in the WASM heap.`);
   if (ld.log) step(`library log: ${ld.log.trim().slice(0, 600)}`);
   result.startToLoadedMs = Math.round(performance.now() - runStart);
   await new Promise((r) => setTimeout(r, 700)); // let the driver sample memory in a settled state
@@ -171,7 +181,7 @@ async function run() {
 
 // ---------- page ----------
 function envLine(a: any) {
-  const gpu = !a ? ("gpu" in navigator ? "navigator.gpu present" : "navigator.gpu ABSENT") : a.available ? `${a.vendor} ${a.architecture} ${a.description || ""} · shader-f16 ${a.shaderF16 ? "present" : "ABSENT (this build cannot start without it)"}` : `no adapter (${a.reason})`;
+  const gpu = !a ? ("gpu" in navigator ? "navigator.gpu present" : "navigator.gpu ABSENT") : a.available ? `${a.vendor} ${a.architecture} ${a.description || ""} · shader-f16 ${a.shaderF16 ? (cfg.f16 ? "present" : "present, not used (f16=0)") : "absent (f32-only shaders)"}` : `no adapter (${a.reason})`;
   return `${gpu} · JSPI ${"Suspending" in WebAssembly ? "available" : "absent (ASYNCIFY build)"} · crossOriginIsolated=${crossOriginIsolated}`;
 }
 function esc(s: string) { return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!); }
@@ -219,6 +229,7 @@ function init() {
   sel("store", "store", [["opfs", "model file: OPFS, read in place"], ["opfs-blob", "model file: OPFS as a File"], ["blob", "model file: fetch Blob"], ["memfs", "model file: copied into WASM heap"]]);
   sel("flash", "flash", [["0", "attention: matmul + softmax"], ["1", "attention: flash kernel"]]);
   sel("variant", "variant", [["jspi", "JSPI build"], ["asyncify", "ASYNCIFY build"]]);
+  sel("f16", "f16", [["1", "shader-f16: use if present"], ["0", "shader-f16: never (f32-only shaders)"]]);
   $("env").textContent = envLine(null);
   $("go").addEventListener("click", start);
   $("clear").addEventListener("click", async () => {
