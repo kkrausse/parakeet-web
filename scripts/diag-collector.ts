@@ -59,6 +59,8 @@ function readAll(days = 4): Line[] {
 }
 const short = (v: unknown, n = 300) => { const s = typeof v === "string" ? v : JSON.stringify(v); return s === undefined ? "" : s.length > n ? s.slice(0, n) + "..." : s; };
 const mib = (x: unknown) => (typeof x === "number" ? `${Math.round(x / 2 ** 20)} MiB` : "?");
+/** The GPU numbers a page sends with a pass (web/src/common.ts gpuDiag): MiB held, buffers live / made / destroyed, cumulative bind groups, JS objects made / collected. */
+const gpu = (g: any) => (!g ? "" : ` | GPU weights ${g.w} working ${g.work} MiB, ${g.n} buffers (made ${g.made}, destroyed ${g.gone}), bind groups ${g.bg}${g.jsObj !== undefined ? `, JS objects ${g.jsObj} made ${g.jsGone} collected, JS buffers live ${g.jsBuf} (${g.jsBufMb} MiB)` : ""}`);
 /** One event as one readable line. */
 function eventLine(e: Line, full: boolean): string {
   const head = `${(e.t / 1000).toFixed(1).padStart(7)}s #${String(e.seq).padEnd(4)}`;
@@ -73,10 +75,11 @@ function eventLine(e: Line, full: boolean): string {
       if (!a.available) return `${head} ADAPTER none: ${a.reason}`;
       return `${head} ADAPTER ${a.vendor} ${a.architecture} ${a.description || a.device || ""} fallback=${a.isFallbackAdapter} | features: ${(a.features ?? []).join(" ") || "none"}\n${" ".repeat(15)}limits: binding ${mib(a.limits?.maxStorageBufferBindingSize)}, buffer ${mib(a.limits?.maxBufferSize)}, invocations ${a.limits?.maxComputeInvocationsPerWorkgroup}, storage buffers/stage ${a.limits?.maxStorageBuffersPerShaderStage}${a.belowSpecDefault?.length ? ` | BELOW SPEC: ${a.belowSpecDefault.join("; ")}` : ""}\n${" ".repeat(15)}device ladder: ${a.plan ? `${a.deviceProbe} with limits=${a.plan.limits || "raised"} f16=${a.plan.f16}` : `NO DEVICE: ${a.deviceError}`}${a.probeErrors?.length ? ` | refused: ${a.probeErrors.join(" | ")}` : ""} | WASM heap ${d.heapMb} MB`;
     }
-    case "chosen": return `${head} CHOSEN ${d.model} (${d.file}) build=${d.build} backend=${d.backend} shaders=${d.shaderPath} limits=${d.limits === "default" ? "spec default" : "raised"} storage=${d.storagePath} (${d.from}) ${d.fileBytes} bytes | fetch ${d.fetchMs} ms, load ${d.loadMs} ms | WASM heap ${d.heapMb} MB (${d.heapUsedMb} in use)`;
-    case "pass": return `${head} pass ${d.clip ? d.clip + " " : ""}${d.n}${d.final ? " final" : ""}: ${d.ms} ms for ${d.audioS} s (mel ${d.melMs}, decode ${d.decodeMs}) heap ${d.heapMb} MB`;
+    case "chosen": return `${head} CHOSEN ${d.model} (${d.file}) build=${d.build} backend=${d.backend} shaders=${d.shaderPath} limits=${d.limits === "default" ? "spec default" : "raised"} storage=${d.storagePath} (${d.from}) ${d.fileBytes} bytes | fetch ${d.fetchMs} ms, load ${d.loadMs} ms | WASM heap ${d.heapMb} MB (${d.heapUsedMb} in use)${d.gpu ? `\n${" ".repeat(15)}GPU after load: weights ${d.gpu.weightsMb} MiB ${JSON.stringify(d.gpu.byType)}, working ${d.gpu.workingMb} MiB, ${d.gpu.buffers} buffers; JS counting ${d.gpuwatch}, collector nudge ${d.gcMb} MiB` : ""}`;
+    case "pass": return `${head} ${d.soak ? "soak " : ""}pass ${d.clip ? d.clip + " " : ""}${d.n}${d.soak ? ` of ${d.soak}` : ""}${d.final ? " final" : ""}: ${d.ms} ms for ${d.audioS} s (mel ${d.melMs}, decode ${d.decodeMs}) heap ${d.heapMb} MB${gpu(d.gpu)}`;
+    case "soak": return `${head} SOAK ${d.stopped ? "stopped" : "done"}: ${d.done} of ${d.n} passes in ${d.seconds} s, median ${d.medianMs} ms; ${d.flat === null ? "no GPU numbers" : d.flat ? "FLAT" : "NOT FLAT"} after warm-up: ${d.madeAfterWarm} buffers made, working ${d.workMin}-${d.workMax} MiB; same text on the check clip: ${d.sameText}${d.error ? `; ERROR ${d.error}` : ""}\n${" ".repeat(15)}start${gpu(d.start)}\n${" ".repeat(15)}end  ${gpu(d.end)}`;
     case "pass-begin": return `${head} pass ${d.n} starting: ${d.audioS} s${d.longest ? " (longest so far)" : ""}${d.final ? " final" : ""}`;
-    case "heartbeat": return `${head} heartbeat ${d.phase}${d.recording ? " recording" : ""} heap ${d.heapMb} MB js ${d.jsHeapMb ?? "?"} MB passes ${d.passes} lag ${d.lagS} s buffer ${d.bufferS} s backlog ${d.backlogS} s ctx ${d.audioContext} ${d.visibility}`;
+    case "heartbeat": return `${head} heartbeat ${d.phase}${d.recording ? " recording" : ""} heap ${d.heapMb} MB js ${d.jsHeapMb ?? "?"} MB passes ${d.passes} lag ${d.lagS} s buffer ${d.bufferS} s backlog ${d.backlogS} s ctx ${d.audioContext} ${d.visibility}${gpu(d.gpu)}`;
     case "load-heap": return `${head} loading: WASM heap ${d.heapMb} MB at ${d.ms} ms`;
     case "lifecycle": return `${head} LIFECYCLE ${d.name}${d.persisted !== undefined ? ` persisted=${d.persisted}` : ""} (${d.visibility})`;
     case "foreign-error": return `${head} FOREIGN, IGNORED ${d.label}: ${short(d.text)} [${d.why}]`;

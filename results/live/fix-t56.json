@@ -1,0 +1,2640 @@
+{
+ "name": "fix-t56",
+ "wav": "/home/kkrausse/devfs/cache/parakeet-ggml-webgpu/audio/live/t56.wav",
+ "wavSeconds": 62.104,
+ "recordSeconds": 60,
+ "chromeArgs": [
+  "--enable-dawn-features=vulkan_enable_f16_on_nvidia"
+ ],
+ "noWebgpu": false,
+ "loadavgStart": "3.95 5.84 6.26 11/2112 3148427",
+ "chrome": "154.0.8037.97",
+ "url": "http://127.0.0.1:8791/live.html?model=s8&phone=1",
+ "readyMs": 2066,
+ "beforeRecording": {
+  "t": 0,
+  "gpuMib": 249,
+  "rendererRssMib": 280,
+  "gpuProcRssMib": 306,
+  "wasmHeapMb": 0,
+  "jsHeapMb": 4,
+  "gpuWorkingMb": 42,
+  "gpuBuffers": 8,
+  "gpuBuffersMade": 10,
+  "jsGpuObjects": 2557,
+  "jsGpuCollected": 1343,
+  "lagS": 0,
+  "bufferS": 0,
+  "passes": 0,
+  "words": 0,
+  "vad": {
+   "noiseFloor": 0.001,
+   "hasSpeech": false,
+   "lastRms": 0
+  }
+ },
+ "drainMs": 1629,
+ "live": {
+  "committed": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatro a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies. delve into unconventional bond markets with our B three bond X and our and experience non standard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier our forward thinking financial forecasting tool. Explore venture capital world with U three unifund or move your money with the M three Mover or sophisticated monetary transfer module. At CorkidQuill Inc. we turn complex finance into creative solutions. Join us in redefining financial services.",
+  "provisional": "",
+  "segments": [
+   {
+    "startS": 1.7,
+    "endS": 10,
+    "reason": "cap",
+    "ms": 84.4,
+    "reused": false,
+    "text": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatro"
+   },
+   {
+    "startS": 10,
+    "endS": 20,
+    "reason": "cap",
+    "ms": 88.3,
+    "reused": false,
+    "text": "a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies."
+   },
+   {
+    "startS": 20,
+    "endS": 29.3,
+    "reason": "cap",
+    "ms": 87.3,
+    "reused": false,
+    "text": "delve into unconventional bond markets with our B three bond X and our and experience non standard equity trading with E three equity."
+   },
+   {
+    "startS": 29.3,
+    "endS": 39.1,
+    "reason": "cap",
+    "ms": 91.5,
+    "reused": false,
+    "text": "Personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier our forward thinking financial forecasting tool."
+   },
+   {
+    "startS": 39.1,
+    "endS": 48.1,
+    "reason": "cap",
+    "ms": 89.8,
+    "reused": false,
+    "text": "Explore venture capital world with U three unifund or move your money with the M three Mover or sophisticated monetary transfer module."
+   },
+   {
+    "startS": 48.1,
+    "endS": 56.2,
+    "reason": "pause",
+    "ms": 0,
+    "reused": true,
+    "text": "At CorkidQuill Inc. we turn complex finance into creative solutions. Join us in redefining financial services."
+   }
+  ],
+  "passCount": 200,
+  "finalCount": 6,
+  "reusedCount": 1,
+  "staleCount": 0,
+  "maxLagS": 0.5,
+  "droppedS": 0,
+  "inputRate": 44100,
+  "backend": "WebGPU: WebGPU",
+  "webgpu": true,
+  "shaderF16": true,
+  "variant": "jspi",
+  "errors": [],
+  "params": {
+   "gapMs": 250,
+   "hangMs": 700,
+   "preRollMs": 300,
+   "tailMs": 300,
+   "capS": 12,
+   "cutLookbackS": 10,
+   "minSpeechMs": 120,
+   "onsetFrames": 2,
+   "absRms": 0.004,
+   "noiseRatio": 3,
+   "lagWarnS": 2,
+   "backlogS": 120
+  },
+  "load": {
+   "fetchMs": 603,
+   "loadMs": 342,
+   "from": "network, streamed to OPFS",
+   "base": "models/",
+   "adapter": "nvidia turing NVIDIA GeForce RTX 2080 Ti"
+  }
+ },
+ "steps": [
+  {
+   "t": 1,
+   "name": "start: 110M, Q8_0 (8-bit weights), jspi",
+   "detail": "session adzvp6; phone=1; cap 12 s; limits default; store opfs"
+  },
+  {
+   "t": 602,
+   "name": "WASM module ready",
+   "ms": 41.8,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 603,
+   "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 present; fallback=false"
+  },
+  {
+   "t": 603,
+   "name": "adapter limits: binding 2048 MiB, buffer 4096 MiB, 1024 invocations/workgroup, workgroup storage 49152 B, 16 storage buffers/stage",
+   "detail": "all at or above the WebGPU spec defaults, which is all this page needs"
+  },
+  {
+   "t": 604,
+   "name": "device probe ok: binding 128 MiB, buffer 256 MiB, 256 invocations",
+   "detail": "spec-default limits"
+  },
+  {
+   "t": 604,
+   "name": "shader path: f16"
+  },
+  {
+   "t": 604,
+   "name": "WebGPU limits: spec defaults, nothing raised (the default on iOS; limits=raised changes it)"
+  },
+  {
+   "t": 637,
+   "name": "model file: 135373280 bytes on the server, 0 bytes stored in this browser (OPFS)"
+  },
+  {
+   "t": 669,
+   "name": "download: 16777216 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 697,
+   "name": "download: 33554432 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 713,
+   "name": "download: 50331648 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 729,
+   "name": "download: 67108864 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 750,
+   "name": "download: 83886080 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 765,
+   "name": "download: 100663296 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 780,
+   "name": "download: 117440512 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 801,
+   "name": "download: 134217728 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1228,
+   "name": "download complete: 135373280 bytes in OPFS (sync access handle)"
+  },
+  {
+   "t": 1230,
+   "name": "storage path: OPFS sync access handle (the file stays on disk; tensors are read one at a time)"
+  },
+  {
+   "t": 1231,
+   "name": "loading the model into the backend: WASM heap 32 MB before"
+  },
+  {
+   "t": 1574,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 602.9,
+   "detail": "129 MB from models/; storage path opfs-sync"
+  },
+  {
+   "t": 1574,
+   "name": "model loaded on WebGPU: WebGPU",
+   "ms": 341.7,
+   "detail": "WASM heap 32 MB, 9.9 MB in use"
+  },
+  {
+   "t": 1575,
+   "name": "after load: GPU: weights 129 MiB (q8_0 101.6, f16 25.5, f32 2), working 2 MiB, 7 buffers · since load 8 buffers made, 1 destroyed · JS objects 167 made, 0 collected; JS buffers 7 live (131.1 MiB)",
+   "detail": "JS object counting on; collector nudge 32 MiB per pass (gc=0 turns it off)"
+  },
+  {
+   "t": 1575,
+   "name": "warm-up pass starting (1.5 s of noise: shaders compile here)"
+  },
+  {
+   "t": 1810,
+   "name": "warm-up pass (1.5 s of noise)",
+   "ms": 223.5,
+   "detail": "WASM heap 39 MB, 20.1 MB in use"
+  },
+  {
+   "t": 1810,
+   "name": "sizing pass starting (13 s of noise: the working buffer is made for the longest utterance)"
+  },
+  {
+   "t": 1877,
+   "name": "sizing pass (13 s of noise)",
+   "ms": 55.3,
+   "detail": "GPU: weights 129 MiB (q8_0 101.6, f16 25.5, f32 2), working 42 MiB, 8 buffers · since load 10 buffers made, 2 destroyed · JS objects 2557 made, 1343 collected; JS buffers 8 live (171.1 MiB)"
+  },
+  {
+   "t": 2194,
+   "name": "recording: context running at 44100 Hz -> 16000 Hz, track 48000 Hz, 1 ch, echoCancellation=false noiseSuppression=false autoGainControl=true"
+  },
+  {
+   "t": 2305,
+   "name": "first pass starting",
+   "detail": "0.1 s of audio"
+  },
+  {
+   "t": 2376,
+   "name": "first pass done",
+   "ms": 70,
+   "detail": "0.1 s of audio, WASM heap 47 MB"
+  },
+  {
+   "t": 15950,
+   "name": "commit 1: 8.3 s of audio, cap",
+   "ms": 84.4,
+   "detail": "18 words"
+  },
+  {
+   "t": 24274,
+   "name": "commit 2: 10.0 s of audio, cap",
+   "ms": 88.3,
+   "detail": "17 words"
+  },
+  {
+   "t": 34223,
+   "name": "commit 3: 9.4 s of audio, cap",
+   "ms": 87.3,
+   "detail": "23 words"
+  },
+  {
+   "t": 43588,
+   "name": "commit 4: 9.7 s of audio, cap",
+   "ms": 91.5,
+   "detail": "24 words"
+  },
+  {
+   "t": 53346,
+   "name": "commit 5: 9.0 s of audio, cap",
+   "ms": 89.8,
+   "detail": "22 words"
+  },
+  {
+   "t": 58816,
+   "name": "commit 6: 8.2 s of audio, pause",
+   "detail": "16 words; text of the last provisional pass"
+  },
+  {
+   "t": 63753,
+   "name": "stopped after 61.6 s: 200 passes, 6 commits, max lag 0.5 s"
+  }
+ ],
+ "console": [],
+ "provisionalPassMs": {
+  "n": 195,
+  "median": 82.1,
+  "p95": 109.6,
+  "max": 137.4
+ },
+ "finalPassMs": {
+  "n": 5,
+  "median": 88.3,
+  "p95": 91.5,
+  "max": 91.5
+ },
+ "provisionalAudioS": {
+  "n": 195,
+  "median": 6.8,
+  "p95": 11.5,
+  "max": 11.9
+ },
+ "finalAudioS": {
+  "n": 5,
+  "median": 9.4,
+  "p95": 10,
+  "max": 10
+ },
+ "lagS": {
+  "n": 31,
+  "median": 0.1,
+  "p95": 0.2,
+  "max": 0.3
+ },
+ "maxLagS": 0.5,
+ "memoryAfterWarmup": {
+  "gpuMib": {
+   "first": 241,
+   "last": 246,
+   "min": 241,
+   "max": 247
+  },
+  "rendererRssMib": {
+   "first": 267,
+   "last": 242,
+   "min": 242,
+   "max": 277
+  },
+  "gpuProcRssMib": {
+   "first": 316,
+   "last": 316,
+   "min": 316,
+   "max": 317
+  },
+  "wasmHeapMb": {
+   "first": 47,
+   "last": 47,
+   "min": 47,
+   "max": 47
+  },
+  "jsHeapMb": {
+   "first": 10,
+   "last": 3,
+   "min": 3,
+   "max": 19
+  },
+  "gpuWorkingMb": {
+   "first": 42,
+   "last": 42,
+   "min": 42,
+   "max": 42
+  },
+  "gpuBuffers": {
+   "first": 8,
+   "last": 8,
+   "min": 8,
+   "max": 8
+  },
+  "gpuBuffersMade": {
+   "first": 10,
+   "last": 10,
+   "min": 10,
+   "max": 10
+  }
+ },
+ "gpuAtLoad": {
+  "weightsMb": 129,
+  "workingMb": 2,
+  "computeMb": 0,
+  "stagingMb": 2,
+  "liveMb": 131.1,
+  "buffers": 7,
+  "byType": {
+   "f16": 25.5,
+   "q8_0": 101.6,
+   "f32": 2
+  },
+  "created": 8,
+  "destroyed": 1,
+  "createdMb": 132.1,
+  "poolHits": 0,
+  "poolMisses": 0,
+  "pipelines": 1,
+  "layouts": 1,
+  "bindGroups": 0,
+  "encoders": 78,
+  "submits": 78,
+  "writes": 685,
+  "maps": 78,
+  "js": {
+   "registry": true,
+   "objects": 167,
+   "collected": 0,
+   "buffers": 8,
+   "buffersDestroyed": 1,
+   "buffersCollected": 0,
+   "bufferLiveMb": 131.1,
+   "bindGroups": 0,
+   "bindGroupsCollected": 0,
+   "layouts": 1,
+   "encoders": 78,
+   "commandBuffers": 78,
+   "commandBuffersCollected": 0,
+   "pipelines": 1,
+   "shaderModules": 1
+  }
+ },
+ "gpuAfterWarmup": {
+  "weightsMb": 129,
+  "workingMb": 42,
+  "computeMb": 40,
+  "stagingMb": 2,
+  "liveMb": 171.1,
+  "buffers": 8,
+  "byType": {
+   "f16": 25.5,
+   "q8_0": 101.6,
+   "f32": 2
+  },
+  "created": 10,
+  "destroyed": 2,
+  "createdMb": 176,
+  "poolHits": 0,
+  "poolMisses": 1,
+  "pipelines": 19,
+  "layouts": 19,
+  "bindGroups": 2222,
+  "encoders": 116,
+  "submits": 116,
+  "writes": 793,
+  "maps": 80,
+  "js": {
+   "registry": true,
+   "objects": 2557,
+   "collected": 1343,
+   "buffers": 10,
+   "buffersDestroyed": 2,
+   "buffersCollected": 1,
+   "bufferLiveMb": 171.1,
+   "bindGroups": 2222,
+   "bindGroupsCollected": 1111,
+   "layouts": 19,
+   "encoders": 116,
+   "commandBuffers": 116,
+   "commandBuffersCollected": 97,
+   "pipelines": 19,
+   "shaderModules": 19
+  }
+ },
+ "gpuEnd": {
+  "weightsMb": 129,
+  "workingMb": 42,
+  "computeMb": 40,
+  "stagingMb": 2,
+  "liveMb": 171.1,
+  "buffers": 8,
+  "byType": {
+   "f16": 25.5,
+   "q8_0": 101.6,
+   "f32": 2
+  },
+  "created": 10,
+  "destroyed": 2,
+  "createdMb": 176,
+  "poolHits": 200,
+  "poolMisses": 1,
+  "pipelines": 26,
+  "layouts": 26,
+  "bindGroups": 224577,
+  "encoders": 3918,
+  "submits": 3918,
+  "writes": 11595,
+  "maps": 280,
+  "js": {
+   "registry": true,
+   "objects": 236139,
+   "collected": 233745,
+   "buffers": 10,
+   "buffersDestroyed": 2,
+   "buffersCollected": 2,
+   "bufferLiveMb": 171.1,
+   "bindGroups": 224577,
+   "bindGroupsCollected": 222355,
+   "layouts": 26,
+   "encoders": 3918,
+   "commandBuffers": 3918,
+   "commandBuffersCollected": 3880,
+   "pipelines": 26,
+   "shaderModules": 26
+  }
+ },
+ "series": [
+  {
+   "t": 0,
+   "gpuMib": 249,
+   "rendererRssMib": 314,
+   "gpuProcRssMib": 306,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 2557,
+   "jsGpuCollected": 1343,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 2,
+   "gpuMib": 251,
+   "rendererRssMib": 244,
+   "gpuProcRssMib": 311,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 6237,
+   "jsGpuCollected": 5012,
+   "lagS": 0,
+   "bufferS": 0.3,
+   "passes": 3,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00066,
+    "hasSpeech": true,
+    "lastRms": 0.37993
+   }
+  },
+  {
+   "t": 4,
+   "gpuMib": 248,
+   "rendererRssMib": 247,
+   "gpuProcRssMib": 314,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 15576,
+   "jsGpuCollected": 14349,
+   "lagS": 0,
+   "bufferS": 2.3,
+   "passes": 11,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00033,
+    "hasSpeech": true,
+    "lastRms": 0.04636
+   }
+  },
+  {
+   "t": 6,
+   "gpuMib": 241,
+   "rendererRssMib": 252,
+   "gpuProcRssMib": 315,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 8,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 23745,
+   "jsGpuCollected": 22516,
+   "lagS": 0.1,
+   "bufferS": 4.4,
+   "passes": 18,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00088,
+    "hasSpeech": true,
+    "lastRms": 0.03601
+   }
+  },
+  {
+   "t": 8,
+   "gpuMib": 241,
+   "rendererRssMib": 259,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 11,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 31914,
+   "jsGpuCollected": 31852,
+   "lagS": 0.2,
+   "bufferS": 6.4,
+   "passes": 25,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00072,
+    "hasSpeech": true,
+    "lastRms": 0.01267
+   }
+  },
+  {
+   "t": 10,
+   "gpuMib": 241,
+   "rendererRssMib": 264,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 15,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 40083,
+   "jsGpuCollected": 40021,
+   "lagS": 0.2,
+   "bufferS": 8.4,
+   "passes": 32,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00009,
+    "hasSpeech": true,
+    "lastRms": 0.00007
+   }
+  },
+  {
+   "t": 12,
+   "gpuMib": 241,
+   "rendererRssMib": 260,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 9,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 49419,
+   "jsGpuCollected": 48192,
+   "lagS": 0.1,
+   "bufferS": 10.5,
+   "passes": 40,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0.00195,
+    "hasSpeech": true,
+    "lastRms": 0.00445
+   }
+  },
+  {
+   "t": 14,
+   "gpuMib": 247,
+   "rendererRssMib": 264,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 14,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 57588,
+   "jsGpuCollected": 55194,
+   "lagS": 0.1,
+   "bufferS": 4,
+   "passes": 47,
+   "words": 18,
+   "vad": {
+    "noiseFloor": 0.00094,
+    "hasSpeech": true,
+    "lastRms": 0.04843
+   }
+  },
+  {
+   "t": 16,
+   "gpuMib": 246,
+   "rendererRssMib": 261,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 8,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 66924,
+   "jsGpuCollected": 66862,
+   "lagS": 0.1,
+   "bufferS": 6.3,
+   "passes": 55,
+   "words": 18,
+   "vad": {
+    "noiseFloor": 0.00087,
+    "hasSpeech": true,
+    "lastRms": 0.04715
+   }
+  },
+  {
+   "t": 18,
+   "gpuMib": 242,
+   "rendererRssMib": 266,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 12,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 75093,
+   "jsGpuCollected": 73866,
+   "lagS": 0.1,
+   "bufferS": 8.3,
+   "passes": 62,
+   "words": 18,
+   "vad": {
+    "noiseFloor": 0.00048,
+    "hasSpeech": true,
+    "lastRms": 0.00713
+   }
+  },
+  {
+   "t": 20,
+   "gpuMib": 241,
+   "rendererRssMib": 267,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 10,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 83262,
+   "jsGpuCollected": 82035,
+   "lagS": 0.2,
+   "bufferS": 10.3,
+   "passes": 69,
+   "words": 18,
+   "vad": {
+    "noiseFloor": 0.00033,
+    "hasSpeech": true,
+    "lastRms": 0.02697
+   }
+  },
+  {
+   "t": 22,
+   "gpuMib": 247,
+   "rendererRssMib": 272,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 14,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 92598,
+   "jsGpuCollected": 91371,
+   "lagS": 0,
+   "bufferS": 2.4,
+   "passes": 77,
+   "words": 35,
+   "vad": {
+    "noiseFloor": 0.001,
+    "hasSpeech": true,
+    "lastRms": 0.00659
+   }
+  },
+  {
+   "t": 25,
+   "gpuMib": 246,
+   "rendererRssMib": 274,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 16,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 100767,
+   "jsGpuCollected": 98373,
+   "lagS": 0,
+   "bufferS": 4.3,
+   "passes": 84,
+   "words": 35,
+   "vad": {
+    "noiseFloor": 0.0005,
+    "hasSpeech": true,
+    "lastRms": 0.00018
+   }
+  },
+  {
+   "t": 27,
+   "gpuMib": 242,
+   "rendererRssMib": 277,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 19,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 110103,
+   "jsGpuCollected": 108876,
+   "lagS": 0.1,
+   "bufferS": 6.6,
+   "passes": 92,
+   "words": 35,
+   "vad": {
+    "noiseFloor": 0.00081,
+    "hasSpeech": true,
+    "lastRms": 0.02587
+   }
+  },
+  {
+   "t": 29,
+   "gpuMib": 241,
+   "rendererRssMib": 246,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 3,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 118272,
+   "jsGpuCollected": 117045,
+   "lagS": 0.1,
+   "bufferS": 8.6,
+   "passes": 99,
+   "words": 35,
+   "vad": {
+    "noiseFloor": 0.00163,
+    "hasSpeech": true,
+    "lastRms": 0.07754
+   }
+  },
+  {
+   "t": 31,
+   "gpuMib": 241,
+   "rendererRssMib": 255,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 8,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 126441,
+   "jsGpuCollected": 124047,
+   "lagS": 0.2,
+   "bufferS": 10.6,
+   "passes": 106,
+   "words": 35,
+   "vad": {
+    "noiseFloor": 0.00013,
+    "hasSpeech": true,
+    "lastRms": 0.04778
+   }
+  },
+  {
+   "t": 33,
+   "gpuMib": 247,
+   "rendererRssMib": 252,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 135777,
+   "jsGpuCollected": 133383,
+   "lagS": 0,
+   "bufferS": 3.2,
+   "passes": 114,
+   "words": 58,
+   "vad": {
+    "noiseFloor": 0.00049,
+    "hasSpeech": true,
+    "lastRms": 0.00155
+   }
+  },
+  {
+   "t": 35,
+   "gpuMib": 246,
+   "rendererRssMib": 254,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 9,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 143946,
+   "jsGpuCollected": 143884,
+   "lagS": 0.1,
+   "bufferS": 5.2,
+   "passes": 121,
+   "words": 58,
+   "vad": {
+    "noiseFloor": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.12055
+   }
+  },
+  {
+   "t": 37,
+   "gpuMib": 242,
+   "rendererRssMib": 257,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 12,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 153282,
+   "jsGpuCollected": 152055,
+   "lagS": 0.1,
+   "bufferS": 7.5,
+   "passes": 129,
+   "words": 58,
+   "vad": {
+    "noiseFloor": 0.00135,
+    "hasSpeech": true,
+    "lastRms": 0.04942
+   }
+  },
+  {
+   "t": 39,
+   "gpuMib": 241,
+   "rendererRssMib": 251,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 4,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 161451,
+   "jsGpuCollected": 160222,
+   "lagS": 0.1,
+   "bufferS": 9.5,
+   "passes": 136,
+   "words": 58,
+   "vad": {
+    "noiseFloor": 0.00094,
+    "hasSpeech": true,
+    "lastRms": 0.00196
+   }
+  },
+  {
+   "t": 41,
+   "gpuMib": 241,
+   "rendererRssMib": 257,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 10,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 169620,
+   "jsGpuCollected": 167226,
+   "lagS": 0.2,
+   "bufferS": 11.5,
+   "passes": 143,
+   "words": 58,
+   "vad": {
+    "noiseFloor": 0.00076,
+    "hasSpeech": true,
+    "lastRms": 0.06445
+   }
+  },
+  {
+   "t": 43,
+   "gpuMib": 247,
+   "rendererRssMib": 250,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 4,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 178956,
+   "jsGpuCollected": 176562,
+   "lagS": 0.1,
+   "bufferS": 3.7,
+   "passes": 151,
+   "words": 82,
+   "vad": {
+    "noiseFloor": 0.00135,
+    "hasSpeech": true,
+    "lastRms": 0.08168
+   }
+  },
+  {
+   "t": 45,
+   "gpuMib": 242,
+   "rendererRssMib": 253,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 7,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 187125,
+   "jsGpuCollected": 187063,
+   "lagS": 0.1,
+   "bufferS": 5.7,
+   "passes": 158,
+   "words": 82,
+   "vad": {
+    "noiseFloor": 0.00106,
+    "hasSpeech": true,
+    "lastRms": 0.00037
+   }
+  },
+  {
+   "t": 47,
+   "gpuMib": 241,
+   "rendererRssMib": 250,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 4,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 196461,
+   "jsGpuCollected": 195234,
+   "lagS": 0.1,
+   "bufferS": 8,
+   "passes": 166,
+   "words": 82,
+   "vad": {
+    "noiseFloor": 0.00063,
+    "hasSpeech": true,
+    "lastRms": 0.01865
+   }
+  },
+  {
+   "t": 49,
+   "gpuMib": 241,
+   "rendererRssMib": 257,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 8,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 204630,
+   "jsGpuCollected": 202236,
+   "lagS": 0.2,
+   "bufferS": 10,
+   "passes": 173,
+   "words": 82,
+   "vad": {
+    "noiseFloor": 0.00091,
+    "hasSpeech": true,
+    "lastRms": 0.00204
+   }
+  },
+  {
+   "t": 51,
+   "gpuMib": 247,
+   "rendererRssMib": 263,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 13,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 213966,
+   "jsGpuCollected": 211572,
+   "lagS": 0.3,
+   "bufferS": 3.1,
+   "passes": 181,
+   "words": 104,
+   "vad": {
+    "noiseFloor": 0.00075,
+    "hasSpeech": true,
+    "lastRms": 0.0587
+   }
+  },
+  {
+   "t": 53,
+   "gpuMib": 246,
+   "rendererRssMib": 254,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 4,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 222135,
+   "jsGpuCollected": 219741,
+   "lagS": 0.1,
+   "bufferS": 5.1,
+   "passes": 188,
+   "words": 104,
+   "vad": {
+    "noiseFloor": 0.00064,
+    "hasSpeech": true,
+    "lastRms": 0.13536
+   }
+  },
+  {
+   "t": 55,
+   "gpuMib": 242,
+   "rendererRssMib": 257,
+   "gpuProcRssMib": 317,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 8,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 230304,
+   "jsGpuCollected": 229077,
+   "lagS": 0.1,
+   "bufferS": 7,
+   "passes": 195,
+   "words": 104,
+   "vad": {
+    "noiseFloor": 0.00029,
+    "hasSpeech": true,
+    "lastRms": 0.01307
+   }
+  },
+  {
+   "t": 57,
+   "gpuMib": 247,
+   "rendererRssMib": 258,
+   "gpuProcRssMib": 317,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 10,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 236139,
+   "jsGpuCollected": 233745,
+   "lagS": 0,
+   "bufferS": 0.3,
+   "passes": 200,
+   "words": 120,
+   "vad": {
+    "noiseFloor": 0,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 59,
+   "gpuMib": 246,
+   "rendererRssMib": 256,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 10,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 236139,
+   "jsGpuCollected": 233745,
+   "lagS": 0,
+   "bufferS": 0.3,
+   "passes": 200,
+   "words": 120,
+   "vad": {
+    "noiseFloor": 0,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  },
+  {
+   "t": 62,
+   "gpuMib": 246,
+   "rendererRssMib": 242,
+   "gpuProcRssMib": 316,
+   "wasmHeapMb": 47,
+   "jsHeapMb": 3,
+   "gpuWorkingMb": 42,
+   "gpuBuffers": 8,
+   "gpuBuffersMade": 10,
+   "jsGpuObjects": 236139,
+   "jsGpuCollected": 233745,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 200,
+   "words": 120,
+   "vad": {
+    "noiseFloor": 0,
+    "hasSpeech": false,
+    "lastRms": 0
+   }
+  }
+ ],
+ "passes": [
+  [
+   70,
+   0.1,
+   0,
+   0.1,
+   0.6
+  ],
+  [
+   29,
+   0.4,
+   0,
+   0.4,
+   0.7
+  ],
+  [
+   31.2,
+   0.7,
+   0,
+   0.4,
+   0.6
+  ],
+  [
+   28.7,
+   0.3,
+   0,
+   0.4,
+   0.6
+  ],
+  [
+   40.8,
+   0.6,
+   0,
+   0.5,
+   3
+  ],
+  [
+   33,
+   0.9,
+   0,
+   0.5,
+   4.3
+  ],
+  [
+   33.5,
+   1.2,
+   0,
+   0.7,
+   4.8
+  ],
+  [
+   65.8,
+   1.5,
+   0,
+   1,
+   4.4
+  ],
+  [
+   75.6,
+   1.7,
+   0,
+   1.1,
+   4.3
+  ],
+  [
+   82,
+   2,
+   0,
+   1.2,
+   5.1
+  ],
+  [
+   70.1,
+   2.3,
+   0,
+   1,
+   9.3
+  ],
+  [
+   68.5,
+   2.6,
+   0,
+   1.4,
+   7
+  ],
+  [
+   71.5,
+   2.9,
+   0,
+   1.7,
+   7.4
+  ],
+  [
+   73.2,
+   3.1,
+   0,
+   1.8,
+   7.9
+  ],
+  [
+   75,
+   3.4,
+   0,
+   2.4,
+   10.7
+  ],
+  [
+   74.3,
+   3.7,
+   0,
+   2.5,
+   10.3
+  ],
+  [
+   99,
+   4,
+   0,
+   2,
+   10.2
+  ],
+  [
+   70.7,
+   4.3,
+   0,
+   1.8,
+   11.5
+  ],
+  [
+   70.4,
+   4.5,
+   0,
+   2.4,
+   10.5
+  ],
+  [
+   73.2,
+   4.8,
+   0,
+   3.3,
+   11.9
+  ],
+  [
+   75.2,
+   5.1,
+   0,
+   3.3,
+   14
+  ],
+  [
+   74.1,
+   5.4,
+   0,
+   2.4,
+   12.6
+  ],
+  [
+   79.3,
+   5.7,
+   0,
+   4.1,
+   14.7
+  ],
+  [
+   75.5,
+   5.9,
+   0,
+   2.8,
+   14.9
+  ],
+  [
+   102.6,
+   6.2,
+   0,
+   2.8,
+   14
+  ],
+  [
+   77,
+   6.5,
+   0,
+   2.9,
+   13.6
+  ],
+  [
+   81.6,
+   6.8,
+   0,
+   3,
+   18.8
+  ],
+  [
+   81.9,
+   7.1,
+   0,
+   5,
+   16.5
+  ],
+  [
+   82.5,
+   7.3,
+   0,
+   3.8,
+   18.4
+  ],
+  [
+   87.6,
+   7.6,
+   0,
+   3.8,
+   19.1
+  ],
+  [
+   86.9,
+   7.9,
+   0,
+   5.3,
+   19.1
+  ],
+  [
+   87.5,
+   8.2,
+   0,
+   5.2,
+   16.4
+  ],
+  [
+   92.6,
+   8.5,
+   0,
+   3.9,
+   17.2
+  ],
+  [
+   95.5,
+   8.7,
+   0,
+   4,
+   18.3
+  ],
+  [
+   117.9,
+   9,
+   0,
+   4.2,
+   20.9
+  ],
+  [
+   92.3,
+   9.3,
+   0,
+   4.6,
+   23.2
+  ],
+  [
+   92,
+   9.6,
+   0,
+   4.9,
+   22.4
+  ],
+  [
+   91.8,
+   9.9,
+   0,
+   4.6,
+   22.9
+  ],
+  [
+   92.2,
+   10.1,
+   0,
+   4.4,
+   21.6
+  ],
+  [
+   93.4,
+   10.4,
+   0,
+   4.6,
+   21.3
+  ],
+  [
+   98.1,
+   10.7,
+   0,
+   5.1,
+   24.5
+  ],
+  [
+   99.3,
+   11,
+   0,
+   5.2,
+   24.9
+  ],
+  [
+   115.6,
+   11.3,
+   0,
+   5.9,
+   27.9
+  ],
+  [
+   105.7,
+   11.5,
+   0,
+   6.5,
+   26.3
+  ],
+  [
+   108,
+   11.8,
+   0,
+   5.7,
+   27.5
+  ],
+  [
+   84.4,
+   8.3,
+   1,
+   3.9,
+   17.2
+  ],
+  [
+   65.1,
+   4,
+   0,
+   2,
+   8.4
+  ],
+  [
+   68,
+   4.2,
+   0,
+   1.8,
+   9.9
+  ],
+  [
+   71,
+   4.5,
+   0,
+   2.4,
+   12.7
+  ],
+  [
+   71.6,
+   4.8,
+   0,
+   3.1,
+   10.7
+  ],
+  [
+   70.7,
+   5.1,
+   0,
+   2.7,
+   10.6
+  ],
+  [
+   78.7,
+   5.4,
+   0,
+   3.2,
+   16.4
+  ],
+  [
+   86.1,
+   5.6,
+   0,
+   3.9,
+   14.7
+  ],
+  [
+   90,
+   5.9,
+   0,
+   2.9,
+   11.8
+  ],
+  [
+   75.5,
+   6.2,
+   0,
+   4.6,
+   11.2
+  ],
+  [
+   80,
+   6.5,
+   0,
+   4.6,
+   11.1
+  ],
+  [
+   76.7,
+   6.8,
+   0,
+   3,
+   12.8
+  ],
+  [
+   78.2,
+   7,
+   0,
+   4.6,
+   12
+  ],
+  [
+   80.1,
+   7.3,
+   0,
+   4.8,
+   13.6
+  ],
+  [
+   76.5,
+   7.6,
+   0,
+   4.1,
+   13
+  ],
+  [
+   79.2,
+   7.9,
+   0,
+   4,
+   13.8
+  ],
+  [
+   90.8,
+   8.2,
+   0,
+   3.8,
+   14.8
+  ],
+  [
+   92.8,
+   8.4,
+   0,
+   4,
+   16.5
+  ],
+  [
+   112.3,
+   8.7,
+   0,
+   5.2,
+   22.5
+  ],
+  [
+   98.6,
+   9,
+   0,
+   5.1,
+   18.6
+  ],
+  [
+   101.6,
+   9.3,
+   0,
+   4.7,
+   19.3
+  ],
+  [
+   96.2,
+   9.6,
+   0,
+   4.1,
+   17.7
+  ],
+  [
+   95.6,
+   9.8,
+   0,
+   4.4,
+   16.5
+  ],
+  [
+   92.9,
+   10.1,
+   0,
+   5,
+   16.5
+  ],
+  [
+   98,
+   10.4,
+   0,
+   5.3,
+   19.2
+  ],
+  [
+   103,
+   10.7,
+   0,
+   5.1,
+   21
+  ],
+  [
+   102.3,
+   11,
+   0,
+   5.9,
+   21.2
+  ],
+  [
+   106,
+   11.2,
+   0,
+   5.5,
+   24.9
+  ],
+  [
+   101.7,
+   11.5,
+   0,
+   6.3,
+   22.3
+  ],
+  [
+   98.5,
+   11.8,
+   0,
+   5.6,
+   21.1
+  ],
+  [
+   88.3,
+   10,
+   1,
+   4.5,
+   16.6
+  ],
+  [
+   63.4,
+   2.3,
+   0,
+   1.2,
+   5.4
+  ],
+  [
+   62.7,
+   2.6,
+   0,
+   1.1,
+   6.3
+  ],
+  [
+   66.4,
+   2.9,
+   0,
+   1.9,
+   6.7
+  ],
+  [
+   66.9,
+   3.2,
+   0,
+   1.8,
+   6.5
+  ],
+  [
+   88.9,
+   3.4,
+   0,
+   2.3,
+   7.3
+  ],
+  [
+   66,
+   3.7,
+   0,
+   1.6,
+   6.4
+  ],
+  [
+   69.3,
+   4,
+   0,
+   1.7,
+   7.8
+  ],
+  [
+   67.4,
+   4.3,
+   0,
+   2,
+   6.9
+  ],
+  [
+   70.7,
+   4.6,
+   0,
+   2.2,
+   7.9
+  ],
+  [
+   75,
+   4.8,
+   0,
+   2.3,
+   11.4
+  ],
+  [
+   74.8,
+   5.1,
+   0,
+   2.4,
+   11.1
+  ],
+  [
+   72.6,
+   5.4,
+   0,
+   2.6,
+   9.1
+  ],
+  [
+   99.1,
+   5.7,
+   0,
+   3.7,
+   9.9
+  ],
+  [
+   70.5,
+   6,
+   0,
+   2.7,
+   9.6
+  ],
+  [
+   72.6,
+   6.2,
+   0,
+   3,
+   9.8
+  ],
+  [
+   79.1,
+   6.5,
+   0,
+   3.8,
+   9.9
+  ],
+  [
+   77.4,
+   6.8,
+   0,
+   3.2,
+   13.5
+  ],
+  [
+   78.8,
+   7.1,
+   0,
+   3.5,
+   13
+  ],
+  [
+   86.8,
+   7.4,
+   0,
+   5.7,
+   18.3
+  ],
+  [
+   85.6,
+   7.6,
+   0,
+   3.6,
+   18.2
+  ],
+  [
+   88.6,
+   7.9,
+   0,
+   5,
+   13.6
+  ],
+  [
+   89.6,
+   8.2,
+   0,
+   3.5,
+   13.9
+  ],
+  [
+   109.7,
+   8.5,
+   0,
+   3.8,
+   16.6
+  ],
+  [
+   82.1,
+   8.8,
+   0,
+   4.9,
+   15.7
+  ],
+  [
+   86.7,
+   9,
+   0,
+   4.5,
+   18.2
+  ],
+  [
+   88,
+   9.3,
+   0,
+   4.6,
+   17.3
+  ],
+  [
+   95,
+   9.6,
+   0,
+   7,
+   18.1
+  ],
+  [
+   82.6,
+   9.9,
+   0,
+   4.2,
+   14.3
+  ],
+  [
+   83,
+   10.2,
+   0,
+   4.5,
+   16.4
+  ],
+  [
+   87.6,
+   10.4,
+   0,
+   4.7,
+   18.2
+  ],
+  [
+   100.3,
+   10.7,
+   0,
+   5.6,
+   19.3
+  ],
+  [
+   98.2,
+   11,
+   0,
+   5.4,
+   19.8
+  ],
+  [
+   103.1,
+   11.3,
+   0,
+   5.7,
+   20.6
+  ],
+  [
+   102.2,
+   11.6,
+   0,
+   5.9,
+   19.4
+  ],
+  [
+   101.7,
+   11.8,
+   0,
+   5.7,
+   19.6
+  ],
+  [
+   87.3,
+   9.4,
+   1,
+   4.3,
+   15.1
+  ],
+  [
+   67.8,
+   2.9,
+   0,
+   1.3,
+   5.9
+  ],
+  [
+   68.6,
+   3.2,
+   0,
+   2.2,
+   8.6
+  ],
+  [
+   67.8,
+   3.5,
+   0,
+   1.6,
+   6.9
+  ],
+  [
+   69.8,
+   3.8,
+   0,
+   1.8,
+   7.7
+  ],
+  [
+   69.4,
+   4,
+   0,
+   2.2,
+   7.9
+  ],
+  [
+   70,
+   4.3,
+   0,
+   2.7,
+   8.2
+  ],
+  [
+   98.2,
+   4.6,
+   0,
+   2,
+   9.9
+  ],
+  [
+   69.9,
+   4.9,
+   0,
+   2.5,
+   9.4
+  ],
+  [
+   72,
+   5.2,
+   0,
+   2.4,
+   9.4
+  ],
+  [
+   78.8,
+   5.4,
+   0,
+   3.3,
+   14.9
+  ],
+  [
+   78.2,
+   5.7,
+   0,
+   2.9,
+   14.5
+  ],
+  [
+   77.9,
+   6,
+   0,
+   3.5,
+   13.9
+  ],
+  [
+   77.5,
+   6.3,
+   0,
+   3.2,
+   13.5
+  ],
+  [
+   80.2,
+   6.6,
+   0,
+   3.1,
+   13.7
+  ],
+  [
+   107.3,
+   6.8,
+   0,
+   2.9,
+   14
+  ],
+  [
+   75,
+   7.1,
+   0,
+   3.4,
+   13.1
+  ],
+  [
+   78.1,
+   7.4,
+   0,
+   3.5,
+   15.4
+  ],
+  [
+   81.6,
+   7.7,
+   0,
+   3.7,
+   17.5
+  ],
+  [
+   86.5,
+   8,
+   0,
+   5.9,
+   19.5
+  ],
+  [
+   81.5,
+   8.2,
+   0,
+   4.1,
+   17
+  ],
+  [
+   81.7,
+   8.5,
+   0,
+   3.9,
+   16.4
+  ],
+  [
+   90.7,
+   8.8,
+   0,
+   3.7,
+   17.9
+  ],
+  [
+   94.6,
+   9.1,
+   0,
+   4,
+   20.4
+  ],
+  [
+   97.7,
+   9.4,
+   0,
+   4.5,
+   20.9
+  ],
+  [
+   122.7,
+   9.6,
+   0,
+   4.5,
+   26.1
+  ],
+  [
+   85.9,
+   9.9,
+   0,
+   5.4,
+   21.2
+  ],
+  [
+   88,
+   10.2,
+   0,
+   5.5,
+   22.1
+  ],
+  [
+   84.9,
+   10.5,
+   0,
+   5.6,
+   18.5
+  ],
+  [
+   94.9,
+   10.8,
+   0,
+   5.5,
+   27.6
+  ],
+  [
+   88.8,
+   11,
+   0,
+   5.6,
+   20.6
+  ],
+  [
+   93.1,
+   11.3,
+   0,
+   5.5,
+   24.3
+  ],
+  [
+   96.1,
+   11.6,
+   0,
+   5.4,
+   23.1
+  ],
+  [
+   104.4,
+   11.9,
+   0,
+   6.4,
+   26.2
+  ],
+  [
+   91.5,
+   9.7,
+   1,
+   7.6,
+   19.6
+  ],
+  [
+   54.2,
+   2.5,
+   0,
+   1.3,
+   7
+  ],
+  [
+   53.6,
+   2.8,
+   0,
+   1.3,
+   7.5
+  ],
+  [
+   56.4,
+   3.1,
+   0,
+   1.5,
+   7.4
+  ],
+  [
+   65,
+   3.4,
+   0,
+   2.4,
+   14.1
+  ],
+  [
+   58.1,
+   3.7,
+   0,
+   2.7,
+   9
+  ],
+  [
+   62.8,
+   3.9,
+   0,
+   2.2,
+   10.7
+  ],
+  [
+   70.7,
+   4.2,
+   0,
+   2.9,
+   9.2
+  ],
+  [
+   71.6,
+   4.5,
+   0,
+   2.1,
+   10.6
+  ],
+  [
+   71.5,
+   4.8,
+   0,
+   2.3,
+   9.6
+  ],
+  [
+   73.2,
+   5.1,
+   0,
+   2.3,
+   9.9
+  ],
+  [
+   78,
+   5.3,
+   0,
+   2.6,
+   11
+  ],
+  [
+   81.5,
+   5.6,
+   0,
+   2.6,
+   12.7
+  ],
+  [
+   95.1,
+   5.9,
+   0,
+   2.9,
+   18.9
+  ],
+  [
+   112,
+   6.2,
+   0,
+   2.8,
+   13.6
+  ],
+  [
+   74.1,
+   6.5,
+   0,
+   3.2,
+   12.3
+  ],
+  [
+   74.5,
+   6.7,
+   0,
+   2.9,
+   12.4
+  ],
+  [
+   72.3,
+   7,
+   0,
+   3.2,
+   12
+  ],
+  [
+   74.4,
+   7.3,
+   0,
+   3.2,
+   13.4
+  ],
+  [
+   81.3,
+   7.6,
+   0,
+   3.7,
+   14.8
+  ],
+  [
+   80.6,
+   7.9,
+   0,
+   3.6,
+   16.6
+  ],
+  [
+   88.5,
+   8.1,
+   0,
+   3.9,
+   17.2
+  ],
+  [
+   94,
+   8.4,
+   0,
+   5.7,
+   16.4
+  ],
+  [
+   90.5,
+   8.7,
+   0,
+   3.9,
+   15.2
+  ],
+  [
+   94,
+   9,
+   0,
+   3.9,
+   16.6
+  ],
+  [
+   100.2,
+   9.3,
+   0,
+   6.8,
+   15.5
+  ],
+  [
+   96,
+   9.5,
+   0,
+   6.6,
+   16.3
+  ],
+  [
+   101.6,
+   9.8,
+   0,
+   5.4,
+   22.8
+  ],
+  [
+   98.9,
+   10.1,
+   0,
+   6.4,
+   18.5
+  ],
+  [
+   101.1,
+   10.4,
+   0,
+   5,
+   20.5
+  ],
+  [
+   96.4,
+   10.7,
+   0,
+   4.6,
+   19.4
+  ],
+  [
+   99.5,
+   10.9,
+   0,
+   4.7,
+   20.8
+  ],
+  [
+   103.7,
+   11.2,
+   0,
+   5.9,
+   22.4
+  ],
+  [
+   107.9,
+   11.5,
+   0,
+   8,
+   27.2
+  ],
+  [
+   100.9,
+   11.8,
+   0,
+   5.7,
+   23.1
+  ],
+  [
+   89.8,
+   9,
+   1,
+   4.9,
+   18.5
+  ],
+  [
+   69.2,
+   3.3,
+   0,
+   2.4,
+   9
+  ],
+  [
+   68.1,
+   3.6,
+   0,
+   1.9,
+   6.7
+  ],
+  [
+   67.2,
+   3.9,
+   0,
+   1.8,
+   7.8
+  ],
+  [
+   75,
+   4.1,
+   0,
+   3.1,
+   13.6
+  ],
+  [
+   99.4,
+   4.4,
+   0,
+   3.7,
+   15.2
+  ],
+  [
+   90.9,
+   4.7,
+   0,
+   6.9,
+   22.1
+  ],
+  [
+   85.6,
+   5,
+   0,
+   4.7,
+   16.8
+  ],
+  [
+   87.7,
+   5.3,
+   0,
+   7,
+   13.7
+  ],
+  [
+   85.9,
+   5.5,
+   0,
+   3.1,
+   21.3
+  ],
+  [
+   75.4,
+   5.8,
+   0,
+   2.6,
+   11.8
+  ],
+  [
+   81.5,
+   6.1,
+   0,
+   2.9,
+   17.6
+  ],
+  [
+   92.6,
+   6.4,
+   0,
+   4.7,
+   23.5
+  ],
+  [
+   109.6,
+   6.7,
+   0,
+   13.7,
+   24.2
+  ],
+  [
+   115.4,
+   6.9,
+   0,
+   11.7,
+   27.9
+  ],
+  [
+   137.4,
+   7.2,
+   0,
+   11.7,
+   39
+  ],
+  [
+   101.9,
+   7.5,
+   0,
+   5.5,
+   27
+  ],
+  [
+   111.5,
+   7.8,
+   0,
+   7.1,
+   33.5
+  ],
+  [
+   104.2,
+   8.1,
+   0,
+   6,
+   31.7
+  ],
+  [
+   95.9,
+   8.3,
+   0,
+   6.9,
+   22.6
+  ]
+ ],
+ "offline": {
+  "text": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatro a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and our and experience non standard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the OE two outlier our forward thinking financial forecasting tool. Explore venture capital world with U three unifund or move your money with the M three Mover or sophisticated monetary transfer module. At CorkidQuill Inc. we turn complex finance into creative solutions. Join us in redefining financial services.",
+  "ms": 641.7999999523163,
+  "seconds": 62.104
+ },
+ "vsOffline": {
+  "exact": false,
+  "raw": {
+   "differing": 6,
+   "words": 120,
+   "spans": [
+    "strategies. [Delve -> delve]",
+    "three [Bond -> bond]",
+    "the [OE -> O]"
+   ]
+  },
+  "normalized": {
+   "differing": 2,
+   "words": 120,
+   "spans": [
+    "the [oe -> o]"
+   ]
+  }
+ },
+ "vsExpected": {
+  "exact": false,
+  "raw": {
+   "differing": 18,
+   "words": 122,
+   "spans": [
+    "strategies. [Delve -> delve]",
+    "three [Bond -> bond]",
+    "three [equity, personalize -> equity. Personalize]",
+    "two [outlier, -> outlier]",
+    "three [mover, our -> Mover or]",
+    "At [Cork Quid Quill -> CorkidQuill]"
+   ]
+  },
+  "normalized": {
+   "differing": 6,
+   "words": 122,
+   "spans": [
+    "mover [our -> or]",
+    "at [cork quid quill -> corkidquill]"
+   ]
+  }
+ },
+ "loadavgEnd": "5.31 5.77 6.20 11/2179 3213004"
+}

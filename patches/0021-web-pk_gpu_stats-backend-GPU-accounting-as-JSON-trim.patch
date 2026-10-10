@@ -1,0 +1,61 @@
+From 5645b3bd4dcd8786334d2c3cb77752179b7bfeca Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 09:12:01 -0700
+Subject: [PATCH 21/21] web: pk_gpu_stats (backend GPU accounting as JSON),
+ trim before loading another model
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ examples/web/pk_web.cpp | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/examples/web/pk_web.cpp b/examples/web/pk_web.cpp
+index 4b3d658f..375ec29c 100644
+--- a/examples/web/pk_web.cpp
++++ b/examples/web/pk_web.cpp
+@@ -8,7 +8,8 @@
+ //   pk_load(path, n_threads)   0 on success; model read from the Emscripten FS
+ //   pk_run(pcm, n)             0 on success; then pk_text() / pk_json()
+ //   pk_json()                  {"text","mel_ms","encode_ms","decode_ms","load_ms","n_tokens","backend"}
+-//   pk_trim()                  drop the GPU compute buffer kept between runs
++//   pk_trim()                  destroy the GPU compute buffers kept between runs
++//   pk_gpu_stats()             JSON: live GPU buffer bytes by purpose, weight bytes by type, objects created so far
+ //   pk_gpu_errors()            device errors so far (shader compilation, validation, device lost)
+ //   pk_log()                   library log lines since the last call (errors, backend notes)
+ 
+@@ -60,6 +61,7 @@ std::string json_escape(const char * s) {
+ extern "C" void         ggml_backend_webgpu_trim(void);
+ extern "C" const char * ggml_backend_webgpu_last_error(void);
+ extern "C" int          ggml_backend_webgpu_error_count(void);
++extern "C" const char * ggml_backend_webgpu_stats_json(void);
+ 
+ extern "C" {
+ 
+@@ -87,6 +89,11 @@ EMSCRIPTEN_KEEPALIVE int pk_load(const char * path, int n_threads) {
+     if (g_session != nullptr) {
+         transcribe_close(g_session);
+         g_session = nullptr;
++        // Nothing of the previous model's working buffers is kept for the next
++        // one (and the new weights are not carved out of a kept compute buffer).
++        // Only after a model was loaded: trim would otherwise be the first thing
++        // to touch the backend registry, before the loader has chosen a backend.
++        ggml_backend_webgpu_trim();
+     }
+     transcribe_session_params sp;
+     transcribe_session_params_init(&sp);
+@@ -139,6 +146,12 @@ EMSCRIPTEN_KEEPALIVE int pk_gpu_error_count(void) {
+     return ggml_backend_webgpu_error_count();
+ }
+ 
++// What the WebGPU backend holds on the device and has created so far (JSON):
++// live buffer bytes by purpose, weight bytes by tensor type, cumulative counts.
++EMSCRIPTEN_KEEPALIVE const char * pk_gpu_stats(void) {
++    return ggml_backend_webgpu_stats_json();
++}
++
+ EMSCRIPTEN_KEEPALIVE const char * pk_json(void) {
+     return g_json.c_str();
+ }
+-- 
+2.53.0
+

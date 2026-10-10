@@ -1,0 +1,826 @@
+From f391fa8256f78e4a31a0db952d0c75abd0c8f46e Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 09:12:01 -0700
+Subject: [PATCH 20/21] ggml-webgpu: exact buffer accounting, grow-only pooled
+ compute buffer in size classes, one param write per batch
+
+Accounting (ggml_backend_webgpu_stats_json): every buffer goes through
+ggml_webgpu_create_buffer / ggml_webgpu_destroy_buffer, so live bytes and
+counts are exact for the backend, split by purpose (weights, compute, kept
+compute, staging, params) with weight bytes by tensor type, plus cumulative
+counts of buffers created and destroyed, pipelines, bind group layouts, bind
+groups, command encoders, submits, queue writes and maps.
+
+Pool: the previous cache reused a freed compute buffer only when it was at most
+2x + 16 MiB larger than the request and otherwise destroyed everything kept and
+made a buffer of the exact size. In live transcription every run has a
+different length, mostly a little longer than the one before, so most runs
+destroyed one buffer and created another (60 s of fake-microphone live use: 108
+buffers created and destroyed over 202 runs; 300 random lengths: 92). Now a
+freed compute buffer is kept, an allocation takes the smallest kept buffer that
+fits, and a new one is created in a size class (4 MiB steps to 16 MiB, then at
+most 25% over), destroying the buffer it outgrew first. After the longest run
+has been seen once no run creates a buffer. The read-back staging buffer grows
+in powers of two from 1 MiB. GGML_WEBGPU_POOL=legacy restores the old policy
+for comparison; GGML_WEBGPU_BUFFER_CACHE=0 still turns pooling off.
+
+Per run, fewer objects for the browser to collect: uniform parameters are
+staged on the CPU and written once per submitted batch (54 queue writes per
+110m encoder run instead of about 1100), and a pipeline's bind group layout is
+fetched once when the pipeline is made instead of once per dispatch
+(getBindGroupLayout returns a new object each call). Bind groups are still one
+per dispatch (1111 per 110m run): their offsets and sizes change with the
+length.
+
+Text unchanged on a07/a14/a56 for 110m Q8_0 and Q4_0 (native and Chrome).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ ggml/include/ggml-webgpu.h                    |   7 +
+ .../ggml-webgpu/ggml-webgpu-shader-lib.hpp    |   2 +
+ ggml/src/ggml-webgpu/ggml-webgpu.cpp          | 427 ++++++++++++++----
+ 3 files changed, 353 insertions(+), 83 deletions(-)
+
+diff --git a/ggml/include/ggml-webgpu.h b/ggml/include/ggml-webgpu.h
+index 1e42c348..bc920b18 100644
+--- a/ggml/include/ggml-webgpu.h
++++ b/ggml/include/ggml-webgpu.h
+@@ -18,6 +18,13 @@ GGML_BACKEND_API ggml_backend_reg_t ggml_backend_webgpu_reg(void);
+ // size of the largest recent graph). Safe to call at any time between computes.
+ GGML_BACKEND_API void ggml_backend_webgpu_trim(void);
+ 
++// GPU objects the backend holds and has created so far, as a JSON object:
++// live buffer bytes and counts by purpose (weights, compute, compute_idle,
++// staging, params), weight bytes by tensor type, and cumulative counts of
++// buffers created / destroyed, pipelines, bind groups, command encoders,
++// submits, queue writes and maps. The string is valid until the next call.
++GGML_BACKEND_API const char * ggml_backend_webgpu_stats_json(void);
++
+ #ifdef  __cplusplus
+ }
+ #endif
+diff --git a/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp b/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
+index 23aab71f..a8e6dc9d 100644
+--- a/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
++++ b/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
+@@ -102,6 +102,8 @@ struct webgpu_pipeline {
+     wgpu::ComputePipeline pipeline;
+     std::string           name;
+     std::shared_ptr<void> context = nullptr;
++    // bind group layout 0, fetched once (getBindGroupLayout makes a new object per call)
++    wgpu::BindGroupLayout layout0 = nullptr;
+ };
+ 
+ // Defined in ggml-webgpu.cpp: creates the module and pipeline inside an error
+diff --git a/ggml/src/ggml-webgpu/ggml-webgpu.cpp b/ggml/src/ggml-webgpu/ggml-webgpu.cpp
+index 0204e782..10b78b34 100644
+--- a/ggml/src/ggml-webgpu/ggml-webgpu.cpp
++++ b/ggml/src/ggml-webgpu/ggml-webgpu.cpp
+@@ -29,6 +29,7 @@
+ #include <mutex>
+ #include <optional>
+ #include <string>
++#include <unordered_map>
+ #include <utility>
+ #include <vector>
+ 
+@@ -111,18 +112,104 @@ static size_t ggml_webgpu_tensor_offset(const ggml_tensor * tensor) {
+ 
+ /* Struct definitions */
+ 
+-// Forward reference
++// GPU object accounting (ggml_backend_webgpu_stats_json). Every buffer the
++// backend creates goes through ggml_webgpu_create_buffer and every one it gives
++// up through ggml_webgpu_destroy_buffer, so "live" is exact for this backend:
++// it is what the device was asked for and has not been told to destroy. Other
++// object kinds have no destroy() in WebGPU; their creations are counted.
++enum webgpu_buf_kind {
++    WEBGPU_BUF_TENSOR = 0,  // a ggml backend buffer in use: weights or compute, told apart by its ggml usage
++    WEBGPU_BUF_POOL_IDLE,   // a compute buffer kept for the next graph allocation
++    WEBGPU_BUF_STAGING,     // readback (MapRead) buffers
++    WEBGPU_BUF_PARAMS,      // uniform parameter buffers
++    WEBGPU_BUF_OTHER,
++};
++
++struct webgpu_buf_record {
++    uint64_t              size  = 0;
++    webgpu_buf_kind       kind  = WEBGPU_BUF_OTHER;
++    ggml_backend_buffer_t owner = nullptr;  // valid while kind == WEBGPU_BUF_TENSOR
++    // bytes of tensor data written into a weights buffer, by tensor type
++    std::unordered_map<int, uint64_t> weight_bytes;
++};
++
++struct webgpu_stats_struct {
++    std::mutex                                       mutex;
++    std::unordered_map<WGPUBuffer, webgpu_buf_record> live;
++    uint64_t buffers_created    = 0;
++    uint64_t bytes_created      = 0;
++    uint64_t buffers_destroyed  = 0;
++    uint64_t bytes_destroyed    = 0;
++    uint64_t pool_hits          = 0;  // graph allocations served from a kept compute buffer
++    uint64_t pool_misses        = 0;  // graph allocations that created a buffer
++    uint64_t pipelines          = 0;
++    uint64_t shader_modules     = 0;
++    uint64_t bind_groups        = 0;
++    uint64_t bind_group_layouts = 0;
++    uint64_t command_encoders   = 0;
++    uint64_t submits            = 0;
++    uint64_t write_buffers      = 0;
++    uint64_t write_bytes        = 0;
++    uint64_t maps               = 0;
++};
++static webgpu_stats_struct g_webgpu_stats;
++
+ static void ggml_webgpu_create_buffer(wgpu::Device &    device,
+                                       wgpu::Buffer &    buffer,
+                                       size_t            size,
+                                       wgpu::BufferUsage usage,
+-                                      const char *      label);
++                                      const char *      label,
++                                      webgpu_buf_kind   kind);
++
++// destroy() frees the GPU memory now. Dropping the last reference does not: in a
++// browser the allocation then lives until the JS garbage collector finds the
++// GPUBuffer, and the collector does not see the GPU memory behind it.
++static void ggml_webgpu_destroy_buffer(wgpu::Buffer & buffer) {
++    if (!buffer) {
++        return;
++    }
++    {
++        std::lock_guard<std::mutex> lock(g_webgpu_stats.mutex);
++        auto                        it = g_webgpu_stats.live.find(buffer.Get());
++        if (it != g_webgpu_stats.live.end()) {
++            g_webgpu_stats.buffers_destroyed++;
++            g_webgpu_stats.bytes_destroyed += it->second.size;
++            g_webgpu_stats.live.erase(it);
++        }
++    }
++    buffer.Destroy();
++    buffer = nullptr;
++}
++
++static void ggml_webgpu_stats_set_kind(const wgpu::Buffer & buffer, webgpu_buf_kind kind, ggml_backend_buffer_t owner) {
++    std::lock_guard<std::mutex> lock(g_webgpu_stats.mutex);
++    auto                        it = g_webgpu_stats.live.find(buffer.Get());
++    if (it != g_webgpu_stats.live.end()) {
++        it->second.kind  = kind;
++        it->second.owner = owner;
++    }
++}
++
++static void ggml_webgpu_stats_weight_write(ggml_backend_buffer_t buffer, const wgpu::Buffer & buf, const ggml_tensor * tensor, size_t size) {
++    if (buffer == nullptr || buffer->usage != GGML_BACKEND_BUFFER_USAGE_WEIGHTS) {
++        return;
++    }
++    std::lock_guard<std::mutex> lock(g_webgpu_stats.mutex);
++    auto                        it = g_webgpu_stats.live.find(buf.Get());
++    if (it != g_webgpu_stats.live.end()) {
++        it->second.weight_bytes[(int) tensor->type] += size;
++    }
++}
+ 
+ // Slot-based parameter arena for compute graph encoding. Each encoded kernel
+ // gets a unique uniform-buffer slice within the current batch, and the slot
+ // cursor is reset immediately after that batch is submitted.
+ struct webgpu_param_arena {
+     wgpu::Buffer buffer;
++    // CPU copy of the slots of the batch being encoded; flush() sends the used
++    // part in one queue write before the batch is submitted (was: one write per
++    // kernel, about a thousand queue.writeBuffer calls per encoder run).
++    std::vector<uint8_t> staged;
+     size_t       slot_stride = 0;
+     size_t       slot_size   = 0;
+     uint32_t     slot_count  = 0;
+@@ -133,9 +220,11 @@ struct webgpu_param_arena {
+         this->slot_size   = slot_size;
+         this->slot_count  = slot_count;
+         this->next_slot   = 0;
++        this->staged.assign(this->slot_stride * slot_count, 0);
+ 
+         ggml_webgpu_create_buffer(device, buffer, this->slot_stride * slot_count,
+-                                  wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform, "ggml_webgpu_param_arena");
++                                  wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform, "ggml_webgpu_param_arena",
++                                  WEBGPU_BUF_PARAMS);
+     }
+ 
+     size_t alloc_slot(size_t size) {
+@@ -147,13 +236,21 @@ struct webgpu_param_arena {
+         return slot_stride * next_slot++;
+     }
+ 
++    void stage(size_t offset, const void * data, size_t size) { std::memcpy(staged.data() + offset, data, size); }
++
++    void flush(wgpu::Queue & queue) {
++        if (next_slot > 0) {
++            const size_t n = slot_stride * next_slot;
++            queue.WriteBuffer(buffer, 0, staged.data(), n);
++            g_webgpu_stats.write_buffers++;
++            g_webgpu_stats.write_bytes += n;
++        }
++    }
++
+     void reset() { next_slot = 0; }
+ 
+     void cleanup() {
+-        if (buffer) {
+-            buffer.Destroy();
+-            buffer = nullptr;
+-        }
++        ggml_webgpu_destroy_buffer(buffer);
+     }
+ 
+     ~webgpu_param_arena() { this->cleanup(); }
+@@ -232,30 +329,18 @@ struct webgpu_global_context_struct {
+ 
+     void drop_cached_compute_bufs() {
+         for (wgpu::Buffer & b : this->cached_compute_bufs) {
+-            b.Destroy();
++            ggml_webgpu_destroy_buffer(b);
+         }
+         this->cached_compute_bufs.clear();
+     }
+ 
+     ~webgpu_global_context_struct() {
+         this->drop_cached_compute_bufs();
+-        if (this->get_tensor_staging_buf) {
+-            this->get_tensor_staging_buf.Destroy();
+-            this->get_tensor_staging_buf = nullptr;
+-        }
+-        if (this->memset_params_buf) {
+-            this->memset_params_buf.Destroy();
+-            this->memset_params_buf = nullptr;
+-        }
++        ggml_webgpu_destroy_buffer(this->get_tensor_staging_buf);
++        ggml_webgpu_destroy_buffer(this->memset_params_buf);
+ #ifdef GGML_WEBGPU_DEBUG
+-        if (this->debug_host_buf) {
+-            this->debug_host_buf.Destroy();
+-            this->debug_host_buf = nullptr;
+-        }
+-        if (this->debug_dev_buf) {
+-            this->debug_dev_buf.Destroy();
+-            this->debug_dev_buf = nullptr;
+-        }
++        ggml_webgpu_destroy_buffer(this->debug_host_buf);
++        ggml_webgpu_destroy_buffer(this->debug_dev_buf);
+ #endif
+     }
+ };
+@@ -289,27 +374,15 @@ struct webgpu_context_struct {
+ 
+     ~webgpu_context_struct() {
+ #ifdef GGML_WEBGPU_GPU_PROFILE
+-        if (this->profile_timestamp_host_buf) {
+-            this->profile_timestamp_host_buf.Destroy();
+-            this->profile_timestamp_host_buf = nullptr;
+-        }
+-        if (this->profile_timestamp_dev_buf) {
+-            this->profile_timestamp_dev_buf.Destroy();
+-            this->profile_timestamp_dev_buf = nullptr;
+-        }
++        ggml_webgpu_destroy_buffer(this->profile_timestamp_host_buf);
++        ggml_webgpu_destroy_buffer(this->profile_timestamp_dev_buf);
+         if (this->profile_timestamp_query_set) {
+             this->profile_timestamp_query_set.Destroy();
+             this->profile_timestamp_query_set = nullptr;
+         }
+ #endif
+-        if (this->set_rows_host_error_buf) {
+-            this->set_rows_host_error_buf.Destroy();
+-            this->set_rows_host_error_buf = nullptr;
+-        }
+-        if (this->set_rows_dev_error_buf) {
+-            this->set_rows_dev_error_buf.Destroy();
+-            this->set_rows_dev_error_buf = nullptr;
+-        }
++        ggml_webgpu_destroy_buffer(this->set_rows_host_error_buf);
++        ggml_webgpu_destroy_buffer(this->set_rows_dev_error_buf);
+     }
+ };
+ 
+@@ -403,6 +476,8 @@ webgpu_pipeline ggml_webgpu_create_checked_pipeline(wgpu::Device &
+     // (the callbacks run on a later wait), instead of an anonymous uncaptured error.
+     device.PushErrorScope(wgpu::ErrorFilter::Validation);
+     wgpu::ShaderModule shader_module = device.CreateShaderModule(&shader_desc);
++    g_webgpu_stats.shader_modules++;
++    g_webgpu_stats.pipelines++;
+ 
+     wgpu::ComputePipelineDescriptor pipeline_desc;
+     pipeline_desc.label              = label;
+@@ -414,6 +489,8 @@ webgpu_pipeline ggml_webgpu_create_checked_pipeline(wgpu::Device &
+         pipeline_desc.compute.constantCount = constants.size();
+     }
+     wgpu::ComputePipeline pipeline = device.CreateComputePipeline(&pipeline_desc);
++    wgpu::BindGroupLayout layout0  = pipeline.GetBindGroupLayout(0);
++    g_webgpu_stats.bind_group_layouts++;
+     std::string           name     = label;
+     device.PopErrorScope(wgpu::CallbackMode::AllowSpontaneous,
+                          [name, shader_module](wgpu::PopErrorScopeStatus status, wgpu::ErrorType type,
+@@ -437,7 +514,7 @@ webgpu_pipeline ggml_webgpu_create_checked_pipeline(wgpu::Device &
+                                      }
+                                  });
+                          });
+-    return { pipeline, label };
++    return { pipeline, label, nullptr, layout0 };
+ }
+ 
+ static webgpu_pipeline ggml_webgpu_create_pipeline(wgpu::Device &                           device,
+@@ -451,7 +528,8 @@ static void ggml_webgpu_create_buffer(wgpu::Device &    device,
+                                       wgpu::Buffer &    buffer,
+                                       size_t            size,
+                                       wgpu::BufferUsage usage,
+-                                      const char *      label) {
++                                      const char *      label,
++                                      webgpu_buf_kind   kind) {
+     wgpu::BufferDescriptor buffer_desc;
+     buffer_desc.size             = size;
+     buffer_desc.usage            = usage;
+@@ -460,6 +538,15 @@ static void ggml_webgpu_create_buffer(wgpu::Device &    device,
+ 
+     // TODO: error handling
+     buffer = device.CreateBuffer(&buffer_desc);
++    if (buffer) {
++        std::lock_guard<std::mutex> lock(g_webgpu_stats.mutex);
++        webgpu_buf_record           rec;
++        rec.size = size;
++        rec.kind = kind;
++        g_webgpu_stats.live[buffer.Get()] = rec;
++        g_webgpu_stats.buffers_created++;
++        g_webgpu_stats.bytes_created += size;
++    }
+ }
+ 
+ static wgpu::Buffer ggml_webgpu_tensor_buf(const ggml_tensor * tensor) {
+@@ -633,6 +720,7 @@ static void ggml_backend_webgpu_map_buffer(webgpu_global_context & ctx,
+                                            size_t                  size) {
+     wgpu::MapAsyncStatus callback_status = wgpu::MapAsyncStatus::Error;
+     std::string          callback_message;
++    g_webgpu_stats.maps++;
+ 
+     const wgpu::WaitStatus wait_status = ctx->instance.WaitAny(
+         buffer.MapAsync(mode, offset, size, wgpu::CallbackMode::AllowSpontaneous,
+@@ -655,6 +743,7 @@ static void ggml_backend_webgpu_submit_commands(webgpu_context &          ctx,
+     }
+ 
+     ctx->global_ctx->queue.Submit(1, &commands);
++    g_webgpu_stats.submits++;
+     num_inflight_batches++;
+ }
+ 
+@@ -674,6 +763,17 @@ static void ggml_backend_webgpu_debug(webgpu_global_context & ctx) {
+ }
+ #endif
+ 
++// The bind group layout of a pipeline, fetched once when the pipeline is made:
++// getBindGroupLayout() returns a new object on every call, and a browser keeps
++// each one until its garbage collector runs.
++static wgpu::BindGroupLayout ggml_webgpu_pipeline_layout(const webgpu_pipeline & pipeline) {
++    if (pipeline.layout0) {
++        return pipeline.layout0;
++    }
++    g_webgpu_stats.bind_group_layouts++;
++    return pipeline.pipeline.GetBindGroupLayout(0);
++}
++
+ static webgpu_encoded_op ggml_backend_webgpu_build_multi(webgpu_context &                          ctx,
+                                                          const std::vector<webgpu_dispatch_desc> & dispatches) {
+     webgpu_encoded_op            result = {};
+@@ -692,17 +792,18 @@ static webgpu_encoded_op ggml_backend_webgpu_build_multi(webgpu_context &
+                                                             ctx->param_arena.slot_size));
+ 
+         wgpu::BindGroupDescriptor bind_group_desc;
+-        bind_group_desc.layout     = dispatch.pipeline.pipeline.GetBindGroupLayout(0);
++        bind_group_desc.layout     = ggml_webgpu_pipeline_layout(dispatch.pipeline);
+         bind_group_desc.entryCount = entries.size();
+         bind_group_desc.entries    = entries.data();
+         bind_group_desc.label      = dispatch.pipeline.name.c_str();
+         bind_groups.push_back(ctx->global_ctx->device.CreateBindGroup(&bind_group_desc));
++        g_webgpu_stats.bind_groups++;
+         param_offsets.push_back(param_offset);
+     }
+ 
+     for (size_t i = 0; i < param_offsets.size(); i++) {
+-        ctx->global_ctx->queue.WriteBuffer(ctx->param_arena.buffer, param_offsets[i], dispatches[i].params.data(),
+-                                           dispatches[i].params.size() * sizeof(uint32_t));
++        ctx->param_arena.stage(param_offsets[i], dispatches[i].params.data(),
++                               dispatches[i].params.size() * sizeof(uint32_t));
+     }
+ 
+ #ifdef GGML_WEBGPU_GPU_PROFILE
+@@ -770,6 +871,8 @@ static void ggml_backend_webgpu_buffer_memset(webgpu_global_context & ctx,
+     uint32_t wg_x = CEIL_DIV(size + 3, bytes_per_wg);
+ 
+     ctx->queue.WriteBuffer(ctx->memset_params_buf, 0, params.data(), params.size() * sizeof(uint32_t));
++    g_webgpu_stats.write_buffers++;
++    g_webgpu_stats.write_bytes += params.size() * sizeof(uint32_t);
+ 
+     wgpu::BindGroupEntry params_entry = {};
+     params_entry.binding              = 1;
+@@ -779,13 +882,15 @@ static void ggml_backend_webgpu_buffer_memset(webgpu_global_context & ctx,
+     entries.push_back(params_entry);
+ 
+     wgpu::BindGroupDescriptor bind_group_desc;
+-    bind_group_desc.layout     = ctx->memset_pipeline.pipeline.GetBindGroupLayout(0);
++    bind_group_desc.layout     = ggml_webgpu_pipeline_layout(ctx->memset_pipeline);
+     bind_group_desc.entryCount = entries.size();
+     bind_group_desc.entries    = entries.data();
+     bind_group_desc.label      = ctx->memset_pipeline.name.c_str();
+     wgpu::BindGroup bind_group = ctx->device.CreateBindGroup(&bind_group_desc);
++    g_webgpu_stats.bind_groups++;
+ 
+     wgpu::CommandEncoder     encoder = ctx->device.CreateCommandEncoder();
++    g_webgpu_stats.command_encoders++;
+     wgpu::ComputePassEncoder pass    = encoder.BeginComputePass();
+     pass.SetPipeline(ctx->memset_pipeline.pipeline);
+     pass.SetBindGroup(0, bind_group);
+@@ -795,6 +900,7 @@ static void ggml_backend_webgpu_buffer_memset(webgpu_global_context & ctx,
+     wgpu::CommandBuffer              command  = encoder.Finish();
+     std::vector<wgpu::CommandBuffer> commands = { command };
+     ctx->queue.Submit(commands.size(), commands.data());
++    g_webgpu_stats.submits++;
+ }
+ 
+ /** End WebGPU Actions */
+@@ -3659,6 +3765,7 @@ static ggml_status ggml_backend_webgpu_graph_compute(ggml_backend_t backend, str
+ #endif
+ 
+     ctx->active_command_encoder = ctx->global_ctx->device.CreateCommandEncoder();
++    g_webgpu_stats.command_encoders++;
+     if (ctx->batch_compute_passes) {
+         ctx->active_compute_pass = ctx->active_command_encoder.BeginComputePass();
+     }
+@@ -3682,10 +3789,12 @@ static ggml_status ggml_backend_webgpu_graph_compute(ggml_backend_t backend, str
+             }
+             num_batched_kernels                = 0;
+             wgpu::CommandBuffer batch_commands = ctx->active_command_encoder.Finish();
++            ctx->param_arena.flush(ctx->global_ctx->queue);
+             ggml_backend_webgpu_submit_commands(ctx, batch_commands, num_inflight_batches);
+ 
+             // reset state for next batch
+             ctx->active_command_encoder = ctx->global_ctx->device.CreateCommandEncoder();
++            g_webgpu_stats.command_encoders++;
+             if (ctx->batch_compute_passes) {
+                 ctx->active_compute_pass = ctx->active_command_encoder.BeginComputePass();
+             }
+@@ -3714,6 +3823,7 @@ static ggml_status ggml_backend_webgpu_graph_compute(ggml_backend_t backend, str
+ 
+     if (num_batched_kernels > 0) {
+         wgpu::CommandBuffer batch_commands = ctx->active_command_encoder.Finish();
++        ctx->param_arena.flush(ctx->global_ctx->queue);
+         ggml_backend_webgpu_submit_commands(ctx, batch_commands, num_inflight_batches);
+         ctx->param_arena.reset();
+         commands.clear();
+@@ -3795,6 +3905,9 @@ static void ggml_backend_webgpu_set_tensor_async(ggml_backend_t backend,
+ 
+     // Write aligned portion
+     buf_ctx->global_ctx->queue.WriteBuffer(buf_ctx->buffer, total_offset, data, (size / 4) * 4);
++    g_webgpu_stats.write_buffers++;
++    g_webgpu_stats.write_bytes += size;
++    ggml_webgpu_stats_weight_write(tensor->buffer, buf_ctx->buffer, tensor, size);
+ 
+     if (size % 4 != 0) {
+         // If size is not a multiple of 4, we need to memset the remaining bytes
+@@ -3856,35 +3969,77 @@ static ggml_backend_i ggml_backend_webgpu_i = {
+ 
+ /* GGML Backend Buffer Interface */
+ 
++// Compute buffers are pooled. transcribe.cpp frees its graph allocator after
++// every run and allocates again milliseconds later, and in a live transcription
++// every run has a different length. A buffer that is destroyed and replaced
++// costs more than its creation: Dawn releases destroyed memory only after a
++// later submit has completed, and WebKit keeps the Metal buffer of a destroyed
++// GPUBuffer alive for as long as any bind group made with it exists, which in a
++// browser is until the JS garbage collector finds those bind groups. So a freed
++// compute buffer is kept, an allocation takes the smallest kept buffer that is
++// large enough however much larger it is, and a new buffer is made in a size
++// class (ggml_webgpu_pool_class) so that growing lengths settle on one buffer
++// instead of making one per length. At steady state a run creates no buffer.
++// GGML_WEBGPU_BUFFER_CACHE=0 turns the pool off (destroy on free, exact sizes);
++// ggml_backend_webgpu_trim() destroys the idle buffers.
++static bool ggml_webgpu_pool_on() {
++    static const bool on = std::getenv("GGML_WEBGPU_BUFFER_CACHE") == nullptr ||
++                           std::getenv("GGML_WEBGPU_BUFFER_CACHE")[0] != '0';
++    return on;
++}
++
++// GGML_WEBGPU_POOL=legacy: the earlier policy, for comparison (a kept buffer is
++// reused only if it is at most twice the size asked for plus 16 MiB, otherwise
++// everything kept is destroyed and a buffer of the exact size is made).
++static bool ggml_webgpu_pool_legacy() {
++    static const bool legacy = std::getenv("GGML_WEBGPU_POOL") != nullptr &&
++                               std::strcmp(std::getenv("GGML_WEBGPU_POOL"), "legacy") == 0;
++    return legacy;
++}
++
++#define WEBGPU_POOL_MAX_IDLE 8
++
++// Size classes: 4 MiB steps up to 16 MiB, then a quarter of the power of two
++// below (at most 25% above what was asked for), never above max_size.
++static size_t ggml_webgpu_pool_class(size_t want, size_t max_size) {
++    size_t step = 4u << 20;
++    while (step * 8 <= want) {
++        step *= 2;
++    }
++    size_t cls = (want + step - 1) / step * step;
++    if (cls > max_size) {
++        cls = std::max(want, max_size);
++    }
++    return ROUNDUP_POW2(cls, WEBGPU_STORAGE_BUF_BINDING_MULT);
++}
++
+ static void ggml_backend_webgpu_buffer_free_buffer(ggml_backend_buffer_t buffer) {
+     ggml_backend_webgpu_buffer_context * ctx = static_cast<ggml_backend_webgpu_buffer_context *>(buffer->context);
+     if (ctx != nullptr && ctx->buffer != nullptr) {
+-        // A caller that frees its graph allocator after every run (transcribe.cpp
+-        // does, so one long utterance does not pin the high-water mark) allocates
+-        // the same compute buffer again milliseconds later. Dawn only releases
+-        // destroyed memory after a later submit has completed, so back-to-back
+-        // runs held two of them (0.6b, 56 s clip: 2 x 230 MiB), and every fresh
+-        // buffer is zero-filled on first use. Keep the last compute buffer and
+-        // hand it to the next allocation that fits. GGML_WEBGPU_BUFFER_CACHE=0
+-        // disables it; ggml_backend_webgpu_trim() drops the cached buffer.
+-        static const bool cache_on  = std::getenv("GGML_WEBGPU_BUFFER_CACHE") == nullptr ||
+-                                      std::getenv("GGML_WEBGPU_BUFFER_CACHE")[0] != '0';
+         static const bool log_alloc = std::getenv("GGML_WEBGPU_LOG_ALLOC") != nullptr;
+-        if (cache_on && buffer->usage == GGML_BACKEND_BUFFER_USAGE_COMPUTE && ctx->global_ctx != nullptr) {
++        if (ggml_webgpu_pool_on() && buffer->usage == GGML_BACKEND_BUFFER_USAGE_COMPUTE && ctx->global_ctx != nullptr) {
+             std::vector<wgpu::Buffer> & pool = ctx->global_ctx->cached_compute_bufs;
+-            if (pool.size() >= 8) {
+-                pool.front().Destroy();
+-                pool.erase(pool.begin());
++            if (pool.size() >= WEBGPU_POOL_MAX_IDLE) {
++                // drop the smallest
++                size_t smallest = 0;
++                for (size_t i = 1; i < pool.size(); i++) {
++                    if (pool[i].GetSize() < pool[smallest].GetSize()) {
++                        smallest = i;
++                    }
++                }
++                ggml_webgpu_destroy_buffer(pool[smallest]);
++                pool.erase(pool.begin() + smallest);
+             }
++            ggml_webgpu_stats_set_kind(ctx->buffer, WEBGPU_BUF_POOL_IDLE, nullptr);
+             pool.push_back(ctx->buffer);
+             if (log_alloc) {
+-                GGML_LOG_INFO("ggml_webgpu: cached %.1f MiB\n", ctx->buffer.GetSize() / 1048576.0);
++                GGML_LOG_INFO("ggml_webgpu: kept %.1f MiB\n", ctx->buffer.GetSize() / 1048576.0);
+             }
+         } else {
+             if (log_alloc) {
+                 GGML_LOG_INFO("ggml_webgpu: free %.1f MiB\n", ctx->buffer.GetSize() / 1048576.0);
+             }
+-            ctx->buffer.Destroy();
++            ggml_webgpu_destroy_buffer(ctx->buffer);
+         }
+         delete ctx;
+     }
+@@ -3937,6 +4092,9 @@ static void ggml_backend_webgpu_buffer_set_tensor(ggml_backend_buffer_t buffer,
+     size_t total_offset = ggml_webgpu_tensor_offset(tensor) + offset;
+ 
+     buf_ctx->global_ctx->queue.WriteBuffer(buf_ctx->buffer, total_offset, data, (size / 4) * 4);
++    g_webgpu_stats.write_buffers++;
++    g_webgpu_stats.write_bytes += size;
++    ggml_webgpu_stats_weight_write(tensor->buffer, buf_ctx->buffer, tensor, size);
+ 
+     if (size % 4 != 0) {
+         // If size is not a multiple of 4, we need to memset the remaining bytes
+@@ -3987,21 +4145,28 @@ static void ggml_backend_webgpu_buffer_get_tensor(ggml_backend_buffer_t buffer,
+     if (buf_ctx->global_ctx->get_tensor_staging_buf == nullptr ||
+         buf_ctx->global_ctx->get_tensor_staging_buf.GetSize() < final_size) {
+         // Create a new staging buffer if it doesn't exist or is too small
+-        if (buf_ctx->global_ctx->get_tensor_staging_buf) {
+-            buf_ctx->global_ctx->get_tensor_staging_buf.Destroy();
++        // Sized in powers of two from 1 MiB, so that reading back outputs of
++        // slowly growing lengths does not make a new buffer each time.
++        size_t staging_size = ggml_webgpu_pool_legacy() ? final_size : (1u << 20);
++        while (staging_size < final_size) {
++            staging_size *= 2;
+         }
+-        ggml_webgpu_create_buffer(device, buf_ctx->global_ctx->get_tensor_staging_buf, final_size,
+-                                  wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::MapRead, "get_tensor_staging_buf");
++        ggml_webgpu_destroy_buffer(buf_ctx->global_ctx->get_tensor_staging_buf);
++        ggml_webgpu_create_buffer(device, buf_ctx->global_ctx->get_tensor_staging_buf, staging_size,
++                                  wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::MapRead, "get_tensor_staging_buf",
++                                  WEBGPU_BUF_STAGING);
+     }
+ 
+     // Copy the data from the buffer to the staging buffer
+     wgpu::CommandEncoder encoder = device.CreateCommandEncoder();
++    g_webgpu_stats.command_encoders++;
+     encoder.CopyBufferToBuffer(buf_ctx->buffer, total_offset, buf_ctx->global_ctx->get_tensor_staging_buf, 0,
+                                final_size);
+     wgpu::CommandBuffer commands = encoder.Finish();
+ 
+     // Submit the command buffer to the queue
+     buf_ctx->global_ctx->queue.Submit(1, &commands);
++    g_webgpu_stats.submits++;
+ 
+     // Map the staging buffer to read the data
+     ggml_backend_webgpu_map_buffer(buf_ctx->global_ctx, buf_ctx->global_ctx->get_tensor_staging_buf,
+@@ -4047,6 +4212,8 @@ static const char * ggml_backend_webgpu_buffer_type_get_name(ggml_backend_buffer
+     return ctx->device_name.c_str();
+ }
+ 
++static size_t ggml_backend_webgpu_buffer_type_get_max_size(ggml_backend_buffer_type_t buft);
++
+ static ggml_backend_buffer_t ggml_backend_webgpu_buffer_type_alloc_buffer(ggml_backend_buffer_type_t buft,
+                                                                           size_t                     size) {
+     static std::atomic<int> buffer_count;
+@@ -4063,37 +4230,61 @@ static ggml_backend_buffer_t ggml_backend_webgpu_buffer_type_alloc_buffer(ggml_b
+     wgpu::Buffer                         buf;
+     const size_t                         want   = ROUNDUP_POW2(size, WEBGPU_STORAGE_BUF_BINDING_MULT);
+     std::vector<wgpu::Buffer> &          pool   = ctx->webgpu_global_ctx->cached_compute_bufs;
+-    if (!pool.empty()) {
+-        // Reuse the smallest cached buffer that fits without wasting more than
+-        // half of it; if none does, they all go first so old and new are not
+-        // alive together longer than necessary.
++    size_t                               create = want;
++    // What an allocation is for is not known here (the usage is set afterwards).
++    // Weights are allocated while nothing is kept (first load, or after the
++    // trim a reload starts with) and so get their exact size; once a compute
++    // buffer has been freed, allocations are graph allocations.
++    if (ggml_webgpu_pool_on() && !pool.empty()) {
++        // the smallest kept buffer that fits
+         size_t best = pool.size();
+         for (size_t i = 0; i < pool.size(); i++) {
+             const size_t have = pool[i].GetSize();
+-            if (have >= want && have <= 2 * want + (16u << 20) && (best == pool.size() || have < pool[best].GetSize())) {
++            if (have >= want && (!ggml_webgpu_pool_legacy() || have <= 2 * want + (16u << 20)) &&
++                (best == pool.size() || have < pool[best].GetSize())) {
+                 best = i;
+             }
+         }
+         if (best < pool.size()) {
+             buf = pool[best];
+             pool.erase(pool.begin() + best);
++            g_webgpu_stats.pool_hits++;
+             if (log_alloc) {
+-                GGML_LOG_INFO("ggml_webgpu: reused a cached %.1f MiB buffer\n", buf.GetSize() / 1048576.0);
++                GGML_LOG_INFO("ggml_webgpu: reused a kept %.1f MiB buffer\n", buf.GetSize() / 1048576.0);
+             }
+         } else {
+-            ctx->webgpu_global_ctx->drop_cached_compute_bufs();
++            // None fits. The largest kept buffer is the one this allocation
++            // outgrew: destroy it first so old and new are not alive together.
++            g_webgpu_stats.pool_misses++;
++            if (ggml_webgpu_pool_legacy()) {
++                ctx->webgpu_global_ctx->drop_cached_compute_bufs();
++            } else if (!pool.empty()) {
++                size_t largest = 0;
++                for (size_t i = 1; i < pool.size(); i++) {
++                    if (pool[i].GetSize() > pool[largest].GetSize()) {
++                        largest = i;
++                    }
++                }
++                ggml_webgpu_destroy_buffer(pool[largest]);
++                pool.erase(pool.begin() + largest);
++            }
++            if (!ggml_webgpu_pool_legacy()) {
++                create = ggml_webgpu_pool_class(want, ggml_backend_webgpu_buffer_type_get_max_size(buft));
++            }
+         }
+     }
+     if (!buf) {
+-        ggml_webgpu_create_buffer(ctx->webgpu_global_ctx->device, buf, want,
++        ggml_webgpu_create_buffer(ctx->webgpu_global_ctx->device, buf, create,
+                                   wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc | wgpu::BufferUsage::CopyDst,
+-                                  buf_name.c_str());
++                                  buf_name.c_str(), WEBGPU_BUF_TENSOR);
+     }
+ 
+     ggml_backend_webgpu_buffer_context * buf_ctx =
+         new ggml_backend_webgpu_buffer_context(buf, buf_name, ctx->webgpu_global_ctx);
+ 
+-    return ggml_backend_buffer_init(buft, ggml_backend_webgpu_buffer_interface, buf_ctx, size);
++    ggml_backend_buffer_t out = ggml_backend_buffer_init(buft, ggml_backend_webgpu_buffer_interface, buf_ctx, size);
++    ggml_webgpu_stats_set_kind(buf, WEBGPU_BUF_TENSOR, out);
++    return out;
+ }
+ 
+ static size_t ggml_backend_webgpu_buffer_type_get_alignment(ggml_backend_buffer_type_t buft) {
+@@ -4499,7 +4690,7 @@ static void create_webgpu_device(ggml_backend_webgpu_reg_context * ctx) {
+     ggml_webgpu_init_memset_pipeline(ctx->webgpu_global_ctx);
+     ggml_webgpu_create_buffer(ctx->webgpu_global_ctx->device, ctx->webgpu_global_ctx->memset_params_buf,
+                               WEBGPU_PARAMS_BUF_SIZE_BYTES, wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::Uniform,
+-                              "memset_params_buf");
++                              "memset_params_buf", WEBGPU_BUF_PARAMS);
+     ctx->webgpu_global_ctx->queue = ctx->webgpu_global_ctx->device.GetQueue();
+ 
+     GGML_LOG_INFO(
+@@ -4521,19 +4712,22 @@ static webgpu_context initialize_webgpu_context(ggml_backend_dev_t dev) {
+         webgpu_ctx->global_ctx->capabilities.limits.minUniformBufferOffsetAlignment);
+     ggml_webgpu_create_buffer(webgpu_ctx->global_ctx->device, webgpu_ctx->set_rows_dev_error_buf,
+                               WEBGPU_SET_ROWS_ERROR_BUF_SIZE_BYTES,
+-                              wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc, "set_rows_dev_error_buf");
++                              wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc, "set_rows_dev_error_buf",
++                              WEBGPU_BUF_OTHER);
+     ggml_webgpu_create_buffer(webgpu_ctx->global_ctx->device, webgpu_ctx->set_rows_host_error_buf,
+                               WEBGPU_SET_ROWS_ERROR_BUF_SIZE_BYTES,
+-                              wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::MapRead, "set_rows_host_error_buf");
++                              wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::MapRead, "set_rows_host_error_buf",
++                              WEBGPU_BUF_STAGING);
+ 
+ #ifdef GGML_WEBGPU_GPU_PROFILE
+     webgpu_ctx->batch_compute_passes = false;
+     ggml_webgpu_create_buffer(
+         webgpu_ctx->global_ctx->device, webgpu_ctx->profile_timestamp_dev_buf, WEBGPU_TIMESTAMP_QUERY_BUF_SIZE_BYTES,
+-        wgpu::BufferUsage::QueryResolve | wgpu::BufferUsage::CopySrc, "profile_timestamp_dev_buf");
++        wgpu::BufferUsage::QueryResolve | wgpu::BufferUsage::CopySrc, "profile_timestamp_dev_buf", WEBGPU_BUF_OTHER);
+     ggml_webgpu_create_buffer(webgpu_ctx->global_ctx->device, webgpu_ctx->profile_timestamp_host_buf,
+                               WEBGPU_TIMESTAMP_QUERY_BUF_SIZE_BYTES,
+-                              wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::MapRead, "profile_timestamp_host_buf");
++                              wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::MapRead, "profile_timestamp_host_buf",
++                              WEBGPU_BUF_STAGING);
+     wgpu::QuerySetDescriptor query_set_desc = {};
+     query_set_desc.type                     = wgpu::QueryType::Timestamp;
+     query_set_desc.count                    = WEBGPU_MAX_PROFILE_QUERY_COUNT;
+@@ -4544,10 +4738,10 @@ static webgpu_context initialize_webgpu_context(ggml_backend_dev_t dev) {
+     // Initialize debug buffers
+     ggml_webgpu_create_buffer(webgpu_ctx->global_ctx->device, webgpu_ctx->global_ctx->debug_host_buf,
+                               WEBGPU_DEBUG_BUF_ELEMS * sizeof(uint32_t),
+-                              wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::MapRead, "debug_host_buf");
++                              wgpu::BufferUsage::CopyDst | wgpu::BufferUsage::MapRead, "debug_host_buf", WEBGPU_BUF_STAGING);
+     ggml_webgpu_create_buffer(webgpu_ctx->global_ctx->device, webgpu_ctx->global_ctx->debug_dev_buf,
+                               WEBGPU_DEBUG_BUF_ELEMS * sizeof(uint32_t),
+-                              wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc, "debug_dev_buf");
++                              wgpu::BufferUsage::Storage | wgpu::BufferUsage::CopySrc, "debug_dev_buf", WEBGPU_BUF_OTHER);
+ #endif
+     return webgpu_ctx;
+ }
+@@ -5182,6 +5376,73 @@ extern "C" int ggml_backend_webgpu_error_count(void) {
+     return g_webgpu_error_count;
+ }
+ 
++// GPU objects this backend holds and has made, as JSON. Sizes are bytes asked
++// of the device, not what the driver reserved. "live" changes only when a
++// buffer is created or destroyed; every other number only grows.
++extern "C" const char * ggml_backend_webgpu_stats_json(void) {
++    static std::string          out;
++    std::lock_guard<std::mutex> lock(g_webgpu_stats.mutex);
++    struct agg {
++        uint64_t bytes = 0, count = 0;
++    };
++    agg                               weights, compute, idle, staging, params, other, tensor_other;
++    uint64_t                          live_bytes = 0;
++    std::unordered_map<int, uint64_t> by_type;
++    for (const auto & kv : g_webgpu_stats.live) {
++        const webgpu_buf_record & r = kv.second;
++        agg *                     a = &other;
++        switch (r.kind) {
++            case WEBGPU_BUF_TENSOR:
++                a = r.owner == nullptr ? &tensor_other :
++                    r.owner->usage == GGML_BACKEND_BUFFER_USAGE_WEIGHTS ? &weights :
++                    r.owner->usage == GGML_BACKEND_BUFFER_USAGE_COMPUTE ? &compute : &tensor_other;
++                break;
++            case WEBGPU_BUF_POOL_IDLE:
++                a = &idle;
++                break;
++            case WEBGPU_BUF_STAGING:
++                a = &staging;
++                break;
++            case WEBGPU_BUF_PARAMS:
++                a = &params;
++                break;
++            default:
++                break;
++        }
++        a->bytes += r.size;
++        a->count++;
++        live_bytes += r.size;
++        for (const auto & w : r.weight_bytes) {
++            by_type[w.first] += w.second;
++        }
++    }
++    auto num = [](uint64_t v) { return std::to_string((unsigned long long) v); };
++    auto obj = [&](const char * name, const agg & a) {
++        return std::string("\"") + name + "\":{\"bytes\":" + num(a.bytes) + ",\"count\":" + num(a.count) + "}";
++    };
++    out = "{\"live_bytes\":" + num(live_bytes) + ",\"live_count\":" + num(g_webgpu_stats.live.size()) + "," +
++          obj("weights", weights) + "," + obj("compute", compute) + "," + obj("compute_idle", idle) + "," +
++          obj("staging", staging) + "," + obj("params", params) + "," + obj("tensor_other", tensor_other) + "," +
++          obj("other", other) + ",\"weights_by_type\":{";
++    bool first = true;
++    for (const auto & w : by_type) {
++        out += std::string(first ? "" : ",") + "\"" + ggml_type_name((ggml_type) w.first) + "\":" + num(w.second);
++        first = false;
++    }
++    out += "},\"buffers_created\":" + num(g_webgpu_stats.buffers_created) +
++           ",\"bytes_created\":" + num(g_webgpu_stats.bytes_created) +
++           ",\"buffers_destroyed\":" + num(g_webgpu_stats.buffers_destroyed) +
++           ",\"bytes_destroyed\":" + num(g_webgpu_stats.bytes_destroyed) +
++           ",\"pool_hits\":" + num(g_webgpu_stats.pool_hits) + ",\"pool_misses\":" + num(g_webgpu_stats.pool_misses) +
++           ",\"pipelines\":" + num(g_webgpu_stats.pipelines) + ",\"shader_modules\":" + num(g_webgpu_stats.shader_modules) +
++           ",\"bind_group_layouts\":" + num(g_webgpu_stats.bind_group_layouts) +
++           ",\"bind_groups\":" + num(g_webgpu_stats.bind_groups) +
++           ",\"command_encoders\":" + num(g_webgpu_stats.command_encoders) +
++           ",\"submits\":" + num(g_webgpu_stats.submits) + ",\"write_buffers\":" + num(g_webgpu_stats.write_buffers) +
++           ",\"write_bytes\":" + num(g_webgpu_stats.write_bytes) + ",\"maps\":" + num(g_webgpu_stats.maps) + "}";
++    return out.c_str();
++}
++
+ void ggml_backend_webgpu_trim(void) {
+     ggml_backend_reg_t reg = ggml_backend_webgpu_reg();
+     auto *             ctx = static_cast<ggml_backend_webgpu_reg_context *>(reg->context);
+-- 
+2.53.0
+

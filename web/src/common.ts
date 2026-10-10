@@ -33,6 +33,23 @@ export function wordDiff(a: string, b: string) {
   return { differing: x.length + y.length - 2 * prev[y.length], words: x.length };
 }
 
+/** The worker's GPU numbers (src/worker.ts gpuBrief) as one line. `prev`: the numbers one pass earlier, for the "last pass" part. */
+export function gpuLine(g: any, prev?: any) {
+  if (!g) return "GPU: none (CPU backend)";
+  const types = Object.entries(g.byType ?? {}).sort((a: any, b: any) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(", ");
+  let s = `GPU: weights ${g.weightsMb} MiB${types ? ` (${types})` : ""}, working ${g.workingMb} MiB, ${g.buffers} buffers`;
+  if (prev) s += `, last pass +${g.created - prev.created} buffers +${g.bindGroups - prev.bindGroups} bind groups +${g.encoders - prev.encoders} encoders +${g.writes - prev.writes} writes`;
+  s += ` · since load ${g.created} buffers made, ${g.destroyed} destroyed`;
+  if (g.js) s += ` · JS objects ${g.js.objects} made, ${g.js.registry ? `${g.js.collected} collected` : "collection not observable"}; JS buffers ${g.js.buffers - g.js.buffersDestroyed} live (${g.js.bufferLiveMb} MiB)`;
+  return s;
+}
+/** The same numbers cut down for a diagnostics event (one per pass). */
+export function gpuDiag(g: any) {
+  if (!g) return null;
+  return { w: g.weightsMb, work: g.workingMb, n: g.buffers, made: g.created, gone: g.destroyed, miss: g.poolMisses, bg: g.bindGroups, enc: g.encoders, wr: g.writes, lay: g.layouts, pipe: g.pipelines,
+    ...(g.js ? { jsObj: g.js.objects, jsGone: g.js.collected, jsBuf: g.js.buffers - g.js.buffersDestroyed, jsBufMb: g.js.bufferLiveMb, jsBg: g.js.bindGroups, jsBgGone: g.js.bindGroupsCollected } : {}) };
+}
+
 export interface Rpc {
   call<T = any>(type: string, body?: Record<string, unknown>, transfer?: Transferable[]): Promise<T>;
   terminate(): void;

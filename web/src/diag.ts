@@ -134,7 +134,7 @@ export function sendEnvironment(diag: Diag, extra: Record<string, unknown>) {
 }
 
 /** How the last visit of this page ended, kept in localStorage: `closed` is only set by pagehide, which a killed tab never fires. */
-export interface Life { sid: string; phase: string; hidden: boolean; closed: boolean; wall: number; model?: string; cpu?: boolean }
+export interface Life { sid: string; phase: string; hidden: boolean; closed: boolean; wall: number; model?: string; cpu?: boolean; at?: string }
 export function lifeStore(key: string, diag: Diag) {
   let prev: Life | null = null;
   try { prev = JSON.parse(localStorage.getItem(key) ?? "null"); } catch { /* none */ }

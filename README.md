@@ -652,7 +652,7 @@ pass: simulator Safari (iOS 18.3) ran it on the CPU only; see "WebKit attempt" a
 `web/live.html` + `web/src/live.ts`: one Record / Stop button, the microphone, and the transcript
 appearing while you speak. Same worker, WASM module, loader, adapter probe, device-request ladder,
 `GPU ERROR` reporting and persisted step trail as the benchmark page (`web/src/common.ts` is what
-the two pages share; the runtime was not changed, patches stay 0001-0019).
+the two pages share; the runtime changes made for it since are patches 0020-0021, see "GPU accounting" below).
 
 Published (tailnet only): https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-live/
 (screenshots: https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-live-shots/). It is also
@@ -689,7 +689,8 @@ device rate (the worklet resamples), capture needs https, and without JSPI the A
   is cleared and a "[N s of audio skipped ...]" line goes into the transcript.
 - **Model**: loads on page open, independent of recording (recording before it is ready just
   queues audio); default 110m Q8_0, the picker has the others and remembers the choice. One warm-up
-  pass over 1.5 s of faint noise compiles the pipelines. Any GPU error or device loss stops the
+  pass over 1.5 s of faint noise compiles the pipelines, then one over cap + 1 s sizes the GPU working
+  buffer once (`sizing=0` skips it). Any GPU error or device loss stops the
   passes, shows the message and offers "Reload the model". Without WebGPU the page says so in a
   notice and in the backend line ("CPU fallback, one WASM thread (slow)").
 - Also: Copy, Clear, Space toggles recording, screen wake lock while recording, microphone released
@@ -699,7 +700,8 @@ Query string: `model=`, `variant=jspi|asyncify`, `f16=0`, `cpu=1` (CPU backend e
 works), `env=NAME=VALUE`, `store=`, `base=`, `verbose=1` as on the benchmark page; tuning:
 `gap=` (ms between pass starts, 250), `hang=` (ms of silence that ends an utterance, 700), `cap=`
 (s, 24; 12 on phones), `thr=` (absolute RMS threshold, 0.004), `ratio=` (x noise floor, 3). Both pages:
-`phone=1|0`, `limits=default|raised`, `guard=0`, `diag=0|<url>`, `store=opfs-writable` (see below).
+`phone=1|0`, `limits=default|raised`, `guard=0`, `diag=0|<url>`, `store=opfs-writable`, `gpuwatch=0`,
+`gc=<MiB>` (see below); live page: `soak=<passes>`, `soakgap=<ms>`, `sizing=0`.
 
 ### Diagnostics, foreign errors, phone hardening (10 Oct, after a first try on an iPhone)
 
@@ -814,6 +816,146 @@ changes the reloads); the iOS user-agent detection with a real iOS user agent (`
 the benchmark page's `auto=1` guard; the guard after a death in the warm-up or first pass (only
 mid-download was simulated); the "CPU" and "smaller model" buttons; the collector across a reboot.
 
+### GPU accounting, the working-buffer pool and the soak test (10 Oct, after the tab died on an iPhone)
+
+On an iPhone (iOS 26.2; the user agent says 18.7) the live page's tab was killed 8-20 s into recording,
+for 110M Q4_0 and Q8_0 alike, with the WASM heap flat at 38-39 MB. **Nothing below was run on a
+phone.** What was done is what could be measured here; whether it stops the kills is not known.
+
+**What iOS said killed it.** Jetsam reports pulled off the phone through the Mac
+(`ios-build sh xcrun devicectl device info files --device <udid> --domain-type systemCrashLogs`, then
+`device copy from ... --source JetsamEvent-....ips`; run from a git repo whose `~/work/<name>` exists
+on the Mac, e.g. `$R/pk-webkit`). Three reports from that morning (07:44:17, 07:44:47 and 08:26:46
+PDT) each show `com.apple.WebKit.WebContent` killed for **`per-process-limit` at 131072 pages =
+2048 MiB**, while `com.apple.WebKit.GPU` was at 15-68 MiB (lifetime maximum 101-132 MiB). The kills
+the collector recorded at 08:32-08:37 PDT had no report on the phone yet when this was written, so
+the match between these reports and this page is by time of day and footprint, not by a session id.
+Read literally: the memory is charged to the web content process, not the GPU process, and it is
+about 2 GiB on a page whose WASM heap is 38 MB and whose weights are 81-129 MiB. Whether WebKit
+charges Metal memory made for a page to that page's process was not established here.
+
+**Accounting** (patch 0020, `pk_gpu_stats` in 0021). The backend counts every `GPUBuffer` it creates
+and every one it destroys, so live bytes and counts are exact for it, split by purpose: weights
+(with the bytes of tensor data by type), compute in use, compute kept, staging (read-back), params;
+and it counts pipelines, shader modules, bind group layouts, bind groups, command encoders, submits,
+queue writes and maps. Independently the worker wraps `GPUDevice.prototype.createBuffer` /
+`createBindGroup` / `createCommandEncoder` ..., `GPUBuffer.prototype.destroy` and registers every
+object with a `FinalizationRegistry`, so objects made, buffers destroyed and **objects the JS
+collector has collected** are counted without trusting the C++ side (`gpuwatch=0` turns it off).
+Both are in the load step, every pass record, the heartbeat, the stats under the buttons ("GPU:
+weights X MiB (q4_0 a, f16 b, f32 c), working Y MiB, N buffers, last pass +K buffers +B bind groups
+... JS objects M made, C collected") and on the benchmark page after each clip.
+
+GPU memory the backend holds (Chrome 154, bytes asked of the device; the same numbers come out on
+any device that runs the page):
+
+| Model | Weights MiB | by tensor type MiB | Working MiB, 13 s sizing pass (cap 12 s) | Working MiB, 56 s clip |
+| --- | ---: | --- | ---: | ---: |
+| 110M Q4_0 | 81.2 | q4_0 53.8, f16 25.5, f32 2.0 | 41 | 66 |
+| 110M Q8_0 | 129.0 | q8_0 101.6, f16 25.5, f32 2.0 | 42 | 66 |
+| 0.6b Q4_0 | 437.5 | q4_0 290.5, f16 144.0, f32 2.9 | 57 | not run |
+| 0.6b Q8_0 | 695.7 | q8_0 548.8, f16 144.0, f32 2.9 | 58 | not run |
+
+So 4-bit does hold less: 48 MiB less for 110M, 258 MiB less for 0.6b; the F16 conv weights (25.5 /
+144 MiB) are the same in both and working memory does not depend on the weight type. Working
+memory is one compute buffer (33 MiB needed for 13 s, made as a 40 MiB size class), 1 MiB staging
+and under 1 MiB of parameters.
+
+**What grew per pass, measured.** The earlier buffer cache (patch 0009) reused a freed compute
+buffer only if it was at most 2x + 16 MiB larger than the request, and otherwise destroyed
+everything kept and created a buffer of the exact size. A live utterance grows by 0.3 s per pass, so
+the request was a little larger almost every time:
+
+| Run (Chrome 154) | Passes | Buffers created after load | MiB created after load | Passes that created a buffer | Working MiB |
+| --- | ---: | ---: | ---: | --- | --- |
+| live, fake microphone `t56`, old policy (`env=GGML_WEBGPU_POOL=legacy&sizing=0`) | 202 | 109 | 1958 | 108 | 7.8-32.4 |
+| live, fake microphone `t56`, new | 200 | 2 (warm-up, sizing) | 44 | 0 after the sizing pass | 42 throughout |
+| soak 300 random lengths, 110M Q4_0, old policy | 300 | 93 | 1688 | 88 of the last 290 | 1.8-31.6 |
+| soak 300, new, no sizing pass (`sizing=0`) | 300 | 3 | 56 | 0 of the last 290 (2 in the first 10) | 33 throughout |
+| soak 300, new | 300 | 2 | 44 | 0 | 41 throughout |
+| soak 300, new, ASYNCIFY build, 110M Q8_0, `gc=32` / `gc=0` | 300 | 2 | 44 | 0 | 42 throughout |
+
+Every buffer the old policy gave up was `destroy()`ed (that was already so; the hypothesis that
+buffers were only released was wrong), and Chrome's GPU memory stayed flat either way. What is
+different in a browser that defers: a destroyed buffer's memory can stay until the bind groups made
+with it are collected. On the phone sessions' short utterances (0.3-4.5 s) the old policy's churn
+adds up to roughly 100-200 MiB over 35 passes, which by itself is not 2 GiB.
+
+The other per-pass objects: one bind group per dispatch (**1111 per pass for 110M, 1295 for 0.6b**),
+19-20 command encoders and command buffers, and before this change about 1100 queue writes and 1100
+bind group layout objects. None of them has a `destroy()`; what they hold on the GPU side is freed
+when the JS collector finds the JS object, and nothing in a pass allocates enough JS memory to make
+a collector run. In Chrome the counters show them collected within a few passes (50-2500
+outstanding, up to 7000 on the ASYNCIFY build). What WebKit does is exactly what the "JS objects M
+made, C collected" figure will show on the phone.
+
+**What was changed.**
+
+- Pool (0020): a freed compute buffer is kept; an allocation takes the smallest kept buffer that
+  fits, however much larger; a new one is made in a size class (4 MiB steps to 16 MiB, then at most
+  25% over) after destroying the one it outgrew. The read-back staging buffer grows in powers of two
+  from 1 MiB. After the longest length has been seen once, no pass creates a buffer.
+  `pk_load` of another model trims the pool first. `env=GGML_WEBGPU_POOL=legacy` is the old policy,
+  `env=GGML_WEBGPU_BUFFER_CACHE=0` no pool at all, `trim=1` (benchmark page) destroys what is kept.
+- Sizing pass (live page): after the 1.5 s warm-up pass, one pass over cap + 1 s of noise, so the
+  compute buffer is made once for the longest utterance (`sizing=0` skips it). 110M: 56-60 ms here.
+- Fewer objects per pass (0020): uniform parameters are staged on the CPU and written once per
+  submitted batch (54 queue writes per 110M pass instead of about 1100); the bind group layout is
+  fetched once per pipeline (25 objects in total instead of 1111 per pass). Bind groups stay at one
+  per dispatch: their offsets and sizes change with the audio length, a bind group cannot be reused
+  across lengths, and binding whole buffers instead would break WebGPU's rule against a writable
+  binding overlapping another binding of the same buffer.
+- Collector nudge (`gc=<MiB>`, worker): after each pass that many MiB of `ArrayBuffer`s are
+  allocated and dropped, never written, so the JS engine sees allocation and collects. **On by
+  default at 32 MiB on iOS / Safari user agents (and with `phone=1`), off elsewhere**; `gc=0` turns
+  it off. This is a guess at what WebKit needs, not a measured fix: in Chrome it changes nothing
+  that matters (same pass time, same memory).
+
+Same text as before on a07 / a14 / a56 for 110M Q8_0 and Q4_0 (native `scripts/nt.sh` and the
+benchmark page in Chrome; Q4_0's text has never equalled the fp32 reference, it equals its earlier
+runs). Speed, same machine and load (load average 7-14): native encoder 26.7 / 26.8 / 84.4 ms
+(Q8_0) against 26.5 / 28.2 / 84.1 before; Chrome warm totals 57 / 69 / 219 ms (Q8_0) and 49 / 69 /
+230 ms (Q4_0) against 48-61 / 62 / 226 in the earlier Q4_0 rows. No measurable change.
+
+**Soak test.** On the live page under "details": a number of passes (300) and "Run soak test"; or
+`?soak=300` to start when the model is ready (`soakgap=<ms>` between passes, default 0). It runs
+the 56 s fixture cut to a random length between 0.3 s and the cap from a random place, no
+microphone, shows the counters after every pass, sends them with every pass record, and ends with
+"FLAT after pass 10: no buffer made, working memory N MiB throughout" or "NOT FLAT ...". Every 50th
+pass is the same 7 s and its text must not change. The visit is marked: if the tab dies in a soak
+the next load says "IN A SOAK TEST, last recorded pass K of N", does not start again by itself
+(`guard=0` overrides) and offers "Try again" / "Try on the CPU".
+
+On the phone, in this order, each tells something different:
+
+1. `?soak=300` (collector nudge on): does a tab that only runs passes survive, and do "JS objects
+   collected" keep up with "made"?
+2. `?soak=300&gc=0`: the same without the nudge. If 1 survives and 2 dies, uncollected WebGPU
+   objects are the growth.
+3. `?soak=300&cpu=1&cap=3`: no WebGPU at all (slow). If this dies too it is not GPU objects.
+4. Recording as before: if the soaks survive and this dies, it is on the microphone side of the page.
+
+```sh
+bun web/drive-soak.ts NAME "model=s4&phone=1" --passes 300 [--chrome-arg --enable-dawn-features=vulkan_enable_f16_on_nvidia] [--url URL]   # -> results/soak/NAME.json
+bun web/drive-diag.ts kill --query "model=s4&phone=1&soak=2000" --at "soak pass 25" --any-phase   # renderer killed mid-soak: the next load says so and does not restart
+bun scripts/diag-collector.ts show <sid> --passes     # pass lines now end in "| GPU weights .. working .. MiB, N buffers (made, destroyed), bind groups, JS objects made / collected"
+```
+
+Published and checked in stock Chrome 154 against the published live link (10 Oct, 09:30-09:45 PDT):
+soak, 400 passes, ASYNCIFY build, 110M Q4_0, `phone=1`: FLAT, 0 buffers made after pass 10, working
+41 MiB throughout, the 7 s check clip the same text every time, GPU process 200 MiB, renderer RSS
+254-314 MiB (`results/soak/pub-s4.json`). Fake microphone, `g2` (2.3 min), ASYNCIFY, 110M Q8_0,
+`phone=1`: 455 passes, 14 commits, buffers made 10 at the start and 10 at the end, working 42 MiB
+throughout, GPU 240-253 MiB, renderer RSS 248-271 MiB, 17 of 286 words differ from the references
+(`results/live/pub-g2-phone.json`). Fake microphone, `t56`, defaults: 200 passes, 3 commits, working
+50 MiB throughout (cap 24 s), 6 of 122 words differ, as before. Benchmark link (`scripts/pub.sh`):
+reference text and stable on the three clips, 47 / 66 / 225 ms.
+
+Not verified: anything on a phone or in WebKit (whether the pool, the fewer objects or the nudge
+change the kills; whether `FinalizationRegistry` callbacks run in a WebKit worker the way they do in
+Chrome; what WebKit keeps per bind group; why two phone sessions died after only 8-10 passes, both
+right after Stop); 0.6b working memory beyond the 13 s sizing pass; a soak longer than 2000 passes.
+
 ### Verified in Chrome on diesel2 (fake microphone)
 
 Chrome 154 with `--use-fake-device-for-media-stream --use-fake-ui-for-media-stream
@@ -889,6 +1031,7 @@ python3 scripts/lsum.py NAME [NAME ...]           # one line per run
 bun web/drive-diag.ts foreign [--url URL]         # injected foreign errors are ignored, own ones shown (exit 0 = ok)
 bun web/drive-diag.ts kill [--url URL] [--at "download:"]   # renderer killed mid-load: last step on the collector, guard on the next load
 bun scripts/diag-collector.ts show                # what the collector got (latest 3 sessions)
+bun web/drive-soak.ts NAME "model=s4&phone=1" --passes 300   # the soak test in Chrome -> results/soak/NAME.json
 ~/devfs/repos/kkrausse/random/scripts/deploy-artifact.sh "$PWD/web/dist-live" parakeet-live   # private shelf, short link
 scripts/pub.sh                                    # the benchmark deployment (also carries live.html and the model files the short link reads)
 ```
@@ -956,7 +1099,7 @@ Query string: `model=s8|s4|q4|q8|f16` (s = the 110m model), `f16=0` (f32-only sh
 Chrome on this box has `shader-f16` only with `--enable-dawn-features=vulkan_enable_f16_on_nvidia`
 (the scripts pass it unless `STOCK=1`; `bench.sh` has `-stock` rows without it).
 Environment knobs added in this pass: `GGML_WEBGPU_NO_F16`, `TRANSCRIBE_F32_POINTWISE`,
-`TRANSCRIBE_DECODER_F32`, `GGML_WEBGPU_BUFFER_CACHE=0`, `GGML_WEBGPU_LOG_ALLOC`.
+`TRANSCRIBE_DECODER_F32`, `GGML_WEBGPU_BUFFER_CACHE=0`, `GGML_WEBGPU_LOG_ALLOC`, `GGML_WEBGPU_POOL=legacy` (0020).
 Third pass: `GGML_WEBGPU_LIMITS=default`, `GGML_WEBGPU_WG_SIZE`, `GGML_WEBGPU_CHUNK_MB`,
 `GGML_WEBGPU_DUMP_SHADERS`, `GGML_WEBGPU_BREAK_SHADER`, `TRANSCRIBE_PRE_ENCODE_TILE` (page: 128),
 `TRANSCRIBE_ENC_PROJ_GPU` (page: 1), `TRANSCRIBE_DECODER_NO_WX_CACHE`. Any of them can be overridden

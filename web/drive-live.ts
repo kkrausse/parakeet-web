@@ -89,7 +89,7 @@ try {
   result.url = `${url0}${query ? (url0.includes("?") ? "&" : "?") + query : ""}`;
   const t0 = performance.now();
   await page.goto(result.url);
-  const state = () => page.evaluate(() => { const s = (window as any).__pkl; return { phase: s.phase, idle: s.idle, lagS: s.lagS, bufferS: s.bufferS, heapMb: s.heapMb, passCount: s.passCount, js: Math.round(((performance as any).memory?.usedJSHeapSize ?? 0) / 2 ** 20), words: s.committed.split(/\s+/).filter(Boolean).length, vad: s.vad() }; });
+  const state = () => page.evaluate(() => { const s = (window as any).__pkl; return { gpu: s.gpu, phase: s.phase, idle: s.idle, lagS: s.lagS, bufferS: s.bufferS, heapMb: s.heapMb, passCount: s.passCount, js: Math.round(((performance as any).memory?.usedJSHeapSize ?? 0) / 2 ** 20), words: s.committed.split(/\s+/).filter(Boolean).length, vad: s.vad() }; });
   for (;;) {
     const s = await state();
     if (s.phase !== "loading") { if (s.phase !== "ready") throw new Error(`model did not load: ${JSON.stringify(await page.evaluate(() => (window as any).__pkl.errors))}`); break; }
@@ -98,7 +98,7 @@ try {
   }
   result.readyMs = Math.round(performance.now() - t0);
   const p = await pids();
-  const sample = async (t: number) => { const s = await state(); return { t: Math.round(t), gpuMib: gpuMib(p.gpu), rendererRssMib: Math.max(0, ...p.renderers.map((r) => procMib(r, "VmRSS"))), gpuProcRssMib: procMib(p.gpu, "VmRSS"), wasmHeapMb: s.heapMb, jsHeapMb: s.js, lagS: s.lagS, bufferS: s.bufferS, passes: s.passCount, words: s.words, vad: s.vad }; };
+  const sample = async (t: number) => { const s = await state(); return { t: Math.round(t), gpuMib: gpuMib(p.gpu), rendererRssMib: Math.max(0, ...p.renderers.map((r) => procMib(r, "VmRSS"))), gpuProcRssMib: procMib(p.gpu, "VmRSS"), wasmHeapMb: s.heapMb, jsHeapMb: s.js, gpuWorkingMb: s.gpu?.workingMb ?? 0, gpuBuffers: s.gpu?.buffers ?? 0, gpuBuffersMade: s.gpu?.created ?? 0, jsGpuObjects: s.gpu?.js?.objects ?? 0, jsGpuCollected: s.gpu?.js?.collected ?? 0, lagS: s.lagS, bufferS: s.bufferS, passes: s.passCount, words: s.words, vad: s.vad }; };
   result.beforeRecording = await sample(0);
   if (css) await page.addStyleTag({ content: css });
   await page.click("#rec");
@@ -124,7 +124,8 @@ try {
     provisionalPassMs: stat(prov.map((x: number[]) => x[0])), finalPassMs: stat(fin.map((x: number[]) => x[0])),
     provisionalAudioS: stat(prov.map((x: number[]) => x[1])), finalAudioS: stat(fin.map((x: number[]) => x[1])),
     lagS: stat(series.map((s) => s.lagS)), maxLagS: live.maxLagS,
-    memoryAfterWarmup: { gpuMib: range("gpuMib"), rendererRssMib: range("rendererRssMib"), gpuProcRssMib: range("gpuProcRssMib"), wasmHeapMb: range("wasmHeapMb"), jsHeapMb: range("jsHeapMb") },
+    memoryAfterWarmup: { gpuMib: range("gpuMib"), rendererRssMib: range("rendererRssMib"), gpuProcRssMib: range("gpuProcRssMib"), wasmHeapMb: range("wasmHeapMb"), jsHeapMb: range("jsHeapMb"), gpuWorkingMb: range("gpuWorkingMb"), gpuBuffers: range("gpuBuffers"), gpuBuffersMade: range("gpuBuffersMade") },
+    gpuAtLoad: await page.evaluate(() => (window as any).__pkl.gpuAtLoad), gpuAfterWarmup: await page.evaluate(() => (window as any).__pkl.gpuAfterWarmup), gpuEnd: await page.evaluate(() => (window as any).__pkl.gpu),
     series, passes: live.passes,
   });
   if (f32) {

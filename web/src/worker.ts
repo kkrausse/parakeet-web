@@ -15,6 +15,85 @@ const stage = (name: string, detail?: string) => post({ type: "stage", name, det
 const errText = (e: any) => `${e?.name ?? "Error"}: ${e?.message ?? e}`;
 const takeLog = () => { try { return M ? (M.UTF8ToString(M.ccall("pk_log", "number", [], [])) as string) : ""; } catch { return ""; } }; // throws once the module has aborted
 
+// ---------- GPU accounting ----------
+// Two independent counts. (1) The backend's own (pk_gpu_stats): every buffer it created and destroyed, live bytes
+// by purpose, weight bytes by tensor type, and how many bind groups / encoders / submits / queue writes it made.
+// (2) This worker's view of the JS objects (gpuwatch, on unless gpuwatch=0): GPUDevice / GPUBuffer methods are
+// wrapped, so objects created, buffers destroy()ed and objects the JS garbage collector has since collected are
+// counted without trusting the C++ side. A WebGPU object other than a buffer has no destroy(): what it holds on the
+// GPU side is released when the collector finds the JS object, and the collector does not see GPU memory.
+const MIB = 2 ** 20;
+const mb1 = (bytes: number) => Math.round((bytes / MIB) * 10) / 10;
+interface Kind { c: number; f: number } // created, finalized (collected by the JS GC)
+const watch = { on: false, registry: false, kinds: {} as Record<string, Kind>, bufDestroyed: 0, bufLiveBytes: 0, bufCreatedBytes: 0 };
+function installGpuWatch() {
+  const g: any = self;
+  if (watch.on || !g.GPUDevice || !g.GPUBuffer) return;
+  watch.on = true;
+  const FR: any = (g as any).FinalizationRegistry;
+  const reg = typeof FR === "function" ? new FR((kind: string) => { watch.kinds[kind].f++; }) : null;
+  watch.registry = !!reg;
+  const sizes = new WeakMap<object, number>();
+  const wrap = (proto: any, method: string, kind: string, made?: (o: any, args: any[]) => void) => {
+    const orig = proto?.[method];
+    if (typeof orig !== "function") return;
+    const k = (watch.kinds[kind] ??= { c: 0, f: 0 });
+    proto[method] = function (this: any, ...args: any[]) {
+      const o = orig.apply(this, args);
+      if (o && typeof o === "object" && typeof o.then !== "function") { k.c++; reg?.register(o, kind); made?.(o, args); }
+      return o;
+    };
+  };
+  wrap(g.GPUDevice.prototype, "createBuffer", "buffer", (o, a) => { const n = Number(a[0]?.size ?? 0); sizes.set(o, n); watch.bufLiveBytes += n; watch.bufCreatedBytes += n; });
+  wrap(g.GPUDevice.prototype, "createBindGroup", "bindGroup");
+  wrap(g.GPUDevice.prototype, "createBindGroupLayout", "bindGroupLayout");
+  wrap(g.GPUComputePipeline?.prototype, "getBindGroupLayout", "bindGroupLayout");
+  wrap(g.GPUDevice.prototype, "createShaderModule", "shaderModule");
+  wrap(g.GPUDevice.prototype, "createComputePipeline", "pipeline");
+  wrap(g.GPUDevice.prototype, "createCommandEncoder", "commandEncoder");
+  wrap(g.GPUCommandEncoder?.prototype, "finish", "commandBuffer");
+  wrap(g.GPUCommandEncoder?.prototype, "beginComputePass", "computePass");
+  const destroy = g.GPUBuffer.prototype.destroy;
+  g.GPUBuffer.prototype.destroy = function (this: any) {
+    const n = sizes.get(this);
+    if (n !== undefined) { sizes.delete(this); watch.bufDestroyed++; watch.bufLiveBytes -= n; }
+    return destroy.apply(this, arguments as any);
+  };
+}
+/** Compact numbers for a pass line: MiB to one decimal, cumulative counts. null when the backend has no GPU stats. */
+function gpuBrief() {
+  if (!M) return null;
+  let s: any;
+  try { s = JSON.parse(M.UTF8ToString(M.ccall("pk_gpu_stats", "number", [], []))); } catch { return null; }
+  const byType: Record<string, number> = {};
+  for (const [k, v] of Object.entries(s.weights_by_type ?? {})) byType[k] = mb1(v as number);
+  const working = s.compute.bytes + s.compute_idle.bytes + s.staging.bytes + s.params.bytes + s.tensor_other.bytes + s.other.bytes;
+  const out: any = {
+    weightsMb: mb1(s.weights.bytes), workingMb: mb1(working), computeMb: mb1(s.compute.bytes + s.compute_idle.bytes), stagingMb: mb1(s.staging.bytes), liveMb: mb1(s.live_bytes), buffers: s.live_count,
+    byType, created: s.buffers_created, destroyed: s.buffers_destroyed, createdMb: mb1(s.bytes_created), poolHits: s.pool_hits, poolMisses: s.pool_misses,
+    pipelines: s.pipelines, layouts: s.bind_group_layouts, bindGroups: s.bind_groups, encoders: s.command_encoders, submits: s.submits, writes: s.write_buffers, maps: s.maps,
+  };
+  if (watch.on) {
+    const k = (name: string) => watch.kinds[name] ?? { c: 0, f: 0 };
+    let made = 0, collected = 0;
+    for (const v of Object.values(watch.kinds)) made += v.c, collected += v.f;
+    out.js = { registry: watch.registry, objects: made, collected, buffers: k("buffer").c, buffersDestroyed: watch.bufDestroyed, buffersCollected: k("buffer").f, bufferLiveMb: mb1(watch.bufLiveBytes),
+      bindGroups: k("bindGroup").c, bindGroupsCollected: k("bindGroup").f, layouts: k("bindGroupLayout").c, encoders: k("commandEncoder").c, commandBuffers: k("commandBuffer").c, commandBuffersCollected: k("commandBuffer").f,
+      pipelines: k("pipeline").c, shaderModules: k("shaderModule").c };
+  }
+  return out;
+}
+// gc=<MiB>: after each pass that many MiB of ArrayBuffers are allocated and dropped at once. A browser's collector
+// is driven by how much JS memory was allocated; a pass makes about a thousand small WebGPU objects whose JS side is
+// a few bytes each, so without this nothing tells it that they (and what they hold in the GPU process) are garbage.
+// The buffers are never written, so they cost address space, not memory. 0 turns it off.
+let gcMb = 0;
+function gcNudge() {
+  let n = 0;
+  for (let i = 0; i < gcMb; i += 4) n += new ArrayBuffer(4 * MIB).byteLength;
+  return n;
+}
+
 // What the backend needs from WebGPU. It requests no limit above the spec default except the two byte
 // sizes, each at most 1 GiB and never more than the adapter offers; everything works at the defaults,
 // only a tensor larger than maxStorageBufferBindingSize then runs on the CPU (slow, same text).
@@ -93,14 +172,16 @@ function gpuErrors(): string[] {
   } catch { return []; } // the module aborted
 }
 
-async function init(msg: { base: string; variant: string; wantF16: boolean; limits: string }) {
+async function init(msg: { base: string; variant: string; wantF16: boolean; limits: string; gpuwatch?: boolean; gcMb?: number }) {
   variant = msg.variant;
+  gcMb = Math.max(0, Number(msg.gcMb ?? 0) || 0);
+  if (msg.gpuwatch !== false) try { installGpuWatch(); } catch { /* counters only */ }
   const url = new URL(`pk-web${msg.variant === "jspi" ? "" : "-" + msg.variant}.js`, msg.base).href;
   const t0 = performance.now();
   const { default: createPk } = await import(url);
   const lines: string[] = [];
   M = await createPk({ print: (s: string) => { lines.push(s); post({ type: "stdout", line: s }); }, printErr: (s: string) => { lines.push(s); post({ type: "stderr", line: s }); } });
-  return { ms: performance.now() - t0, heapMb: heapMb(), adapter: await adapterInfo(msg.wantF16, msg.limits), jspi: "Suspending" in WebAssembly };
+  return { ms: performance.now() - t0, heapMb: heapMb(), adapter: await adapterInfo(msg.wantF16, msg.limits), jspi: "Suspending" in WebAssembly, gpuwatch: watch.on, finalizationRegistry: watch.registry, gcMb };
 }
 
 interface Got { blob?: Blob; handle?: any; bytes?: Uint8Array; from: string; mb: number; path: string }
@@ -221,7 +302,7 @@ async function load(msg: { id: number; url: string; name: string; store: string;
   const gpuErr = gpuErrors();
   if (st !== 0) throw new Error(`pk_load failed with status ${st}\n${gpuErr.join("\n")}\n${log}`);
   if (got.bytes === undefined && !got.blob && !got.handle) try { FS.unlink(path); } catch { /* keep */ }
-  return { fetchMs, loadMs, from: got.from, storagePath: got.path, mb: got.mb, heapMb: heapMb(), heapUsedMb: usedMb(), backend: M.UTF8ToString(M.ccall("pk_backend", "number", [], [])), log, gpuErrors: gpuErr };
+  return { fetchMs, loadMs, from: got.from, storagePath: got.path, mb: got.mb, heapMb: heapMb(), heapUsedMb: usedMb(), backend: M.UTF8ToString(M.ccall("pk_backend", "number", [], [])), log, gpuErrors: gpuErr, gpu: gpuBrief() };
 }
 
 async function run(msg: { pcm: Float32Array }) {
@@ -240,14 +321,17 @@ async function run(msg: { pcm: Float32Array }) {
     try { const j = JSON.parse(json); delete j.text; brief = JSON.stringify(j); } catch { brief = `(${json.length} bytes of unparsed output)`; }
     throw new Error(`pk_run failed with status ${st}: ${brief}\n${gpuErr.join("\n")}\n${log}`);
   }
-  return { ...JSON.parse(json), gpuErrors: gpuErr, wallMs, heapMb: heapMb(), heapUsedMb: usedMb(), log };
+  if (gcMb > 0) gcNudge();
+  return { ...JSON.parse(json), gpuErrors: gpuErr, wallMs, heapMb: heapMb(), heapUsedMb: usedMb(), log, gpu: gpuBrief() };
 }
 
 self.onmessage = async (e: MessageEvent) => {
   const msg = e.data;
   try {
     const out = msg.type === "init" ? await init(msg) : msg.type === "load" ? await load(msg) : msg.type === "run" ? await run(msg)
-      : msg.type === "trim" ? M.ccall("pk_trim", null, [], [])
+      : msg.type === "trim" ? (M.ccall("pk_trim", null, [], []), gpuBrief())
+      : msg.type === "gpu" ? gpuBrief()
+      : msg.type === "set" ? ((gcMb = Math.max(0, Number(msg.gcMb ?? gcMb) || 0)), { gcMb })
       : msg.type === "free" ? await M.ccall("pk_free", null, [], [], { async: true }) : null;
     post({ type: "result", id: msg.id, out });
   } catch (err: any) {

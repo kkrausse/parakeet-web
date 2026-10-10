@@ -1,7 +1,7 @@
 // Parakeet (TDT 0.6b v2 and tdt_ctc-110m) in the browser on transcribe.cpp + ggml's WebGPU backend (WASM). One page,
 // no framework. Everything heavy happens in src/worker.ts; this file is configuration, the step
 // trail (screen + localStorage, so a killed tab leaves one) and the benchmark loop.
-import { adapterSteps, backendEnv, createRpc, esc, fmtMs, historyStore, r1, stepLine, wordDiff, type Rpc, type RunLog as RunLogOf, type Step } from "./common";
+import { adapterSteps, backendEnv, createRpc, esc, fmtMs, gpuDiag, gpuLine, historyStore, r1, stepLine, wordDiff, type Rpc, type RunLog as RunLogOf, type Step } from "./common";
 import { createDiag, detectDevice, lifeStore, sendEnvironment, watchErrors } from "./diag";
 // Reference text per model family: 0.6b = native transcribe.cpp F16; 110m = onnx-asr / ONNX Runtime fp32
 // (../parakeet-webgpu-bench/results/110m/reference-ort-cpu-fp32.jsonl).
@@ -111,7 +111,9 @@ async function run() {
 
   w.__pkb.phase = "init";
   startWorker();
-  const init = await call("init", { base: location.href, variant: cfg.variant, wantF16: cfg.f16, limits: cfg.limits });
+  // gpuwatch=0: no JS-side counting of WebGPU objects; gc=<MiB>: nudge the JS collector after each pass (src/worker.ts)
+  const init = await call("init", { base: location.href, variant: cfg.variant, wantF16: cfg.f16, limits: cfg.limits, gpuwatch: params.get("gpuwatch") !== "0", gcMb: Number(params.get("gc") ?? 0) || 0 });
+  let gpuNow: any = null, gpuPrev: any = null;
   result.adapter = init.adapter; result.jspi = init.jspi;
   const a = init.adapter;
   diag.send("adapter", { adapter: a, jspi: init.jspi, heapMb: init.heapMb });
@@ -134,6 +136,7 @@ async function run() {
   diag.send("chosen", { model: cfg.model, file: model.file, build: cfg.variant, backend: ld.backend, webgpu: /webgpu/i.test(ld.backend), shaderPath: useF16 ? "f16" : "f32-only", limits: a.plan?.limits ?? null,
     storagePath: ld.storagePath, from: ld.from, fileBytes: Math.round(ld.mb * 2 ** 20), fetchMs: Math.round(ld.fetchMs), loadMs: Math.round(ld.loadMs), heapMb: ld.heapMb, heapUsedMb: ld.heapUsedMb, phone: device.phone, ios: device.ios });
   step(`model loaded on ${ld.backend}`, ld.loadMs, `WASM heap ${ld.heapMb} MB, ${ld.heapUsedMb} MB in use`);
+  if (ld.gpu) { step(`after load: ${gpuLine(ld.gpu)}`); result.gpuAtLoad = ld.gpu; }
   if (!/webgpu/i.test(ld.backend)) step(`WARNING: not on WebGPU (backend "${ld.backend}"). Everything runs on one WASM thread and the weights sit in the WASM heap.`);
   if (ld.log) step(`library log: ${ld.log.trim().slice(0, 600)}`);
   const gpuFail = (where: string, errs: string[] | undefined) => {
@@ -155,7 +158,8 @@ async function run() {
     let nRun = 0;
     const once = async () => {
       const r = await call("run", { pcm: audio });
-      diag.send("pass", { clip, n: ++nRun, ms: r1(r.wallMs), audioS: r1(seconds), melMs: r1(r.mel_ms), decodeMs: r1(r.decode_ms), heapMb: r.heapMb, heapUsedMb: r.heapUsedMb }, false);
+      diag.send("pass", { clip, n: ++nRun, ms: r1(r.wallMs), audioS: r1(seconds), melMs: r1(r.mel_ms), decodeMs: r1(r.decode_ms), heapMb: r.heapMb, heapUsedMb: r.heapUsedMb, gpu: gpuDiag(r.gpu) }, false);
+      gpuPrev = gpuNow; gpuNow = r.gpu ?? null;
       gpuFail(clip, r.gpuErrors);
       if (cfg.verbose && r.log) for (const l of String(r.log).split("\n")) if (/decoder:|mel:/.test(l)) step(`library: ${l.trim().slice(0, 300)}`);
       // encoder = until its output is on the CPU: with lazy synchronize the library's own encode_ms stops at submit
@@ -190,9 +194,10 @@ async function run() {
       rec.wasmHeapMb = all.at(-1)!.heapMb; rec.wasmHeapUsedMb = all.at(-1)!.heapUsedMb;
       step(`${clip} warm x${all.length}`, rec.totalMs.median, `total median/worst ${rec.totalMs.median} / ${rec.totalMs.worst} ms; encoder ${rec.encMs.median} / ${rec.encMs.worst} ms; mel ${rec.preMs.median} ms; decode ${rec.decMs.median} ms; ${rec.xRealTime}x real time; text stable=${rec.textStable}`);
     }
+    if (gpuNow) { rec.gpu = gpuNow; step(`${clip}: ${gpuLine(gpuNow, gpuPrev)}`); }
     render(result);
   }
-  if (params.get("trim") === "1") { await call("trim"); step("released the GPU compute buffer kept between runs (trim=1)"); await new Promise((r) => setTimeout(r, 1500)); w.__pkb.phase = "trimmed"; await new Promise((r) => setTimeout(r, 600)); }
+  if (params.get("trim") === "1") { const t = await call("trim"); step("released the GPU compute buffers kept between runs (trim=1)", undefined, t ? gpuLine(t) : undefined); result.gpuAfterTrim = t; await new Promise((r) => setTimeout(r, 1500)); w.__pkb.phase = "trimmed"; await new Promise((r) => setTimeout(r, 600)); }
   if (cfg.verbose) await call("free"); // a profiling build prints its summary when the backend is freed
   if (result.gpuErrors?.length) throw new Error(`the GPU device reported ${result.gpuErrors.length} error line(s) (see the GPU ERROR steps); results above are not trustworthy`);
   step("done", performance.now() - runStart);

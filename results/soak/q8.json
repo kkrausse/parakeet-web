@@ -1,0 +1,901 @@
+{
+ "name": "q8",
+ "passes": 30,
+ "chromeArgs": [],
+ "loadavgStart": "5.53 6.52 6.49 16/2106 3060492",
+ "chrome": "154.0.8037.97",
+ "url": "http://127.0.0.1:8791/live.html?soak=30&model=q8&phone=1",
+ "soak": {
+  "n": 30,
+  "done": 30,
+  "running": false,
+  "from": "audio/a56.f32",
+  "gapMs": 0,
+  "gcMb": 32,
+  "start": {
+   "w": 695.7,
+   "work": 58,
+   "n": 12,
+   "made": 14,
+   "gone": 2,
+   "miss": 1,
+   "bg": 2590,
+   "enc": 153,
+   "wr": 839,
+   "lay": 20,
+   "pipe": 20,
+   "jsObj": 3012,
+   "jsGone": 2423,
+   "jsBuf": 12,
+   "jsBufMb": 753.7,
+   "jsBg": 2590,
+   "jsBgGone": 2085
+  },
+  "series": [
+   [
+    1,
+    7,
+    126.3,
+    58,
+    12,
+    0,
+    1295,
+    582,
+    12
+   ],
+   [
+    2,
+    0.5,
+    55.4,
+    58,
+    12,
+    0,
+    1295,
+    588,
+    12
+   ],
+   [
+    3,
+    6.7,
+    94.4,
+    58,
+    12,
+    0,
+    1295,
+    587,
+    12
+   ],
+   [
+    4,
+    10.9,
+    137.9,
+    58,
+    12,
+    0,
+    1295,
+    584,
+    12
+   ],
+   [
+    5,
+    6.1,
+    83.2,
+    58,
+    12,
+    0,
+    1295,
+    58,
+    12
+   ],
+   [
+    6,
+    7.3,
+    92,
+    58,
+    12,
+    0,
+    1295,
+    1414,
+    12
+   ],
+   [
+    7,
+    0.8,
+    48.8,
+    58,
+    12,
+    0,
+    1295,
+    1418,
+    12
+   ],
+   [
+    8,
+    11.6,
+    128.2,
+    58,
+    12,
+    0,
+    1295,
+    156,
+    12
+   ],
+   [
+    9,
+    8.5,
+    93.8,
+    58,
+    12,
+    0,
+    1295,
+    1516,
+    12
+   ],
+   [
+    10,
+    4.9,
+    73.4,
+    58,
+    12,
+    0,
+    1295,
+    1414,
+    12
+   ],
+   [
+    11,
+    5.1,
+    73.5,
+    58,
+    12,
+    0,
+    1295,
+    597,
+    12
+   ],
+   [
+    12,
+    11.9,
+    130.6,
+    58,
+    12,
+    0,
+    1295,
+    1414,
+    12
+   ],
+   [
+    13,
+    5.2,
+    77.8,
+    58,
+    12,
+    0,
+    1295,
+    56,
+    12
+   ],
+   [
+    14,
+    3.7,
+    60.9,
+    58,
+    12,
+    0,
+    1295,
+    1414,
+    12
+   ],
+   [
+    15,
+    8.2,
+    94.6,
+    58,
+    12,
+    0,
+    1295,
+    1414,
+    12
+   ],
+   [
+    16,
+    1.3,
+    52.2,
+    58,
+    12,
+    0,
+    1295,
+    56,
+    12
+   ],
+   [
+    17,
+    3.9,
+    68.9,
+    58,
+    12,
+    0,
+    1295,
+    1414,
+    12
+   ],
+   [
+    18,
+    5.7,
+    72.6,
+    58,
+    12,
+    0,
+    1295,
+    1414,
+    12
+   ],
+   [
+    19,
+    7,
+    91.2,
+    58,
+    12,
+    0,
+    1295,
+    340,
+    12
+   ],
+   [
+    20,
+    0.5,
+    49.1,
+    58,
+    12,
+    0,
+    1295,
+    56,
+    12
+   ],
+   [
+    21,
+    3.8,
+    70.9,
+    58,
+    12,
+    0,
+    1295,
+    1416,
+    12
+   ],
+   [
+    22,
+    11.5,
+    128.3,
+    58,
+    12,
+    0,
+    1295,
+    1414,
+    12
+   ],
+   [
+    23,
+    8.1,
+    100.5,
+    58,
+    12,
+    0,
+    1295,
+    56,
+    12
+   ],
+   [
+    24,
+    7.6,
+    93.8,
+    58,
+    12,
+    0,
+    1295,
+    1414,
+    12
+   ],
+   [
+    25,
+    11.2,
+    128,
+    58,
+    12,
+    0,
+    1295,
+    56,
+    12
+   ],
+   [
+    26,
+    5.6,
+    81.1,
+    58,
+    12,
+    0,
+    1295,
+    1414,
+    12
+   ],
+   [
+    27,
+    4.2,
+    67.9,
+    58,
+    12,
+    0,
+    1295,
+    1414,
+    12
+   ],
+   [
+    28,
+    7,
+    88.2,
+    58,
+    12,
+    0,
+    1295,
+    2774,
+    12
+   ],
+   [
+    29,
+    5.5,
+    75,
+    58,
+    12,
+    0,
+    1295,
+    1414,
+    12
+   ],
+   [
+    30,
+    5.6,
+    79.8,
+    58,
+    12,
+    0,
+    1295,
+    2774,
+    12
+   ]
+  ],
+  "madeAfterWarm": 0,
+  "missesAfterWarm": 0,
+  "workMin": 58,
+  "workMax": 58,
+  "sameText": null,
+  "error": null,
+  "ms": [
+   126.3,
+   55.4,
+   94.4,
+   137.9,
+   83.2,
+   92,
+   48.8,
+   128.2,
+   93.8,
+   73.4,
+   73.5,
+   130.6,
+   77.8,
+   60.9,
+   94.6,
+   52.2,
+   68.9,
+   72.6,
+   91.2,
+   49.1,
+   70.9,
+   128.3,
+   100.5,
+   93.8,
+   128,
+   81.1,
+   67.9,
+   88.2,
+   75,
+   79.8
+  ],
+  "flat": true,
+  "end": {
+   "w": 695.7,
+   "work": 58,
+   "n": 12,
+   "made": 14,
+   "gone": 2,
+   "miss": 1,
+   "bg": 41440,
+   "enc": 813,
+   "wr": 2969,
+   "lay": 21,
+   "pipe": 21,
+   "jsObj": 43815,
+   "jsGone": 41041,
+   "jsBuf": 12,
+   "jsBufMb": 753.7,
+   "jsBg": 41440,
+   "jsBgGone": 38850
+  },
+  "medianMs": 83.2,
+  "seconds": 2.7
+ },
+ "gpu": {
+  "weightsMb": 695.7,
+  "workingMb": 58,
+  "computeMb": 56,
+  "stagingMb": 2,
+  "liveMb": 753.7,
+  "buffers": 12,
+  "byType": {
+   "q8_0": 548.8,
+   "f32": 2.9,
+   "f16": 144
+  },
+  "created": 14,
+  "destroyed": 2,
+  "createdMb": 761.1,
+  "poolHits": 30,
+  "poolMisses": 1,
+  "pipelines": 21,
+  "layouts": 21,
+  "bindGroups": 41440,
+  "encoders": 813,
+  "submits": 813,
+  "writes": 2969,
+  "maps": 141,
+  "js": {
+   "registry": true,
+   "objects": 43815,
+   "collected": 41041,
+   "buffers": 14,
+   "buffersDestroyed": 2,
+   "buffersCollected": 2,
+   "bufferLiveMb": 753.7,
+   "bindGroups": 41440,
+   "bindGroupsCollected": 38850,
+   "layouts": 21,
+   "encoders": 813,
+   "commandBuffers": 813,
+   "commandBuffersCollected": 769,
+   "pipelines": 21,
+   "shaderModules": 21
+  }
+ },
+ "gpuAtLoad": {
+  "weightsMb": 695.7,
+  "workingMb": 2,
+  "computeMb": 0,
+  "stagingMb": 2,
+  "liveMb": 697.7,
+  "buffers": 11,
+  "byType": {
+   "q8_0": 548.8,
+   "f32": 2.9,
+   "f16": 144
+  },
+  "created": 12,
+  "destroyed": 1,
+  "createdMb": 698.7,
+  "poolHits": 0,
+  "poolMisses": 0,
+  "pipelines": 1,
+  "layouts": 1,
+  "bindGroups": 0,
+  "encoders": 109,
+  "submits": 109,
+  "writes": 697,
+  "maps": 109,
+  "js": {
+   "registry": true,
+   "objects": 233,
+   "collected": 183,
+   "buffers": 12,
+   "buffersDestroyed": 1,
+   "buffersCollected": 0,
+   "bufferLiveMb": 697.7,
+   "bindGroups": 0,
+   "bindGroupsCollected": 0,
+   "layouts": 1,
+   "encoders": 109,
+   "commandBuffers": 109,
+   "commandBuffersCollected": 91,
+   "pipelines": 1,
+   "shaderModules": 1
+  }
+ },
+ "gpuAfterWarmup": {
+  "weightsMb": 695.7,
+  "workingMb": 58,
+  "computeMb": 56,
+  "stagingMb": 2,
+  "liveMb": 753.7,
+  "buffers": 12,
+  "byType": {
+   "q8_0": 548.8,
+   "f32": 2.9,
+   "f16": 144
+  },
+  "created": 14,
+  "destroyed": 2,
+  "createdMb": 761.1,
+  "poolHits": 0,
+  "poolMisses": 1,
+  "pipelines": 20,
+  "layouts": 20,
+  "bindGroups": 2590,
+  "encoders": 153,
+  "submits": 153,
+  "writes": 839,
+  "maps": 111,
+  "js": {
+   "registry": true,
+   "objects": 3012,
+   "collected": 2423,
+   "buffers": 14,
+   "buffersDestroyed": 2,
+   "buffersCollected": 1,
+   "bufferLiveMb": 753.7,
+   "bindGroups": 2590,
+   "bindGroupsCollected": 2085,
+   "layouts": 20,
+   "encoders": 153,
+   "commandBuffers": 153,
+   "commandBuffersCollected": 143,
+   "pipelines": 20,
+   "shaderModules": 20
+  }
+ },
+ "backend": "WebGPU: WebGPU",
+ "variant": "jspi",
+ "steps": [
+  {
+   "t": 1,
+   "name": "start: 0.6b v2, Q8_0 (8-bit weights), jspi",
+   "detail": "session h9s976; phone=1; cap 12 s; limits default; store opfs"
+  },
+  {
+   "t": 583,
+   "name": "WASM module ready",
+   "ms": 44.9,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 583,
+   "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 ABSENT; fallback=false"
+  },
+  {
+   "t": 583,
+   "name": "adapter limits: binding 2048 MiB, buffer 4096 MiB, 1024 invocations/workgroup, workgroup storage 49152 B, 16 storage buffers/stage",
+   "detail": "all at or above the WebGPU spec defaults, which is all this page needs"
+  },
+  {
+   "t": 584,
+   "name": "device probe ok: binding 128 MiB, buffer 256 MiB, 256 invocations",
+   "detail": "spec-default limits"
+  },
+  {
+   "t": 584,
+   "name": "shader path: f32 only (adapter has no shader-f16)"
+  },
+  {
+   "t": 584,
+   "name": "WebGPU limits: spec defaults, nothing raised (the default on iOS; limits=raised changes it)"
+  },
+  {
+   "t": 613,
+   "name": "model file: 729574912 bytes on the server, 0 bytes stored in this browser (OPFS)"
+  },
+  {
+   "t": 692,
+   "name": "download: 16777216 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 766,
+   "name": "download: 33554432 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 840,
+   "name": "download: 50331648 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 912,
+   "name": "download: 67108864 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 966,
+   "name": "download: 83886080 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1025,
+   "name": "download: 100663296 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1111,
+   "name": "download: 117440512 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1173,
+   "name": "download: 134217728 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1256,
+   "name": "download: 150994944 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1343,
+   "name": "download: 167772160 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1427,
+   "name": "download: 184549376 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1524,
+   "name": "download: 201326592 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1608,
+   "name": "download: 218103808 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1697,
+   "name": "download: 234881024 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1765,
+   "name": "download: 251658240 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1848,
+   "name": "download: 268435456 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1946,
+   "name": "download: 285212672 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 2036,
+   "name": "download: 301989888 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 2118,
+   "name": "download: 318767104 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 2195,
+   "name": "download: 335544320 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 2286,
+   "name": "download: 352321536 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 2374,
+   "name": "download: 369098752 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 2434,
+   "name": "download: 385875968 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 2510,
+   "name": "download: 402653184 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 2570,
+   "name": "download: 419430400 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 2647,
+   "name": "download: 436207616 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 2716,
+   "name": "download: 452984832 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 2782,
+   "name": "download: 469762048 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 2861,
+   "name": "download: 486539264 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 2939,
+   "name": "download: 503316480 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 3020,
+   "name": "download: 520093696 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 3097,
+   "name": "download: 536870912 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 3175,
+   "name": "download: 553648128 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 3260,
+   "name": "download: 570425344 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 3356,
+   "name": "download: 587202560 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 3446,
+   "name": "download: 603979776 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 3525,
+   "name": "download: 620756992 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 3613,
+   "name": "download: 637534208 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 3698,
+   "name": "download: 654311424 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 3779,
+   "name": "download: 671088640 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 3857,
+   "name": "download: 687865856 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 3929,
+   "name": "download: 704643072 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 4011,
+   "name": "download: 721420288 of 729574912 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 6484,
+   "name": "download complete: 729574912 bytes in OPFS (sync access handle)"
+  },
+  {
+   "t": 6489,
+   "name": "storage path: OPFS sync access handle (the file stays on disk; tensors are read one at a time)"
+  },
+  {
+   "t": 6490,
+   "name": "loading the model into the backend: WASM heap 32 MB before"
+  },
+  {
+   "t": 7561,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 5889.1,
+   "detail": "696 MB from models/; storage path opfs-sync"
+  },
+  {
+   "t": 7561,
+   "name": "model loaded on WebGPU: WebGPU",
+   "ms": 1069,
+   "detail": "WASM heap 32 MB, 14.6 MB in use"
+  },
+  {
+   "t": 7562,
+   "name": "after load: GPU: weights 695.7 MiB (q8_0 548.8, f16 144, f32 2.9), working 2 MiB, 11 buffers · since load 12 buffers made, 1 destroyed · JS objects 233 made, 183 collected; JS buffers 11 live (697.7 MiB)",
+   "detail": "JS object counting on; collector nudge 32 MiB per pass (gc=0 turns it off)"
+  },
+  {
+   "t": 7563,
+   "name": "warm-up pass starting (1.5 s of noise: shaders compile here)"
+  },
+  {
+   "t": 7839,
+   "name": "warm-up pass (1.5 s of noise)",
+   "ms": 269.6,
+   "detail": "WASM heap 46 MB, 25 MB in use"
+  },
+  {
+   "t": 7839,
+   "name": "sizing pass starting (13 s of noise: the working buffer is made for the longest utterance)"
+  },
+  {
+   "t": 7988,
+   "name": "sizing pass (13 s of noise)",
+   "ms": 139.5,
+   "detail": "GPU: weights 695.7 MiB (q8_0 548.8, f16 144, f32 2.9), working 58 MiB, 12 buffers · since load 14 buffers made, 2 destroyed · JS objects 3012 made, 2423 collected; JS buffers 12 live (753.7 MiB)"
+  },
+  {
+   "t": 8012,
+   "name": "soak starting: 30 passes, lengths 0.3-12 s",
+   "detail": "audio/a56.f32; gap 0 ms; collector nudge 32 MiB; GPU: weights 695.7 MiB (q8_0 548.8, f16 144, f32 2.9), working 58 MiB, 12 buffers · since load 14 buffers made, 2 destroyed · JS objects 3012 made, 2423 collected; JS buffers 12 live (753.7 MiB)"
+  },
+  {
+   "t": 8140,
+   "name": "soak pass 1 of 30",
+   "ms": 126.3,
+   "detail": "7.0 s; heap 55 MB; GPU: weights 695.7 MiB (q8_0 548.8, f16 144, f32 2.9), working 58 MiB, 12 buffers, last pass +0 buffers +1295 bind groups +22 encoders +71 writes · since load 14 buffers made, 2 destroyed · JS objects 4375 made, 3793 collected; JS buffers 12 live (753.7 MiB)"
+  },
+  {
+   "t": 8965,
+   "name": "soak pass 10 of 30",
+   "ms": 73.4,
+   "detail": "4.9 s; heap 55 MB; GPU: weights 695.7 MiB (q8_0 548.8, f16 144, f32 2.9), working 58 MiB, 12 buffers, last pass +0 buffers +1295 bind groups +22 encoders +71 writes · since load 14 buffers made, 2 destroyed · JS objects 16615 made, 15201 collected; JS buffers 12 live (753.7 MiB)"
+  },
+  {
+   "t": 10284,
+   "name": "soak pass 25 of 30",
+   "ms": 128,
+   "detail": "11.2 s; heap 55 MB; GPU: weights 695.7 MiB (q8_0 548.8, f16 144, f32 2.9), working 58 MiB, 12 buffers, last pass +0 buffers +1295 bind groups +22 encoders +71 writes · since load 14 buffers made, 2 destroyed · JS objects 37015 made, 36959 collected; JS buffers 12 live (753.7 MiB)"
+  },
+  {
+   "t": 10684,
+   "name": "soak done: 30 of 30 passes in 2.7 s, median 83.2 ms · FLAT after pass 10: no buffer made, working memory 58 MiB throughout",
+   "detail": "GPU: weights 695.7 MiB (q8_0 548.8, f16 144, f32 2.9), working 58 MiB, 12 buffers · since load 14 buffers made, 2 destroyed · JS objects 43815 made, 41041 collected; JS buffers 12 live (753.7 MiB)"
+  }
+ ],
+ "errors": [],
+ "text": "soak: 30 passes over audio/a56.f32, lengths 0.3-12 s, 0 ms between passes, collector nudge 32 MiB/pass\nstart: GPU: weights 695.7 MiB (q8_0 548.8, f16 144, f32 2.9), working 58 MiB, 12 buffers · since load 14 buffers made, 2 destroyed · JS objects 3012 made, 2423 collected; JS buffers 12 live (753.7 MiB)\nsoak done: 30 of 30 passes in 2.7 s, median 83.2 ms · FLAT after pass 10: no buffer made, working memory 58 MiB throughout\nend: GPU: weights 695.7 MiB (q8_0 548.8, f16 144, f32 2.9), working 58 MiB, 12 buffers · since load 14 buffers made, 2 destroyed · JS objects 43815 made, 41041 collected; JS buffers 12 live (753.7 MiB)",
+ "series": [
+  {
+   "t": 8122,
+   "pass": 0,
+   "gpuMib": 831,
+   "rendererRssMib": 384,
+   "gpuProcRssMib": 388,
+   "wasmHeapMb": 0,
+   "working": 58,
+   "buffers": 12,
+   "made": 14,
+   "jsObjects": 3012,
+   "jsCollected": 2423
+  },
+  {
+   "t": 9156,
+   "pass": 11,
+   "gpuMib": 831,
+   "rendererRssMib": 342,
+   "gpuProcRssMib": 392,
+   "wasmHeapMb": 55,
+   "working": 58,
+   "buffers": 12,
+   "made": 14,
+   "jsObjects": 17975,
+   "jsCollected": 17378
+  },
+  {
+   "t": 10188,
+   "pass": 23,
+   "gpuMib": 831,
+   "rendererRssMib": 349,
+   "gpuProcRssMib": 393,
+   "wasmHeapMb": 55,
+   "working": 58,
+   "buffers": 12,
+   "made": 14,
+   "jsObjects": 34295,
+   "jsCollected": 34239
+  },
+  {
+   "t": 11225,
+   "pass": 30,
+   "gpuMib": 831,
+   "rendererRssMib": 350,
+   "gpuProcRssMib": 393,
+   "wasmHeapMb": 55,
+   "working": 58,
+   "buffers": 12,
+   "made": 14,
+   "jsObjects": 43815,
+   "jsCollected": 41041
+  }
+ ],
+ "console": [],
+ "loadavgEnd": "6.16 6.61 6.52 3/2174 3071498"
+}

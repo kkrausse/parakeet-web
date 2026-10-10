@@ -4,7 +4,8 @@
 //            collector); an error and a rejection thrown from live.js itself must still be shown; a pass still runs.
 //   kill:    the renderer is killed (SIGKILL) at the first step matching --at while the model loads; the reload
 //            must show the "not closed normally" line and the guard instead of loading again; "Try again" loads.
-// usage: bun drive-diag.ts foreign|kill [--url http://127.0.0.1:8791/live.html] [--query "phone=1"] [--at "download:"]
+// usage: bun drive-diag.ts foreign|kill [--url http://127.0.0.1:8791/live.html] [--query "phone=1"] [--at "download:"] [--any-phase]
+//        kill inside a soak test: --query "soak=2000" --at "soak pass 25" --any-phase
 import { chromium } from "playwright-core";
 import { rmSync } from "node:fs";
 import { join } from "node:path";
@@ -12,6 +13,7 @@ import { join } from "node:path";
 const args = Bun.argv.slice(2);
 const flag = (k: string) => { const i = args.indexOf(k); return i < 0 ? undefined : args.splice(i, 2)[1]; };
 const url0 = flag("--url") ?? "http://127.0.0.1:8791/live.html", query = flag("--query") ?? "", at = flag("--at") ?? "download:";
+const anyPhase = (() => { const i = args.indexOf("--any-phase"); if (i < 0) return false; args.splice(i, 1); return true; })(); // kill: wait for the --at step even after the model is ready (e.g. inside a soak)
 const mode = args[0];
 const url = `${url0}${query ? (url0.includes("?") ? "&" : "?") + query : ""}`;
 const profile = join(import.meta.dir, "..", "cache", "chrome-profiles", `diag-${mode}`);
@@ -52,7 +54,7 @@ try {
   } else if (mode === "kill") {
     const cdp = await ctx.browser()!.newBrowserCDPSession();
     await page.goto(url);
-    const before = await until(page, (s) => s.steps.some((n: string) => n.includes(at)) || s.phase !== "loading", `a step matching "${at}"`);
+    const before = await until(page, (s) => s.steps.some((n: string) => n.includes(at)) || (!anyPhase && s.phase !== "loading"), `a step matching "${at}"`);
     out.killedAt = before.steps.at(-1); out.killedSid = before.sid; out.phaseAtKill = before.phase;
     const { processInfo } = await cdp.send("SystemInfo.getProcessInfo");
     const crashed = new Promise((r) => page.once("crash", r));

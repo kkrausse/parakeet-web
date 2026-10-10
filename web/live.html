@@ -75,6 +75,7 @@
     <div>x real time<b id="s-rtf">-</b></div>
     <div id="lagcell">lag<b id="s-lag">-</b></div>
     <div class="wide"><b id="s-backend">backend: not loaded yet</b></div>
+    <div class="wide"><b id="s-gpu">GPU: -</b></div>
     <div class="wide" id="diagshort"></div>
   </div>
 </div>
@@ -84,6 +85,10 @@
   <p id="env"></p>
   <p>Offline model, re-run on the current utterance several times a second (grey text); an utterance is committed on a pause or when it reaches the length cap, and its audio is dropped. The model file is fetched once and kept in this browser.</p>
   <p id="diagnote"></p>
+  <h2>Soak test</h2>
+  <p>Runs the model back to back over a test clip cut to a different length each time (0.3 s up to the utterance cap), without the microphone, and shows what the GPU backend holds after every pass. Buffers made and working memory should stop changing after the first few passes.</p>
+  <p><input id="soakn" type="number" min="1" max="100000" value="300" style="width:6em;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card)"> passes <button id="soakgo">Run soak test</button> <button id="soakstop" hidden>Stop</button></p>
+  <pre id="soak" hidden></pre>
   <h2>This session</h2>
   <pre id="steps"></pre>
   <h2>Earlier sessions in this browser</h2>
