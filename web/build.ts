@@ -10,10 +10,10 @@ const cache = process.env.PK_CACHE ?? join(process.env.HOME!, "devfs/cache/parak
 const f16 = join(process.env.HOME!, "devfs/repos/kkrausse/random/.claude/worktrees/parakeet-webgpu-bench/parakeet-webgpu-bench/cache/gguf/parakeet-tdt-0.6b-v2-F16.gguf");
 const candidates: [string, string, string][] = [
   ["q4", "Q4_0 (4-bit weights)", join(cache, "gguf/parakeet-tdt-0.6b-v2-Q4_0.gguf")],
-  ["q4km", "Q4_K_M", join(cache, "gguf/parakeet-tdt-0.6b-v2-Q4_K_M.gguf")],
   ["q8", "Q8_0 (8-bit weights)", join(cache, "gguf/parakeet-tdt-0.6b-v2-Q8_0.gguf")],
   ["f16", "F16", existsSync(join(cache, "gguf/parakeet-tdt-0.6b-v2-F16.gguf")) ? join(cache, "gguf/parakeet-tdt-0.6b-v2-F16.gguf") : f16],
 ];
+// Q4_K_M is left out: Q4_K blocks have no direct mul_mat kernel yet (2x slower encoder). PK_EXTRA_MODELS adds it back.
 for (const extra of (process.env.PK_EXTRA_MODELS ?? "").split(",").filter(Boolean)) { // key=label=path
   const [k, l, p] = extra.split("=");
   candidates.push([k, l, p]);
@@ -36,10 +36,10 @@ const place = (from: string, to: string, link = false) => {
   copyFileSync(from, dest);
 };
 place(join(here, "index.html"), "index.html");
-for (const [dir, suffix] of [["build-web", ""], ["build-web-asyncify", "-asyncify"]]) {
+for (const [dir, suffix] of [["build-web", ""], ["build-web-asyncify", "-asyncify"], ["build-web-prof", "-prof"]]) {
   // the asyncify build is linked as pk-web too; it is renamed here, and so is the .wasm it asks for
   const js = join(cache, dir, "bin/pk-web.js");
-  if (!existsSync(js)) { console.warn(`no ${dir} build`); continue; }
+  if (!existsSync(js)) continue;
   await Bun.write(join(dist, `pk-web${suffix}.js`), (await Bun.file(js).text()).replaceAll("pk-web.wasm", `pk-web${suffix}.wasm`));
   place(join(cache, dir, "bin/pk-web.wasm"), `pk-web${suffix}.wasm`);
 }

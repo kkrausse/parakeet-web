@@ -1,7 +1,7 @@
 From 63046ca3fb71c876e94f9bab337cf25e8785edbb Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 02:06:21 -0700
-Subject: [PATCH 2/3] web: pk-web browser module; 1 MiB stream buffer in the
+Subject: [PATCH 2/5] web: pk-web browser module; 1 MiB stream buffer in the
  tensor loader
 
 examples/web builds an ES6 Emscripten module (JSPI or ASYNCIFY per

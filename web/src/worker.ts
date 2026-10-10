@@ -9,6 +9,7 @@ let M: any = null;
 let variant = "";
 const post = (m: any, transfer: Transferable[] = []) => self.postMessage(m, transfer);
 const heapMb = () => (M ? Math.round(M.wasmMemory.buffer.byteLength / 2 ** 20) : 0);
+const usedMb = () => (M ? Math.round((M.ccall("pk_heap_in_use", "number", [], []) / 2 ** 20) * 10) / 10 : 0);
 const takeLog = () => (M ? (M.UTF8ToString(M.ccall("pk_log", "number", [], [])) as string) : "");
 
 async function adapterInfo() {
@@ -30,11 +31,11 @@ async function adapterInfo() {
 
 async function init(msg: { base: string; variant: string }) {
   variant = msg.variant;
-  const url = new URL(`${msg.variant === "asyncify" ? "pk-web-asyncify" : "pk-web"}.js`, msg.base).href;
+  const url = new URL(`pk-web${msg.variant === "jspi" ? "" : "-" + msg.variant}.js`, msg.base).href;
   const t0 = performance.now();
   const { default: createPk } = await import(url);
   const lines: string[] = [];
-  M = await createPk({ print: (s: string) => lines.push(s), printErr: (s: string) => { lines.push(s); post({ type: "stderr", line: s }); } });
+  M = await createPk({ print: (s: string) => { lines.push(s); post({ type: "stdout", line: s }); }, printErr: (s: string) => { lines.push(s); post({ type: "stderr", line: s }); } });
   return { ms: performance.now() - t0, heapMb: heapMb(), adapter: await adapterInfo(), jspi: "Suspending" in WebAssembly };
 }
 
@@ -109,7 +110,7 @@ async function load(msg: { id: number; url: string; name: string; store: string;
   got.handle?.close(); // nothing reads the file after load
   if (st !== 0) throw new Error(`pk_load failed with status ${st}\n${log}`);
   if (got.bytes === undefined && !got.blob && !got.handle) try { FS.unlink(path); } catch { /* keep */ }
-  return { fetchMs, loadMs, from: got.from, mb: got.mb, heapMb: heapMb(), backend: M.UTF8ToString(M.ccall("pk_backend", "number", [], [])), log };
+  return { fetchMs, loadMs, from: got.from, mb: got.mb, heapMb: heapMb(), heapUsedMb: usedMb(), backend: M.UTF8ToString(M.ccall("pk_backend", "number", [], [])), log };
 }
 
 async function run(msg: { pcm: Float32Array }) {
@@ -123,7 +124,7 @@ async function run(msg: { pcm: Float32Array }) {
   const json = M.UTF8ToString(M.ccall("pk_json", "number", [], []));
   const log = takeLog();
   if (st !== 0) throw new Error(`pk_run failed with status ${st}: ${json}\n${log}`);
-  return { ...JSON.parse(json), wallMs, heapMb: heapMb(), log };
+  return { ...JSON.parse(json), wallMs, heapMb: heapMb(), heapUsedMb: usedMb(), log };
 }
 
 self.onmessage = async (e: MessageEvent) => {
@@ -133,6 +134,6 @@ self.onmessage = async (e: MessageEvent) => {
       : msg.type === "free" ? await M.ccall("pk_free", null, [], [], { async: true }) : null;
     post({ type: "result", id: msg.id, out });
   } catch (err: any) {
-    post({ type: "result", id: msg.id, error: `${err?.message ?? err}${M ? "\n" + takeLog() : ""}`.trim() });
+    post({ type: "result", id: msg.id, error: `${err?.message ?? err}${M ? "\n" + takeLog() : ""}`.trim(), stack: String(err?.stack ?? "") });
   }
 };

@@ -1,0 +1,158 @@
+From c5a43d4f8e8d368c6f34625230ab49e7e6079a6d Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 02:42:20 -0700
+Subject: [PATCH 4/5] webgpu: lazy synchronize in WASM, 4x32 direct workgroup,
+ WASM scheduler split budget, heap probes
+
+- ggml_backend_webgpu_synchronize is a no-op in WASM builds (GGML_WEBGPU_LAZY_SYNC
+  overrides): a read already waits for its staging-buffer map, so the extra
+  OnSubmittedWorkDone wait was one more GPU-process round trip per graph
+  (about 7 ms per transcribe in Chrome).
+- mul_mat_direct workgroup 4 row tiles x 32 column tiles (was 8x8): 10-15% faster
+  on the 2080 Ti; other shapes measured, see the README attempt log.
+- ggml_backend_sched_new reserved graph_size*60 tensor structs for split inputs
+  (165 MB malloc at graph_size 8192). Native never touches it; in WASM it grew the
+  heap from 64 to 182 MB on the first run. Budget 256 splits under __EMSCRIPTEN__.
+- pk-web: pk_heap_in_use(), overridable memory link flags, 32 MB initial heap.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ examples/web/CMakeLists.txt                     |  5 ++++-
+ examples/web/pk_web.cpp                         |  7 +++++++
+ ggml/src/ggml-backend.cpp                       |  8 ++++++++
+ ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp | 15 ++++++++++-----
+ ggml/src/ggml-webgpu/ggml-webgpu.cpp            | 16 ++++++++++++++++
+ 5 files changed, 45 insertions(+), 6 deletions(-)
+
+diff --git a/examples/web/CMakeLists.txt b/examples/web/CMakeLists.txt
+index d436a630..22e76590 100644
+--- a/examples/web/CMakeLists.txt
++++ b/examples/web/CMakeLists.txt
+@@ -4,6 +4,9 @@
+ # repeated here. GGML_WEBGPU_JSPI=ON: JSPI + wasm exceptions; OFF: ASYNCIFY.
+ add_executable(pk-web pk_web.cpp)
+ target_link_libraries(pk-web PRIVATE transcribe)
++# Memory flags are overridable to hunt heap growth (fixed heap + aborting malloc + --profiling-funcs
++# gives a stack trace for the allocation that would have grown it).
++set(PK_WEB_MEMORY_FLAGS "-sALLOW_MEMORY_GROWTH=1;-sINITIAL_MEMORY=64MB;-sMAXIMUM_MEMORY=4GB" CACHE STRING "pk-web memory link flags")
+ set(PK_ASYNC_EXPORTS "pk_load,pk_run,pk_free")
+ if(EMDAWNWEBGPU_DIR)
+     target_link_options(pk-web PRIVATE "--use-port=${EMDAWNWEBGPU_DIR}/emdawnwebgpu.port.py")
+@@ -17,7 +20,7 @@ else()
+ endif()
+ target_link_options(pk-web PRIVATE
+     "-sMODULARIZE=1" "-sEXPORT_ES6=1" "-sEXPORT_NAME=createPk" "-sENVIRONMENT=web,worker"
+-    "-sALLOW_MEMORY_GROWTH=1" "-sINITIAL_MEMORY=64MB" "-sMAXIMUM_MEMORY=4GB" "-sSTACK_SIZE=5MB"
++    "-sSTACK_SIZE=5MB" ${PK_WEB_MEMORY_FLAGS}
+     "-sEXPORTED_RUNTIME_METHODS=FS,WORKERFS,ccall,cwrap,UTF8ToString,stringToNewUTF8,HEAPF32,HEAPU8,wasmMemory"
+     "-sEXPORTED_FUNCTIONS=_main,_malloc,_free"
+     "-lworkerfs.js"
+diff --git a/examples/web/pk_web.cpp b/examples/web/pk_web.cpp
+index 2d06245f..2b804d31 100644
+--- a/examples/web/pk_web.cpp
++++ b/examples/web/pk_web.cpp
+@@ -14,6 +14,8 @@
+ 
+ #include <emscripten/emscripten.h>
+ 
++#include <malloc.h>
++
+ #include <cstdio>
+ #include <cstdlib>
+ #include <string>
+@@ -110,6 +112,11 @@ EMSCRIPTEN_KEEPALIVE int pk_run(const float * pcm, int n_samples) {
+     return 0;
+ }
+ 
++// Bytes malloc currently has in use (the WASM heap itself never shrinks).
++EMSCRIPTEN_KEEPALIVE double pk_heap_in_use(void) {
++    return static_cast<double>(mallinfo().uordblks);
++}
++
+ EMSCRIPTEN_KEEPALIVE const char * pk_json(void) {
+     return g_json.c_str();
+ }
+diff --git a/ggml/src/ggml-backend.cpp b/ggml/src/ggml-backend.cpp
+index 20bf9650..859fe054 100644
+--- a/ggml/src/ggml-backend.cpp
++++ b/ggml/src/ggml-backend.cpp
+@@ -1877,7 +1877,15 @@ ggml_backend_sched_t ggml_backend_sched_new(
+     sched->hv_tensor_backend_ids = (int *) malloc(sched->hash_set.size * sizeof(sched->hv_tensor_backend_ids[0]));
+     sched->hv_tensor_copies      = (ggml_tensor **) malloc(sched->hash_set.size * sched->n_backends * sched->n_copies * sizeof(struct ggml_tensor *));
+ 
++#ifdef __EMSCRIPTEN__
++    // WASM: the heap never shrinks and is a hard budget in a phone tab. One split per
++    // node reserves graph_size * 60 tensor structs for split-input copies (165 MB at
++    // graph_size 8192) that a one- or two-backend graph never touches. Budget 256
++    // splits; exceeding it fails loudly in ggml_new_tensor (context pool exhausted).
++    const size_t ggml_sched_max_splits = graph_size < 256 ? graph_size : 256;
++#else
+     const size_t ggml_sched_max_splits = graph_size; // at most there is one split for each node in the graph
++#endif
+     const size_t nodes_size = graph_size + ggml_sched_max_splits*GGML_SCHED_MAX_SPLIT_INPUTS*2;
+     sched->node_backend_ids = (int *) calloc(nodes_size, sizeof(sched->node_backend_ids[0]));
+     sched->leaf_backend_ids = (int *) calloc(nodes_size, sizeof(sched->leaf_backend_ids[0]));
+diff --git a/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp b/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
+index b2216e18..5a068cf2 100644
+--- a/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
++++ b/ggml/src/ggml-webgpu/ggml-webgpu-shader-lib.hpp
+@@ -2147,18 +2147,23 @@ class ggml_webgpu_shader_lib {
+             const char * tname = ggml_get_type_traits(context.src0->type)->type_name;
+             std::string  upper = tname;
+             std::transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
++            // Workgroup shape: 4 row tiles x 32 column tiles (16 rows x 128 columns of
++            // output per workgroup). Swept on a 2080 Ti with N = 88: 8x8 was 10-15%
++            // slower, 1x64 and 16x4 40-60% slower. GGML_WEBGPU_DIRECT_WGM / _WGN override.
++            static const uint32_t wgm = std::getenv("GGML_WEBGPU_DIRECT_WGM") ? (uint32_t) atoi(std::getenv("GGML_WEBGPU_DIRECT_WGM")) : 4u;
++            static const uint32_t wgn = std::getenv("GGML_WEBGPU_DIRECT_WGN") ? (uint32_t) atoi(std::getenv("GGML_WEBGPU_DIRECT_WGN")) : 32u;
+             std::vector<std::string> ddefs = { "DIRECT_" + upper,
+-                                               "WORKGROUP_SIZE_M=" + std::to_string(WEBGPU_MUL_MAT_WG_SIZE_M) + "u",
+-                                               "WORKGROUP_SIZE_N=" + std::to_string(WEBGPU_MUL_MAT_WG_SIZE_N) + "u" };
++                                               "WORKGROUP_SIZE_M=" + std::to_string(wgm) + "u",
++                                               "WORKGROUP_SIZE_N=" + std::to_string(wgn) + "u" };
+             auto dproc                 = preprocessor.preprocess(wgsl_mul_mat_direct, ddefs);
+             auto ddec                  = std::make_shared<ggml_webgpu_mul_mat_shader_decisions>();
+             ddec->tile_k               = 4;
+             ddec->tile_m               = WEBGPU_MUL_MAT_TILE_M;
+             ddec->tile_n               = WEBGPU_MUL_MAT_TILE_N;
+             ddec->use_subgroup_matrix  = 0;
+-            ddec->wg_size_m            = WEBGPU_MUL_MAT_WG_SIZE_M;
+-            ddec->wg_size_n            = WEBGPU_MUL_MAT_WG_SIZE_N;
+-            ddec->wg_size              = WEBGPU_MUL_MAT_WG_SIZE_M * WEBGPU_MUL_MAT_WG_SIZE_N;
++            ddec->wg_size_m            = wgm;
++            ddec->wg_size_n            = wgn;
++            ddec->wg_size              = wgm * wgn;
+             ddec->mul_mat_wg_size      = WEBGPU_MUL_MAT_WG_SIZE;
+             webgpu_pipeline dpipe      = ggml_webgpu_create_pipeline(device, dproc, std::string("mul_mat_direct_") + tname + "_f32");
+             dpipe.context              = ddec;
+diff --git a/ggml/src/ggml-webgpu/ggml-webgpu.cpp b/ggml/src/ggml-webgpu/ggml-webgpu.cpp
+index 1df5350b..c893c2e0 100644
+--- a/ggml/src/ggml-webgpu/ggml-webgpu.cpp
++++ b/ggml/src/ggml-webgpu/ggml-webgpu.cpp
+@@ -3720,7 +3720,23 @@ static void ggml_backend_webgpu_set_tensor_async(ggml_backend_t backend,
+ 
+ static void ggml_backend_webgpu_synchronize(ggml_backend_t backend) {
+     ggml_backend_webgpu_context * backend_ctx = (ggml_backend_webgpu_context *) backend->context;
++    // Lazy synchronize: everything a caller can observe goes through the queue in
++    // order (get_tensor copies to a staging buffer and waits for its map; set_tensor
++    // is a queued write), so waiting for OnSubmittedWorkDone here only adds one more
++    // round trip to the GPU process -- in a browser that is a JSPI suspend plus an
++    // IPC hop per graph. Default in WASM builds; GGML_WEBGPU_LAZY_SYNC=0/1 overrides.
++#ifdef __EMSCRIPTEN__
++    static const bool lazy_default = true;
++#else
++    static const bool lazy_default = false;
++#endif
++    static const bool lazy = std::getenv("GGML_WEBGPU_LAZY_SYNC") ? std::getenv("GGML_WEBGPU_LAZY_SYNC")[0] != '0' : lazy_default;
++    if (lazy) {
++        return;
++    }
++    WEBGPU_CPU_PROFILE_TOTAL_START(synchronize);
+     ggml_backend_webgpu_wait_queue(backend_ctx->webgpu_ctx->global_ctx);
++    WEBGPU_CPU_PROFILE_TOTAL_END(synchronize, backend_ctx->webgpu_ctx->global_ctx);
+ }
+ 
+ static ggml_backend_i ggml_backend_webgpu_i = {
+-- 
+2.53.0
+

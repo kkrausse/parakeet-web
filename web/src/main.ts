@@ -14,7 +14,7 @@ interface Config {
   model: string; clip: string; runs: number; threads: number;
   store: "opfs" | "opfs-blob" | "blob" | "memfs"; // where the model file lives while it is loaded
   flash: boolean; // ggml FLASH_ATTN_EXT in the encoder (off: plain matmul + softmax attention)
-  variant: "jspi" | "asyncify";
+  variant: "jspi" | "asyncify" | "prof"; // prof: JSPI build with ggml CPU-side profiling (use with verbose=1)
   verbose: boolean; base: string; env: Record<string, string>;
 }
 const params = new URLSearchParams(location.search);
@@ -30,7 +30,7 @@ function readConfig(): Config {
     threads: Math.max(1, Number(params.get("threads") ?? 1) | 0),
     store: pick("store", ["opfs", "opfs-blob", "blob", "memfs"], "opfs"),
     flash: params.get("flash") === "1",
-    variant: pick("variant", ["jspi", "asyncify"], "Suspending" in WebAssembly ? "jspi" : "asyncify"),
+    variant: pick("variant", ["jspi", "asyncify", "prof"], "Suspending" in WebAssembly ? "jspi" : "asyncify"),
     verbose: params.get("verbose") === "1",
     base: params.get("base") ?? "models/",
     env,
@@ -78,10 +78,12 @@ function startWorker() {
   worker.onmessage = (e) => {
     const m = e.data;
     if (m.type === "progress") return status(`downloading model: ${Math.round(m.got / 2 ** 20)} / ${Math.round(m.total / 2 ** 20)} MB`);
+    if (m.type === "stdout") { if (cfg.verbose) step(`wasm: ${String(m.line).slice(0, 400)}`); return; }
     if (m.type === "stderr") { if (cfg.verbose || /error|abort|fail/i.test(m.line)) step(`wasm: ${String(m.line).slice(0, 400)}`); return; }
     const p = pending.get(m.id);
     if (!p) return;
     pending.delete(m.id);
+    if (m.error && cfg.verbose && m.stack) step(`stack: ${String(m.stack).slice(0, 2500)}`);
     m.error ? p.reject(new Error(m.error)) : p.resolve(m.out);
   };
   worker.onerror = (e) => { for (const p of pending.values()) p.reject(new Error(`worker error: ${e.message}`)); pending.clear(); };
@@ -112,10 +114,11 @@ async function run() {
   status("fetching and loading the model");
   const env: Record<string, string> = { TRANSCRIBE_NO_FLASH: cfg.flash ? "" : "1", TRANSCRIBE_F32_MASK_CONCAT: cfg.flash ? "1" : "", ...cfg.env };
   const ld = await call("load", { url: new URL(cfg.base + model.file, location.href).href, name: model.file, store: cfg.store, env, threads: cfg.threads, verbose: cfg.verbose });
-  result.load = { fetchMs: Math.round(ld.fetchMs), loadMs: Math.round(ld.loadMs), from: ld.from, fileMb: r1(ld.mb), wasmHeapMb: ld.heapMb, backend: ld.backend };
+  result.load = { fetchMs: Math.round(ld.fetchMs), loadMs: Math.round(ld.loadMs), from: ld.from, fileMb: r1(ld.mb), wasmHeapMb: ld.heapMb, wasmHeapUsedMb: ld.heapUsedMb, backend: ld.backend };
   result.session = { totalMs: Math.round(ld.loadMs) };
   step(`model file ready (${ld.from})`, ld.fetchMs, `${ld.mb.toFixed(0)} MB`);
-  step(`model loaded on ${ld.backend}`, ld.loadMs, `WASM heap ${ld.heapMb} MB`);
+  step(`model loaded on ${ld.backend}`, ld.loadMs, `WASM heap ${ld.heapMb} MB, ${ld.heapUsedMb} MB in use`);
+  if (!/webgpu/i.test(ld.backend)) step(`WARNING: not on WebGPU (backend "${ld.backend}"). The ggml WebGPU backend needs shader-f16; without it everything runs on one WASM thread and the weights sit in the WASM heap.`);
   if (ld.log) step(`library log: ${ld.log.trim().slice(0, 600)}`);
   result.startToLoadedMs = Math.round(performance.now() - runStart);
   await new Promise((r) => setTimeout(r, 700)); // let the driver sample memory in a settled state
@@ -129,11 +132,12 @@ async function run() {
     const seconds = audio.length / 16000;
     const once = async () => {
       const r = await call("run", { pcm: audio });
-      return { pre: r.mel_ms as number, enc: r.encode_ms as number, dec: r.decode_ms as number, total: r.wallMs as number, text: r.text as string, tokens: r.n_tokens as number, heapMb: r.heapMb as number };
+      // encoder = until its output is on the CPU: with lazy synchronize the library's own encode_ms stops at submit
+      return { pre: r.mel_ms as number, enc: (r.wallMs - r.mel_ms - r.decode_ms) as number, encSubmit: r.encode_ms as number, dec: r.decode_ms as number, total: r.wallMs as number, text: r.text as string, tokens: r.n_tokens as number, heapMb: r.heapMb as number, heapUsedMb: r.heapUsedMb as number };
     };
     status(`${clip}: first run`);
     const first = await once();
-    step(`${clip} (${CLIPS[clip]}) first run${i === 0 ? " (cold)" : ""}`, first.total, `mel ${fmtMs(first.pre)}, encoder ${fmtMs(first.enc)}, decode ${fmtMs(first.dec)}, heap ${first.heapMb} MB`);
+    step(`${clip} (${CLIPS[clip]}) first run${i === 0 ? " (cold)" : ""}`, first.total, `mel ${fmtMs(first.pre)}, encoder ${fmtMs(first.enc)}, decode ${fmtMs(first.dec)}, heap ${first.heapMb} MB (${first.heapUsedMb} in use)`);
     const rec: any = {
       clip, seconds: Math.round(seconds * 100) / 100, firstInPage: i === 0,
       firstRunMs: { pre: r1(first.pre), enc: r1(first.enc), dec: r1(first.dec), total: r1(first.total) },
@@ -151,11 +155,12 @@ async function run() {
       Object.assign(rec, { warmRuns: all.length, preMs: col((x) => x.pre), encMs: col((x) => x.enc), decMs: col((x) => x.dec), totalMs: col((x) => x.total) });
       rec.xRealTime = r1((seconds * 1000) / rec.totalMs.median);
       rec.textStable = all.every((x) => x.text === first.text);
-      rec.wasmHeapMb = all.at(-1)!.heapMb;
+      rec.wasmHeapMb = all.at(-1)!.heapMb; rec.wasmHeapUsedMb = all.at(-1)!.heapUsedMb;
       step(`${clip} warm x${all.length}`, rec.totalMs.median, `total median/worst ${rec.totalMs.median} / ${rec.totalMs.worst} ms; encoder ${rec.encMs.median} / ${rec.encMs.worst} ms; mel ${rec.preMs.median} ms; decode ${rec.decMs.median} ms; ${rec.xRealTime}x real time; text stable=${rec.textStable}`);
     }
     render(result);
   }
+  if (cfg.verbose) await call("free"); // a profiling build prints its summary when the backend is freed
   step("done", performance.now() - runStart);
   current.done = true, persist();
   status("done");
@@ -203,7 +208,7 @@ function start() {
 function init() {
   (window as any).__pkb = { done: false, phase: "idle" };
   const preset = (key: string, n: number, note: string) => MODELS[key] ? `<a class="preset" href="${link({ model: key, clip: "a07", runs: 3, auto: 1 })}"><b>${n}. ${esc(MODELS[key].label)}</b><span>${MODELS[key].mb} MB download. ${note}</span></a>` : "";
-  $("presets").innerHTML = preset("q4", 1, "Smallest. 7 s clip, 3 warm runs.") + preset("q8", 2, "8-bit weights.") + preset("f16", 3, "Half-float weights.");
+  $("presets").innerHTML = preset("q4", 1, "Smallest: 4-bit weights stay packed on the GPU. 7 s clip, 3 warm runs.") + preset("q8", 2, "8-bit weights.") + preset("f16", 3, "Half-float weights.");
   const sel = (id: string, key: keyof Config, options: [string, string][]) => {
     $(id).innerHTML = options.map(([v, l]) => `<option value="${v}"${String(cfg[key] === true ? 1 : cfg[key] === false ? 0 : cfg[key]) === v ? " selected" : ""}>${l}</option>`).join("");
     $(id).addEventListener("change", (e) => (location.href = link({ [key]: (e.target as HTMLSelectElement).value, auto: 0 })));
