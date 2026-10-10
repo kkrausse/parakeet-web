@@ -698,7 +698,121 @@ device rate (the worklet resamples), capture needs https, and without JSPI the A
 Query string: `model=`, `variant=jspi|asyncify`, `f16=0`, `cpu=1` (CPU backend even where WebGPU
 works), `env=NAME=VALUE`, `store=`, `base=`, `verbose=1` as on the benchmark page; tuning:
 `gap=` (ms between pass starts, 250), `hang=` (ms of silence that ends an utterance, 700), `cap=`
-(s, 24), `thr=` (absolute RMS threshold, 0.004), `ratio=` (x noise floor, 3).
+(s, 24; 12 on phones), `thr=` (absolute RMS threshold, 0.004), `ratio=` (x noise floor, 3). Both pages:
+`phone=1|0`, `limits=default|raised`, `guard=0`, `diag=0|<url>`, `store=opfs-writable` (see below).
+
+### Diagnostics, foreign errors, phone hardening (10 Oct, after a first try on an iPhone)
+
+Reported from an iPhone (110M Q8_0): "Unexpected error: Script error." and a `TypeError` about
+`window.ethereum.selectedAddress = undefined` on the page, and the page "randomly reloads". **Nothing
+below was run on a phone**; it was checked in Chrome on diesel2 only. Why the tab reloads is not known.
+
+**Errors that are not the page's.** Neither page has any `ethereum` code or any inline script; those
+two messages are what a window `error` handler gets from a script the browser, a wallet or an
+extension injected. Both pages now classify every `error` / `unhandledrejection` (`src/diag.ts`): it is
+the page's own only if the stack or the source file is a `.js` in the page's own directory. Everything
+else (bare "Script error." with no file, no file at all, an inline script, a file elsewhere, a rejection
+whose stack has no frame in the page's scripts or that mentions an injected global such as
+`ethereum` / an extension scheme, and a rejection with no stack at all) is counted in the diagnostics
+note, kept in `__pkl.foreign` / `__pkb.foreign`, sent to the collector as `foreign-error` ("foreign,
+ignored"), and neither shown as an error nor put in the step trail. Own errors are shown as before.
+The one deliberate loss: a rejection with a non-Error value from the page's own code would be counted
+as foreign (the page's own failures are caught where they happen and do not rely on this handler).
+
+**Collector.** Both pages POST their step trail as it happens to a collector on diesel2, so a tab that
+is killed leaves its last step there. `scripts/diag-collector.ts`:
+
+```sh
+# run (transient systemd user unit; gone after a reboot, start it again the same way)
+systemd-run --user --unit=parakeet-diag-collector -p Restart=on-failure "$(which bun)" "$PWD/scripts/diag-collector.ts" serve 4795
+systemctl --user stop parakeet-diag-collector            # stop
+sudo tailscale serve --bg --https=9445 4795              # tailnet-only https route (the pages are https); never funnel
+sudo tailscale serve --https=9445 off                    # undo the route
+bun scripts/diag-collector.ts show            # the latest 3 sessions, readable (show 10; show <session id>; --passes; --full)
+bun scripts/diag-collector.ts tail            # follow events as they arrive
+```
+
+- Listens on `127.0.0.1:4795` only; `POST /log` (text/plain JSON, so no CORS preflight; CORS headers
+  for `*.guineafowl-truck.ts.net` and localhost), `GET /health`. URL the pages use:
+  `https://diesel2.guineafowl-truck.ts.net:9445/log` (`PK_DIAG_URL` at build time; `diag=0` in the query
+  turns sending off, `diag=<url>` points it elsewhere).
+- Log: `~/devfs/cache/parakeet-ggml-webgpu/diag/diag-YYYY-MM-DD.jsonl`, one event per line with the
+  receive time, the session id (new on every page load, shown on the page: under the backend line on the
+  live page, under the adapter line on the benchmark page), a sequence number per session (gaps are
+  printed by `show`), and the tailnet login `tailscale serve` adds.
+- Sent: user agent, `deviceMemory`, `hardwareConcurrency`, touch points, screen, whether
+  `navigator.gpu` / JSPI / the OPFS API exist, storage quota and usage; the adapter (info, all features,
+  all limits, the device-request ladder with every refusal); which build, backend, shader path, limits
+  and storage path were chosen; every step of the trail (model-load stages with byte counts every
+  16 MiB, WASM heap twice a second while the backend loads the model); a record per pass (duration,
+  audio length, mel / decode ms, WASM heap; batched once a second) and, before it runs, an announcement
+  of the first pass, the next four and every pass over a buffer at least 1 s longer than any before; a
+  heartbeat every 5 s while loading or recording (heap, lag, buffer, backlog, AudioContext state);
+  AudioContext state changes and sample rate, the microphone track's settings (without device ids) and
+  its mute / unmute / ended events; `visibilitychange`, `pagehide` / `pageshow` with `persisted`,
+  `freeze` / `resume`, online / offline; GPU errors and device-lost lines (they are steps); own errors
+  and the ignored foreign ones. On load: `previous session <id> ended at step "..." (phase, closed
+  normally or not, in front or in the background)`.
+- Never sent: audio, transcript text (the benchmark's "transcript matches" steps go without their
+  text, `verbose=1` stdout lines are not sent, a failed pass's message has its text removed).
+- Sending is `fetch(..., {keepalive: true, mode: "no-cors"})` per step (`sendBeacon` on `pagehide` and
+  when the page is hidden). Failures are swallowed; after three in a row it tries once per 30 s.
+
+**How a visit ended.** `pagehide` marks a visit closed in `localStorage`; a tab the browser kills never
+fires it. On the next load both pages say so (a notice at the top of the live page, a line under the
+adapter line on the benchmark page: "This page was not closed normally last time ...: previous session
+X ended at step ...") and send it. If that visit died in front while loading the
+model, in the warm-up pass or in its first transcription pass, the live page does **not** load the
+model again by itself: it shows that and three buttons, "Try again", "Try on the CPU (slow)" (`cpu=1`)
+and "Try the smaller model" (110M Q4_0, 81 MB). The benchmark page likewise does not honour `auto=1`
+after such a visit. `guard=0` turns this off.
+
+**Smaller footprint on phones** (`phone=1|0` forces the detection either way, for testing):
+
+- iOS / iPadOS user agents: the WebGPU device is requested with **spec-default limits** (nothing
+  raised; was: the two byte limits at `min(adapter, 1 GiB)`). The 110M models need nothing more: the
+  whole Q8_0 file is 129 MiB and no tensor reaches the 128 MiB binding limit; same text on the three
+  clips (checked again below). With default limits weights and compute buffers come in 128 MiB chunks
+  instead of 256. This does not by itself lower GPU memory (Chrome, third pass: 304 MiB peak on the 56 s
+  clip against 268); it only stops asking the device for more than it needs. `limits=raised` /
+  `limits=default` override on any device (as does `env=GGML_WEBGPU_LIMITS=...`).
+- Phones (iOS and Android user agents): the live utterance cap is **12 s** instead of 24 (`cap=`
+  overrides). Chrome here, `t56`: provisional passes on 7.3 s median instead of 12.7, GPU 214-238 MiB
+  instead of 241-248, WASM heap 46 MB instead of 46-56; 6 commits instead of 3, 7 of 122 words differ
+  from the references either way.
+- The model file is never held twice. Path the default takes: streamed from the network into OPFS in
+  network-sized chunks through a sync access handle (short writes are an error), then read one tensor
+  at a time through the handle into the WASM heap and on to the GPU; the heap is 32 MB after load. If
+  the sync access handle cannot be had the worker now falls back instead of failing: write with
+  `createWritable`, read the stored `File` in slices (`store=opfs-writable` forces this path); if OPFS
+  fails altogether, a fetch `Blob` (held whole by the browser for the visit). Each fallback and the path
+  that ran are steps (`storage path: ...`). Desktop Chrome, 110M Q8_0, three clips, reference text on
+  all paths: renderer RSS peak 325 MiB with the sync handle, 535 with the OPFS `File`, 565 with the
+  Blob (one run each, on a loaded machine) - so the fallbacks cost more memory, and the diagnostics
+  say which one a phone took.
+
+Verified in Chrome 154 on diesel2 (`web/drive-diag.ts foreign|kill`, `scripts/lv.sh`, `scripts/cs.sh`,
+`scripts/pub.sh`), local build and **both published links**, the collector reached over the tailnet
+https URL each time:
+
+- Benchmark, 110M Q8_0, three clips: reference text and stable, local (`limits` raised, `phone=1`
+  i.e. spec-default limits, `store=opfs-writable`, `store=blob`) and published (stock Chrome).
+- Live, fake microphone, `t56`: local 7 of 120 words differ from the offline pass, `phone=1` 11 of 120
+  (7 of 122 against the references in both), published stock Chrome 6 of 120; no page errors.
+- A cross-origin script that throws ("Script error."), an injected inline
+  `window.ethereum.selectedAddress = undefined`, a foreign rejection with that message and a rejection
+  with a bare string: nothing shown, model still ready and a pass still runs, four `FOREIGN, IGNORED`
+  lines on the collector. An error and a rejection thrown from `live.js` itself: both shown.
+- Renderer killed (SIGKILL) at the first `download:` step: the collector's last step for that session
+  is that download step; the next load shows the "not closed normally" line and the guard, sends
+  `previous session ... ended at step "download: ..."`, loads on "Try again"; a normal reload after
+  that shows neither.
+
+Not tested: any phone or Safari (so: whether iOS fires `pagehide` in the cases assumed, whether a
+keepalive request survives a tab kill there, which storage path iOS takes, whether any of this
+changes the reloads); the iOS user-agent detection with a real iOS user agent (`phone=1` was used);
+the benchmark page's `auto=1` guard; the guard after a death in the warm-up or first pass (only
+mid-download was simulated); the "CPU" and "smaller model" buttons; the collector across a reboot.
 
 ### Verified in Chrome on diesel2 (fake microphone)
 
@@ -772,6 +886,9 @@ scripts/lv.sh NAME t56 ["query"] [--shot 30] [--viewport 390x844] [--no-webgpu] 
 STOCK=1 scripts/lv.sh NAME g2                     # without the Dawn f16 flag (f32-only shaders)
 URL=https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-live/ STOCK=1 scripts/lv.sh NAME t56   # against the published link
 python3 scripts/lsum.py NAME [NAME ...]           # one line per run
+bun web/drive-diag.ts foreign [--url URL]         # injected foreign errors are ignored, own ones shown (exit 0 = ok)
+bun web/drive-diag.ts kill [--url URL] [--at "download:"]   # renderer killed mid-load: last step on the collector, guard on the next load
+bun scripts/diag-collector.ts show                # what the collector got (latest 3 sessions)
 ~/devfs/repos/kkrausse/random/scripts/deploy-artifact.sh "$PWD/web/dist-live" parakeet-live   # private shelf, short link
 scripts/pub.sh                                    # the benchmark deployment (also carries live.html and the model files the short link reads)
 ```

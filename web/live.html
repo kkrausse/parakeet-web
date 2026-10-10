@@ -58,6 +58,7 @@
     <select id="model" aria-label="Model"></select>
     <div class="load" id="load"><span class="track"><i id="mbar"></i></span><span id="mstatus">starting</span></div>
   </header>
+  <div class="notice warn" id="prevnote" hidden></div>
   <div class="notice warn" id="warn" hidden></div>
   <div class="notice" id="errors" hidden></div>
   <div id="transcript" aria-live="polite"><span id="committed"></span><span id="prov"></span><span id="hint">Tap the red button and speak. Text in grey is still being revised; it turns solid when you pause.</span></div>
@@ -74,6 +75,7 @@
     <div>x real time<b id="s-rtf">-</b></div>
     <div id="lagcell">lag<b id="s-lag">-</b></div>
     <div class="wide"><b id="s-backend">backend: not loaded yet</b></div>
+    <div class="wide" id="diagshort"></div>
   </div>
 </div>
 <section class="more" id="more">
@@ -81,6 +83,7 @@
   <label><input type="checkbox" id="proc"> <span>Browser echo cancellation and noise suppression (off by default: the model gets the raw microphone). Applies from the next recording.</span></label>
   <p id="env"></p>
   <p>Offline model, re-run on the current utterance several times a second (grey text); an utterance is committed on a pause or when it reaches the length cap, and its audio is dropped. The model file is fetched once and kept in this browser.</p>
+  <p id="diagnote"></p>
   <h2>This session</h2>
   <pre id="steps"></pre>
   <h2>Earlier sessions in this browser</h2>

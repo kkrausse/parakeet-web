@@ -5,18 +5,21 @@
 // last time, its text is appended to the committed transcript and its audio is dropped. Committed
 // text is append-only. Passes never queue: a provisional pass always takes the newest whole buffer.
 import { adapterSteps, backendEnv, createRpc, esc, fmtMs, historyStore, r1, stepLine, type Rpc, type RunLog, type Step } from "./common";
+import { createDiag, detectDevice, lifeStore, sendEnvironment, watchErrors } from "./diag";
 declare const MODELS: Record<string, { label: string; file: string; mb: number; family: "0.6b" | "110m" }>; // build.ts; smallest verified first
 
 const params = new URLSearchParams(location.search);
 const num = (k: string, d: number) => { const v = Number(params.get(k)); return params.has(k) && Number.isFinite(v) ? v : d; };
 const SR = 16000, FRAME = 320; // endpointing works on 20 ms frames
+const device = detectDevice(params); // phone=1|0 forces it
+const diag = createDiag("live", params);
 // Decisions (all overridable from the query string for tuning: gap, hang, cap, thr, ratio).
 const P = {
   gapMs: num("gap", 250), // floor between the starts of two passes
   hangMs: num("hang", 700), // silence after speech that ends an utterance
   preRollMs: 300, // audio kept before the first speech frame
   tailMs: 300, // silence kept after the last speech frame
-  capS: num("cap", 24), // an utterance longer than this is cut ...
+  capS: num("cap", device.phone ? 12 : 24), // an utterance longer than this is cut ... (phones: half, so one pass needs less GPU memory)
   cutLookbackS: 10, // ... in the longest gap (or failing that the quietest 200 ms) of its last 10 s
   minSpeechMs: 120, // shorter bursts are dropped without a pass (clicks)
   onsetFrames: 2, // consecutive frames over the threshold that start an utterance
@@ -26,7 +29,7 @@ const P = {
   backlogS: 120, // audio waiting for its final pass; above this new audio is skipped until half is cleared
 };
 
-interface LiveConfig { model: string; variant: "jspi" | "asyncify"; f16: boolean; cpu: boolean; store: string; verbose: boolean; base: string | null; env: Record<string, string> }
+interface LiveConfig { model: string; variant: "jspi" | "asyncify"; f16: boolean; cpu: boolean; store: string; verbose: boolean; base: string | null; limits: string; env: Record<string, string> }
 const MODEL_KEY = "pkggml:live-model", PROC_KEY = "pkggml:live-proc";
 const lsGet = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } };
@@ -40,9 +43,13 @@ function readConfig(): LiveConfig {
     variant: pick(params.get("variant"), ["jspi", "asyncify"], "Suspending" in WebAssembly ? "jspi" : "asyncify"),
     f16: params.get("f16") !== "0",
     cpu: params.get("cpu") === "1", // run on the CPU backend even where WebGPU works
-    store: pick(params.get("store"), ["opfs", "opfs-blob", "blob", "memfs"], "opfs"),
+    store: pick(params.get("store"), ["opfs", "opfs-blob", "opfs-writable", "blob", "memfs"], "opfs"),
     verbose: params.get("verbose") === "1",
     base: params.get("base"),
+    // WebGPU device limits: "default" requests nothing above the spec defaults (all the 110M models need: the same
+    // text was verified that way); "" lets the backend raise the two byte limits to min(adapter, 1 GiB). On iOS the
+    // default is "default"; limits=raised|default and env=GGML_WEBGPU_LIMITS=... override.
+    limits: env.GGML_WEBGPU_LIMITS ?? (params.get("limits") === "raised" ? "" : params.get("limits") === "default" || device.ios ? "default" : ""),
     env,
   };
 }
@@ -51,11 +58,14 @@ const $ = (id: string) => document.getElementById(id)!;
 
 // ---------- persisted step trail ----------
 const store = historyStore<LiveConfig>("pkggml:live-runs", 6);
+const life = lifeStore("pkggml:live-life", diag);
 let runs = store.load();
 let current: RunLog<LiveConfig> | null = null;
 let trailStart = performance.now();
 const MAX_STEPS = 400;
-function step(name: string, ms?: number, detail?: string) {
+/** One line of the trail: on screen, in localStorage, and to the collector. `local`: never sent (could hold text). */
+function step(name: string, ms?: number, detail?: string, local = false) {
+  if (!local) diag.send("step", { name, ms: ms === undefined ? undefined : r1(ms), detail });
   if (!current) return;
   if (current.steps.length >= MAX_STEPS) { if (current.steps.length === MAX_STEPS) current.steps.push({ t: Math.round(performance.now() - trailStart), name: "(further steps not recorded)" }); return; }
   const s: Step = { t: Math.round(performance.now() - trailStart), name, ms: ms === undefined ? undefined : r1(ms), detail };
@@ -65,7 +75,7 @@ function step(name: string, ms?: number, detail?: string) {
 }
 function newTrail() {
   trailStart = performance.now();
-  current = { id: String(Date.now()), started: new Date().toISOString(), config: { ...cfg }, ua: navigator.userAgent, steps: [], done: false };
+  current = { id: String(Date.now()), sid: diag.sid, started: new Date().toISOString(), config: { ...cfg }, ua: navigator.userAgent, steps: [], done: false };
   runs.push(current);
   $("steps").textContent = "";
   pk.steps = current.steps;
@@ -73,7 +83,7 @@ function newTrail() {
 function renderHistory() {
   const prev = runs.filter((h) => h !== current).reverse();
   $("history").innerHTML = prev.length
-    ? prev.map((h) => `<details><summary class="${h.error ? "bad" : ""}">${esc(h.started)} · ${esc(String(h.config?.model))} · ${h.error ? "failed" : h.done ? "model loaded" : `did not finish loading; last step: ${esc(h.steps.at(-1)?.name ?? "none")}`}</summary><pre>${esc(h.steps.map(stepLine).join("\n"))}${h.error ? "\nERROR: " + esc(h.error) : ""}</pre></details>`).join("")
+    ? prev.map((h) => `<details><summary class="${h.error ? "bad" : ""}">${esc(h.started)} · ${h.sid ? `session ${esc(h.sid)} · ` : ""}${esc(String(h.config?.model))} · ${h.error ? "failed" : h.done ? "model loaded" : `did not finish loading; last step: ${esc(h.steps.at(-1)?.name ?? "none")}`}</summary><pre>${esc(h.steps.map(stepLine).join("\n"))}${h.error ? "\nERROR: " + esc(h.error) : ""}</pre></details>`).join("")
     : "<p>No earlier sessions stored in this browser.</p>";
 }
 
@@ -124,7 +134,7 @@ function loadStatus(text: string, frac: number | null, ready = false) {
   $("load").classList.toggle("ready", ready);
 }
 function modelFailed(msg: string) {
-  modelState = "failed"; pk.phase = "failed";
+  modelState = "failed"; pk.phase = "failed"; life.phase("failed");
   if (current) current.error = msg, store.save(runs);
   step(`ERROR: ${msg.slice(0, 1500)}`);
   loadStatus("model not running", 0);
@@ -137,45 +147,50 @@ function gpuErrors(where: string, errs: string[] | undefined) {
   // A shader the browser rejected, a validation error or a lost device: what comes out after that is not to be trusted, so stop.
   const lost = errs.some((e) => /device lost/i.test(e));
   showError(`GPU error (${where}): ${errs.slice(0, 4).join("\n").slice(0, 900)}`, true);
-  modelState = "failed"; pk.phase = "failed"; loadStatus(lost ? "GPU device lost" : "stopped after a GPU error", 0);
+  modelState = "failed"; pk.phase = "failed"; life.phase("failed"); loadStatus(lost ? "GPU device lost" : "stopped after a GPU error", 0);
   if (current) current.error = `GPU error (${where})`, store.save(runs);
 }
 async function loadModel(key: string) {
   const gen = ++loadGen;
   rpc?.terminate();
-  modelState = "loading"; pk.phase = "loading"; busy = false;
+  modelState = "loading"; pk.phase = "loading"; busy = false; realPasses = 0; maxPassSamples = 0;
   cfg.model = key;
+  life.phase("loading", { model: key, cpu: cfg.cpu });
   const model = MODELS[key];
   newTrail(); renderHistory();
   warn(null);
   backendLabel = "backend: loading"; setStats();
   loadStatus(`${model.label}: starting`, 0.02);
-  step(`start: ${model.label}, ${cfg.variant}${cfg.cpu ? ", cpu=1" : ""}`);
+  step(`start: ${model.label}, ${cfg.variant}${cfg.cpu ? ", cpu=1" : ""}`, undefined, `session ${diag.sid}; ${device.why}; cap ${P.capS} s; limits ${cfg.limits || "raised"}; store ${cfg.store}`);
   try {
     const mine = (rpc = createRpc((m) => {
       if (gen !== loadGen) return;
       if (m.type === "progress") return loadStatus(`downloading ${Math.round(m.got / 2 ** 20)} / ${Math.round(m.total / 2 ** 20)} MB`, 0.05 + 0.8 * (m.got / Math.max(1, m.total)));
-      if (m.type === "stdout") { if (cfg.verbose) step(`wasm: ${String(m.line).slice(0, 400)}`); return; }
+      if (m.type === "stage") return step(m.name, undefined, m.detail);
+      if (m.type === "diag") return diag.send(m.kind, m.data);
+      if (m.type === "stdout") { if (cfg.verbose) step(`wasm: ${String(m.line).slice(0, 400)}`, undefined, undefined, true); return; }
       if (m.type === "stderr") { if (cfg.verbose || /error|abort|fail/i.test(m.line)) step(`wasm: ${String(m.line).slice(0, 400)}`); return; }
       if (m.type === "stack" && cfg.verbose) step(`stack: ${String(m.stack).slice(0, 2500)}`);
     }));
-    const init = await mine.call("init", { base: location.href, variant: cfg.variant, wantF16: cfg.f16, limits: cfg.env.GGML_WEBGPU_LIMITS ?? "" });
+    const init = await mine.call("init", { base: location.href, variant: cfg.variant, wantF16: cfg.f16, limits: cfg.limits });
     if (gen !== loadGen) return;
     const a = init.adapter;
+    diag.send("adapter", { adapter: a, jspi: init.jspi, heapMb: init.heapMb });
     step("WASM module ready", init.ms, `heap ${init.heapMb} MB; JSPI ${init.jspi ? "available" : "absent"}`);
     adapterSteps(a, step);
     $("env").textContent = `${a.available ? `${a.vendor} ${a.architecture} ${a.description || ""} · shader-f16 ${a.shaderF16 ? "present" : "absent"}` : `no WebGPU adapter (${a.reason})`} · JSPI ${init.jspi ? "available" : "absent (ASYNCIFY build)"} · ${cfg.variant} build`;
     const { useF16, pathLine, env } = backendEnv(a, { f16: cfg.f16, flash: false, extra: { ...(cfg.cpu ? { TRANSCRIBE_BACKENDS: "cpu" } : {}), ...cfg.env } });
     if (a.available && !cfg.cpu) step(pathLine);
+    if (a.available && !cfg.cpu) step(a.plan?.limits === "default" ? `WebGPU limits: spec defaults, nothing raised${cfg.limits === "default" ? (device.ios && !params.has("limits") && !cfg.env.GGML_WEBGPU_LIMITS ? " (the default on iOS; limits=raised changes it)" : " (requested)") : " (the raised request was refused)"}` : `WebGPU limits: the two byte limits raised to ${JSON.stringify(a.requested?.requiredLimits)} (limits=default requests none)`);
     loadStatus(`${model.label}: fetching the model file (${model.mb} MB, once)`, 0.05);
     const base = await modelBase(model.file);
     let where = cfg.store;
-    if (where === "opfs") { // private windows and some embedded browsers have no origin-private file system: keep the file as a Blob for this visit
+    if (where.startsWith("opfs")) { // private windows and some embedded browsers have no origin-private file system: keep the file as a Blob for this visit
       try { await navigator.storage.getDirectory(); } catch (e: any) { where = "blob"; step(`no origin-private file system (${e?.name ?? e}): the model file is fetched again on every visit`); }
     }
     const ld = await mine.call("load", { url: new URL(base + model.file, location.href).href, name: model.file, store: where, env, threads: 1, verbose: cfg.verbose });
     if (gen !== loadGen) return;
-    step(`model file ready (${ld.from})`, ld.fetchMs, `${ld.mb.toFixed(0)} MB from ${base}`);
+    step(`model file ready (${ld.from})`, ld.fetchMs, `${ld.mb.toFixed(0)} MB from ${base}; storage path ${ld.storagePath}`);
     step(`model loaded on ${ld.backend}`, ld.loadMs, `WASM heap ${ld.heapMb} MB, ${ld.heapUsedMb} MB in use`);
     if (ld.log && cfg.verbose) step(`library log: ${ld.log.trim().slice(0, 600)}`);
     const webgpu = /webgpu/i.test(ld.backend);
@@ -188,19 +203,24 @@ async function loadModel(key: string) {
       warn(`Not on WebGPU: ${why}. The model runs on one WASM thread here, far slower than a GPU: text will trail behind speech and the lag figure below shows by how much.`);
       step(`WARNING: not on WebGPU (backend "${ld.backend}"): ${why}`);
     }
+    diag.send("chosen", { model: key, file: model.file, build: cfg.variant, backend: ld.backend, webgpu, shaderPath: webgpu ? (useF16 ? "f16" : "f32-only") : null, limits: a.plan?.limits ?? null, cpuRequested: cfg.cpu,
+      storagePath: ld.storagePath, from: ld.from, fileBytes: Math.round(ld.mb * 2 ** 20), fetchMs: Math.round(ld.fetchMs), loadMs: Math.round(ld.loadMs), heapMb: ld.heapMb, heapUsedMb: ld.heapUsedMb, capS: P.capS, phone: device.phone, ios: device.ios });
     gpuErrors("load", ld.gpuErrors);
+    if (pk.phase === "failed") return;
     loadStatus(`${model.label}: warming up`, 0.92);
+    life.phase("warmup");
+    step("warm-up pass starting (1.5 s of noise: shaders compile here)");
     // One pass over 1.5 s of faint noise, so shader pipelines are compiled before the first words arrive.
     const noise = new Float32Array(SR * 1.5);
     let seed = 1;
     for (let i = 0; i < noise.length; i++) { seed = (seed * 1664525 + 1013904223) >>> 0; noise[i] = (seed / 2 ** 32 - 0.5) * 2e-3; }
     const w = await mine.call("run", { pcm: noise });
     if (gen !== loadGen) return;
-    step("warm-up pass (1.5 s of noise)", w.wallMs);
+    step("warm-up pass (1.5 s of noise)", w.wallMs, `WASM heap ${w.heapMb} MB, ${w.heapUsedMb} MB in use`);
     gpuErrors("warm-up", w.gpuErrors);
     if (pk.phase === "failed") return;
     current!.done = true; store.save(runs);
-    modelState = "ready"; pk.phase = "ready";
+    modelState = "ready"; pk.phase = "ready"; life.phase("ready");
     loadStatus(`${model.label} ready`, 1, true);
     setStats();
     pump();
@@ -326,8 +346,11 @@ function commit(text: string, seg: Final, ms: number) {
     if (pk.finalCount <= 150) step(`commit ${pk.finalCount}: ${((seg.endAbs - seg.startAbs) / SR).toFixed(1)} s of audio, ${seg.reason}`, seg.text !== undefined ? undefined : ms, `${t.split(/\s+/).filter(Boolean).length} words${seg.text !== undefined ? "; text of the last provisional pass" : ""}`);
   }
 }
+let realPasses = 0, maxPassSamples = 0; // since the model was loaded
 function notePass(ms: number, audioS: number, final: boolean, r: any) {
   pk.passCount++;
+  if (++realPasses === 1) { life.phase("running"); step("first pass done", ms, `${audioS.toFixed(1)} s of audio, WASM heap ${r.heapMb} MB`); }
+  diag.send("pass", { n: pk.passCount, ms: r1(ms), audioS: r1(audioS), final, melMs: r1(r.mel_ms), decodeMs: r1(r.decode_ms), heapMb: r.heapMb, heapUsedMb: r.heapUsedMb, lagS: pk.lagS }, false);
   if (pk.passes.length >= 4000) pk.passes.splice(0, 2000);
   pk.passes.push([r1(ms), r1(audioS), final ? 1 : 0, r1(r.mel_ms), r1(r.decode_ms)]);
   pk.heapMb = r.heapMb;
@@ -352,6 +375,10 @@ async function pump() {
     provEndAbs = endAbs;
   }
   busy = true; lastPassStart = performance.now();
+  // The pass that kills a tab never reports back: the first passes, and every pass over a longer buffer than any before, are announced first.
+  if (realPasses === 0) { life.phase("first-pass"); step("first pass starting", undefined, `${(pcm.length / SR).toFixed(1)} s of audio`); }
+  else if (realPasses < 5 || pcm.length > maxPassSamples + SR) diag.send("pass-begin", { n: pk.passCount + 1, audioS: r1(pcm.length / SR), final: !!seg, longest: pcm.length > maxPassSamples });
+  if (pcm.length > maxPassSamples) maxPassSamples = pcm.length;
   const gen = loadGen, t0 = performance.now();
   let r: any;
   try { r = await rpc.call("run", { pcm }); } // a copy is sent: a final segment stays queued until its text is in
@@ -451,7 +478,9 @@ async function startRecording() {
     const mute = c.createGain(); mute.gain.value = 0;
     src.connect(n); n.connect(mute); mute.connect(c.destination);
     s.getAudioTracks()[0]?.addEventListener("ended", () => { if (stream === s) stopRecording("The microphone went away; recording stopped."); });
-    c.onstatechange = () => { if (ctx === c && recording && c.state !== "running") micMessage(`Audio capture is ${c.state} (paused by the browser); it resumes when this tab is in front`); else if (ctx === c && recording) micMessage(null); };
+    const track = s.getAudioTracks()[0];
+    for (const evName of ["mute", "unmute", "ended"]) track?.addEventListener(evName, () => diag.send("mic-track", { event: evName, readyState: track.readyState, muted: track.muted }));
+    c.onstatechange = () => { diag.send("audio-context", { state: c.state, sampleRate: c.sampleRate, recording }); if (ctx === c && recording && c.state !== "running") micMessage(`Audio capture is ${c.state} (paused by the browser); it resumes when this tab is in front`); else if (ctx === c && recording) micMessage(null); };
     const set = s.getAudioTracks()[0]?.getSettings?.() ?? {};
     // fresh utterance state; the committed transcript is kept
     nFrames = 0; bufAbs = 0; captured = 0; coveredAbs = 0; provEndAbs = 0; noiseFloor = 0.001; dropping = false; resetUtterance();
@@ -460,14 +489,15 @@ async function startRecording() {
     $("rec").classList.add("on"); $("rec").setAttribute("aria-pressed", "true"); $("rec").setAttribute("aria-label", "Stop");
     ($("model") as HTMLSelectElement).disabled = true;
     micMessage(null);
-    step(`recording: context ${c.sampleRate} Hz -> 16000 Hz, track ${set.sampleRate ?? "?"} Hz, ${set.channelCount ?? "?"} ch, echoCancellation=${set.echoCancellation} noiseSuppression=${set.noiseSuppression} autoGainControl=${set.autoGainControl}`);
+    diag.send("recording", { contextState: c.state, contextSampleRate: c.sampleRate, baseLatency: c.baseLatency ?? null, trackSettings: { ...set, deviceId: undefined, groupId: undefined }, trackLabelPresent: !!track?.label, processing: proc });
+    step(`recording: context ${c.state} at ${c.sampleRate} Hz -> 16000 Hz, track ${set.sampleRate ?? "?"} Hz, ${set.channelCount ?? "?"} ch, echoCancellation=${set.echoCancellation} noiseSuppression=${set.noiseSuppression} autoGainControl=${set.autoGainControl}`);
     void acquireWake();
     render();
   } catch (e: any) {
     starting = false;
     releaseMic();
     micMessage(micErrorText(e));
-    step(`microphone: ${e?.name ?? "Error"}: ${e?.message ?? e}`);
+    step(`microphone: ${e?.name ?? "Error"}: ${e?.message ?? e}`, undefined, `AudioContext ${c.state}`);
   }
 }
 function releaseMic() {
@@ -523,9 +553,10 @@ function init() {
     renderHistory();
   });
   addEventListener("keydown", (e: KeyboardEvent) => { if (e.code === "Space" && !(e.target instanceof HTMLSelectElement) && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLButtonElement)) { e.preventDefault(); recording ? stopRecording() : void startRecording(); } });
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && recording) { void ctx?.resume().catch(() => {}); if (!wake || wake.released) void acquireWake(); } });
-  addEventListener("unhandledrejection", (e: PromiseRejectionEvent) => { step(`unhandled rejection: ${e.reason?.message ?? e.reason}`); showError(`Unexpected error: ${e.reason?.message ?? e.reason}`); });
-  addEventListener("error", (e: ErrorEvent) => { step(`uncaught error: ${e.message}`); showError(`Unexpected error: ${e.message}`); });
+  document.addEventListener("visibilitychange", () => { step(`page ${document.visibilityState}${recording ? " while recording" : ""}`, undefined, ctx ? `AudioContext ${ctx.state}` : undefined); if (document.visibilityState === "visible" && recording) { void ctx?.resume().catch(() => {}); if (!wake || wake.released) void acquireWake(); } });
+  // Only errors from this page's own scripts are shown. A wallet, extension or in-app browser injects scripts whose
+  // errors also arrive here ("Script error.", "window.ethereum ..."): those are counted and sent to the collector.
+  watchErrors(diag, (label, text) => { step(`${label}: ${text}`); showError(`Unexpected error: ${text}`); }, () => { pk.foreign = diag.foreign; setNote(); });
   // For the driver: one offline pass over a whole 16 kHz float32 file, through the same worker.
   pk.offline = async (url: string) => {
     if (busy || recording || modelState !== "ready") throw new Error("busy");
@@ -535,7 +566,44 @@ function init() {
   pk.run = async (pcm: Float32Array) => { if (busy || recording || modelState !== "ready") throw new Error("busy"); busy = true; try { return await rpc!.call("run", { pcm }); } finally { busy = false; } };
   pk.vad = () => ({ noiseFloor: +noiseFloor.toFixed(5), hasSpeech, lastRms: +(nFrames ? rms[nFrames - 1] : 0).toFixed(5) });
   setInterval(() => { if (recording || finals.length) setStats(); }, 250);
+  // Every 5 s while something is going on: the numbers that would show a tab growing before it is killed.
+  setInterval(() => {
+    if (!recording && !busy && modelState !== "loading") return;
+    diag.send("heartbeat", { phase: pk.phase, recording, heapMb: pk.heapMb, jsHeapMb: (performance as any).memory ? Math.round((performance as any).memory.usedJSHeapSize / 2 ** 20) : null, passes: pk.passCount, lagS: pk.lagS, bufferS: pk.bufferS,
+      backlogS: r1(backlogS()), audioContext: ctx?.state ?? null, visibility: document.visibilityState });
+  }, 5000);
   setStats();
+  setNote();
+  sendEnvironment(diag, { device, capS: P.capS, limits: cfg.limits || "raised", config: cfg });
+  // How the last visit ended. pagehide marks a visit closed; a tab the browser killed never gets there.
+  const prev = life.prev, prevRun = runs.at(-1);
+  if (prev) {
+    const lastStep = prevRun && (!prevRun.sid || prevRun.sid === prev.sid) ? prevRun.steps.at(-1)?.name ?? "none" : "none recorded";
+    const line = `previous session ${prev.sid} ended at step "${lastStep.slice(0, 200)}" (phase ${prev.phase}, ${prev.closed ? "page closed normally" : prev.hidden ? "NOT closed normally, in the background" : "NOT closed normally, in front"}, ${Math.round((Date.now() - prev.wall) / 1000)} s ago)`;
+    diag.send("previous-session", { line, prev, lastStep, steps: prevRun?.steps.length ?? 0, error: prevRun?.error ?? null });
+    if (!prev.closed) { $("prevnote").hidden = false; $("prevnote").textContent = `This page was not closed normally last time (the browser may have killed or reloaded the tab): ${line}.`; }
+    // Died while loading or in its first pass, in front: loading the same thing again would most likely die the same way
+    // (and a browser that reloads a killed tab would loop). Stop and let the person choose. guard=0 turns this off.
+    if (!prev.closed && !prev.hidden && ["loading", "warmup", "first-pass"].includes(prev.phase) && params.get("guard") !== "0") return showGuard(prev, lastStep);
+  }
   void loadModel(cfg.model);
+}
+function setNote() { $("diagnote").textContent = diag.note(); $("diagshort").textContent = diag.url ? `diagnostics session ${diag.sid}` : "diagnostics off"; }
+function showGuard(prev: { sid: string; phase: string; model?: string; cpu?: boolean }, lastStep: string) {
+  modelState = "failed"; pk.phase = "guard";
+  const what = prev.phase === "first-pass" ? "during its first transcription pass" : prev.phase === "warmup" ? "during the warm-up pass" : "while loading the model";
+  const prevModel = MODELS[prev.model ?? ""]?.label ?? MODELS[cfg.model].label;
+  loadStatus("model not loaded", 0);
+  diag.send("guard", { prev, lastStep });
+  const el = $("errors");
+  el.hidden = false;
+  el.textContent = `The last time this page was open (session ${prev.sid}) the tab went away ${what} (${prevModel}${prev.cpu ? ", on the CPU" : ""}); its last step was "${lastStep.slice(0, 200)}". The model was not loaded again automatically.`;
+  const go = (over: Record<string, string>) => { const p = new URLSearchParams(location.search); for (const [k, v] of Object.entries(over)) p.set(k, v); life.closing(); location.search = `?${p}`; };
+  const button = (label: string, act: () => void) => { const b = document.createElement("button"); b.textContent = label; b.onclick = act; b.style.marginRight = "8px"; el.append(b); };
+  el.append(document.createElement("br"));
+  button("Try again", () => { el.hidden = true; el.textContent = ""; void loadModel(cfg.model); });
+  if (!cfg.cpu) button("Try on the CPU (slow)", () => go({ cpu: "1" }));
+  if (MODELS.s4 && cfg.model !== "s4") button(`Try the smaller model (${MODELS.s4.label}, ${MODELS.s4.mb} MB)`, () => { lsSet(MODEL_KEY, "s4"); go({ model: "s4" }); });
+  setStats();
 }
 init();

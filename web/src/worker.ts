@@ -10,6 +10,9 @@ let variant = "";
 const post = (m: any, transfer: Transferable[] = []) => self.postMessage(m, transfer);
 const heapMb = () => (M ? Math.round(M.wasmMemory.buffer.byteLength / 2 ** 20) : 0);
 const usedMb = () => (M ? Math.round((M.ccall("pk_heap_in_use", "number", [], []) / 2 ** 20) * 10) / 10 : 0);
+/** A load stage for the page's step trail (persisted and sent to the collector). */
+const stage = (name: string, detail?: string) => post({ type: "stage", name, detail });
+const errText = (e: any) => `${e?.name ?? "Error"}: ${e?.message ?? e}`;
 const takeLog = () => { try { return M ? (M.UTF8ToString(M.ccall("pk_log", "number", [], [])) as string) : ""; } catch { return ""; } }; // throws once the module has aborted
 
 // What the backend needs from WebGPU. It requests no limit above the spec default except the two byte
@@ -37,6 +40,8 @@ async function adapterInfo(wantF16: boolean, limits: string) {
       if (Number.isNaN(v)) below.push(`${k} is not reported`);
       else if (k.startsWith("min") ? v > d : v < d) below.push(`${k} = ${v}, spec default ${d}`);
     }
+    const allLimits: Record<string, number> = {}; // everything the adapter reports, for the diagnostics
+    for (const k in adapter.limits) { const v = (adapter.limits as any)[k]; if (typeof v === "number") allLimits[k] = v; }
     const f16 = adapter.features.has("shader-f16");
     // The same request the WASM backend makes, tried from JS first so a rejection shows the browser's own message.
     const requiredFeatures = (f16 && wantF16 ? ["shader-f16"] : []) as GPUFeatureName[];
@@ -66,7 +71,7 @@ async function adapterInfo(wantF16: boolean, limits: string) {
       isFallbackAdapter: (i as any).isFallbackAdapter ?? (adapter as any).isFallbackAdapter ?? null,
       shaderF16: f16, features: [...adapter.features].sort(),
       wgslLanguageFeatures: [...((gpu as any).wgslLanguageFeatures ?? [])].sort(),
-      limits: lim, belowSpecDefault: below, requested: { requiredFeatures, requiredLimits }, deviceProbe: device, deviceError, probeErrors, plan,
+      limits: lim, allLimits, belowSpecDefault: below, requested: { requiredFeatures, requiredLimits }, deviceProbe: device, deviceError, probeErrors, plan,
       maxBufferSizeMb: Math.round(lim.maxBufferSize / 2 ** 20),
       maxStorageBufferBindingSizeMb: Math.round(lim.maxStorageBufferBindingSize / 2 ** 20),
     };
@@ -98,46 +103,88 @@ async function init(msg: { base: string; variant: string; wantF16: boolean; limi
   return { ms: performance.now() - t0, heapMb: heapMb(), adapter: await adapterInfo(msg.wantF16, msg.limits), jspi: "Suspending" in WebAssembly };
 }
 
-/** Get the model as a disk-backed Blob (or bytes for memfs) without keeping it in JS memory. */
-async function obtain(url: string, name: string, store: string, id: number): Promise<{ blob?: Blob; handle?: any; bytes?: Uint8Array; from: string; mb: number }> {
-  const progress = (got: number, total: number) => post({ type: "progress", id, got, total });
-  if (store === "opfs" || store === "opfs-blob") {
-    const done = async (h: any, from: string) => {
-      const f: File = await h.getFile();
-      // opfs: read straight from a sync access handle into the WASM heap (no Blob slices, no garbage).
-      return store === "opfs" ? { handle: await h.createSyncAccessHandle(), from, mb: f.size / 2 ** 20 } : { blob: f, from, mb: f.size / 2 ** 20 };
-    };
-    const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle("pk-models", { create: true });
-    const head = await fetch(url, { method: "HEAD" });
-    const want = Number(head.headers.get("content-length") ?? 0);
-    const h = await dir.getFileHandle(name, { create: true });
-    let f = await h.getFile();
-    if (want > 0 && f.size === want) return done(h, "OPFS (already stored)");
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`fetch ${url}: ${resp.status}`);
-    const acc = await (h as any).createSyncAccessHandle();
-    acc.truncate(0);
-    const reader = resp.body!.getReader();
-    let got = 0, last = 0;
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      acc.write(value, { at: got });
-      got += value.length;
-      if (got - last > 16 << 20) last = got, progress(got, want);
+interface Got { blob?: Blob; handle?: any; bytes?: Uint8Array; from: string; mb: number; path: string }
+/** The model file kept in OPFS; downloaded once, streamed to disk chunk by chunk (never whole in memory). */
+async function obtainOpfs(url: string, name: string, store: string, progress: (got: number, total: number) => void): Promise<Got> {
+  const dir = await (await navigator.storage.getDirectory()).getDirectoryHandle("pk-models", { create: true });
+  const head = await fetch(url, { method: "HEAD" });
+  const want = Number(head.headers.get("content-length") ?? 0);
+  const h: any = await dir.getFileHandle(name, { create: true });
+  const have = (await h.getFile()).size;
+  stage(`model file: ${want} bytes on the server, ${have} bytes stored in this browser (OPFS)`);
+  const open = async (from: string): Promise<Got> => {
+    const f: File = await h.getFile();
+    if (store === "opfs") {
+      // read straight from a sync access handle into the WASM heap, one tensor at a time (no Blob slices, no garbage)
+      try {
+        const handle = await h.createSyncAccessHandle();
+        stage("storage path: OPFS sync access handle (the file stays on disk; tensors are read one at a time)");
+        return { handle, from, mb: f.size / 2 ** 20, path: "opfs-sync" };
+      } catch (e) { stage(`OPFS sync access handle unavailable for reading (${errText(e)}): reading the stored file as a File instead`); }
     }
-    acc.flush(); acc.close();
-    return done(h, "network, streamed to OPFS");
+    stage("storage path: OPFS File (the file stays on disk; read in slices)");
+    return { blob: f, from, mb: f.size / 2 ** 20, path: "opfs-file" };
+  };
+  if (want > 0 && have === want) return open("OPFS (already stored)");
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`fetch ${url}: ${resp.status}`);
+  const reader = resp.body!.getReader();
+  let got = 0, last = 0, how = "";
+  const tick = () => { if (got - last >= 16 << 20) { last = got; progress(got, want); stage(`download: ${got} of ${want} bytes written to OPFS (${how}), WASM heap ${heapMb()} MB`); } };
+  let acc: any = null;
+  // store=opfs-writable: as if there were no sync access handle (createWritable to store, a File to read)
+  try { if (store === "opfs-writable") throw new Error("store=opfs-writable"); acc = await h.createSyncAccessHandle(); } catch (e) { stage(`OPFS sync access handle unavailable for writing (${errText(e)}): trying createWritable`); }
+  if (acc) {
+    how = "sync access handle";
+    try {
+      acc.truncate(0);
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const n = acc.write(value, { at: got });
+        if (n !== value.length) throw new Error(`short write to OPFS at byte ${got}: ${n} of ${value.length} (storage full?)`);
+        got += value.length;
+        tick();
+      }
+      acc.flush();
+    } finally { acc.close(); }
+  } else {
+    if (typeof h.createWritable !== "function") throw new Error("this browser's OPFS has neither createSyncAccessHandle nor createWritable");
+    how = "createWritable";
+    const w = await h.createWritable();
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        await w.write(value);
+        got += value.length;
+        tick();
+      }
+    } catch (e) { try { await w.abort(); } catch { /* gone */ } throw e; }
+    await w.close();
+  }
+  stage(`download complete: ${got} bytes in OPFS (${how})${want > 0 && got !== want ? `; EXPECTED ${want}` : ""}`);
+  return open("network, streamed to OPFS");
+}
+
+/** Get the model as a disk-backed file (or bytes for memfs) without keeping it in JS memory. Every path taken is a stage. */
+async function obtain(url: string, name: string, store: string, id: number): Promise<Got> {
+  const progress = (got: number, total: number) => post({ type: "progress", id, got, total });
+  if (store === "opfs" || store === "opfs-blob" || store === "opfs-writable") {
+    try { return await obtainOpfs(url, name, store, progress); }
+    catch (e) { stage(`OPFS path FAILED (${errText(e)}): falling back to a fetch Blob, which the browser holds whole for this visit and fetches again next time`); }
   }
   const resp = await fetch(url);
   if (!resp.ok) throw new Error(`fetch ${url}: ${resp.status}`);
-  if (store === "blob") {
+  if (store !== "memfs") {
     const blob = await resp.blob();
-    return { blob, from: "network, as a Blob", mb: blob.size / 2 ** 20 };
+    stage(`storage path: fetch Blob (${blob.size} bytes held by the browser; not kept between visits)`);
+    return { blob, from: "network, as a Blob", mb: blob.size / 2 ** 20, path: "blob" };
   }
   // memfs: the whole file inside the WASM heap (what a page gets with FS.writeFile). Baseline only.
   const bytes = new Uint8Array(await resp.arrayBuffer());
-  return { bytes, from: "network, whole file copied into the WASM heap (MEMFS)", mb: bytes.length / 2 ** 20 };
+  stage(`storage path: MEMFS (${bytes.length} bytes copied into the WASM heap; baseline only)`);
+  return { bytes, from: "network, whole file copied into the WASM heap (MEMFS)", mb: bytes.length / 2 ** 20, path: "memfs" };
 }
 
 async function load(msg: { id: number; url: string; name: string; store: string; env: Record<string, string>; threads: number; verbose: boolean }) {
@@ -163,14 +210,18 @@ async function load(msg: { id: number; url: string; name: string; store: string;
   for (const [k, v] of Object.entries(msg.env)) M.ccall("pk_setenv", null, ["string", "string"], [k, v]);
   M.ccall("pk_set_log_level", null, ["number"], [msg.verbose ? 1 : 0]);
   const t1 = performance.now();
-  const st = await M.ccall("pk_load", "number", ["string", "number"], [path, msg.threads], { async: true });
+  stage(`loading the model into the backend: WASM heap ${heapMb()} MB before`);
+  // While pk_load is suspended on the GPU the worker's timers run: the heap size goes to the collector twice a second.
+  const ticker = setInterval(() => post({ type: "diag", kind: "load-heap", data: { heapMb: heapMb(), ms: Math.round(performance.now() - t1) } }), 500);
+  let st: number;
+  try { st = await M.ccall("pk_load", "number", ["string", "number"], [path, msg.threads], { async: true }); } finally { clearInterval(ticker); }
   const loadMs = performance.now() - t1;
   const log = takeLog();
   got.handle?.close(); // nothing reads the file after load
   const gpuErr = gpuErrors();
   if (st !== 0) throw new Error(`pk_load failed with status ${st}\n${gpuErr.join("\n")}\n${log}`);
   if (got.bytes === undefined && !got.blob && !got.handle) try { FS.unlink(path); } catch { /* keep */ }
-  return { fetchMs, loadMs, from: got.from, mb: got.mb, heapMb: heapMb(), heapUsedMb: usedMb(), backend: M.UTF8ToString(M.ccall("pk_backend", "number", [], [])), log, gpuErrors: gpuErr };
+  return { fetchMs, loadMs, from: got.from, storagePath: got.path, mb: got.mb, heapMb: heapMb(), heapUsedMb: usedMb(), backend: M.UTF8ToString(M.ccall("pk_backend", "number", [], [])), log, gpuErrors: gpuErr };
 }
 
 async function run(msg: { pcm: Float32Array }) {
@@ -184,7 +235,11 @@ async function run(msg: { pcm: Float32Array }) {
   const json = M.UTF8ToString(M.ccall("pk_json", "number", [], []));
   const log = takeLog();
   const gpuErr = gpuErrors();
-  if (st !== 0) throw new Error(`pk_run failed with status ${st}: ${json}\n${gpuErr.join("\n")}\n${log}`);
+  if (st !== 0) { // the message goes to the diagnostics collector: no transcript text in it
+    let brief = json;
+    try { const j = JSON.parse(json); delete j.text; brief = JSON.stringify(j); } catch { brief = `(${json.length} bytes of unparsed output)`; }
+    throw new Error(`pk_run failed with status ${st}: ${brief}\n${gpuErr.join("\n")}\n${log}`);
+  }
   return { ...JSON.parse(json), gpuErrors: gpuErr, wallMs, heapMb: heapMb(), heapUsedMb: usedMb(), log };
 }
 

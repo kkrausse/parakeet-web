@@ -3,7 +3,8 @@
 // backend is loaded with) and small formatting helpers. The runtime itself is src/worker.ts for both.
 
 export interface Step { t: number; name: string; ms?: number; detail?: string }
-export interface RunLog<C = unknown> { id: string; started: string; config: C; ua: string; steps: Step[]; done: boolean; error?: string }
+/** `sid`: the diagnostics session id of the page load that made it (src/diag.ts). */
+export interface RunLog<C = unknown> { id: string; sid?: string; started: string; config: C; ua: string; steps: Step[]; done: boolean; error?: string }
 
 export const r1 = (x: number) => Math.round(x * 10) / 10;
 export function fmtMs(ms: number) { return ms >= 10000 ? `${(ms / 1000).toFixed(1)} s` : ms >= 100 ? `${Math.round(ms)} ms` : `${r1(ms)} ms`; }

@@ -35,7 +35,8 @@ for (const k of Object.keys(models)) for (const c of LONG) {
 rmSync(dist, { recursive: true, force: true });
 const out = await Bun.build({
   entrypoints: [join(here, "src/main.ts"), join(here, "src/worker.ts"), join(here, "src/live.ts"), join(here, "src/live-worklet.ts")], outdir: dist, target: "browser", format: "esm", minify: false,
-  define: { MODELS: JSON.stringify(models), EXPECTED_LONG: JSON.stringify(expectedLong) },
+  // DIAG_URL: where both pages POST their step trail (scripts/diag-collector.ts on diesel2, tailnet https). PK_DIAG_URL= (empty) builds without it.
+  define: { MODELS: JSON.stringify(models), EXPECTED_LONG: JSON.stringify(expectedLong), DIAG_URL: JSON.stringify(process.env.PK_DIAG_URL ?? "https://diesel2.guineafowl-truck.ts.net:9445/log") },
 });
 if (!out.success) throw new AggregateError(out.logs, "build failed");
 
