@@ -1,0 +1,231 @@
+From 9b360e15ba2cf35a94856e7a53a7864ba65638fe Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 05:10:55 -0700
+Subject: [PATCH 13/14] parakeet decoder: per-token memo of layer-0 Wx @
+ embedding, joint prediction half cached across blank steps
+
+Wx @ embed(token) of the first LSTM layer depends on the token only: it is
+computed once per token id (by the same mul_mat on the same backend, so the
+value is the one the step graph produced) and kept with the model, up to
+(vocab + 1) x 4H floats (10.5 MB). The joint's pred_w @ pred_state + pred_b is
+its own graph, recomputed only when pred_state changed (190 of 482 steps at
+56 s are blanks). Logits are bit-identical; text identical on all models.
+Native, one thread, 56 s clip, decode ms: 110m Q8_0 72 -> 47 (66 with the memo
+off), 0.6b Q4_0 123 -> 100. The memo is warm in repeated runs of one clip:
+the first run of a new text pays for its distinct tokens.
+TRANSCRIBE_DECODER_NO_WX_CACHE=1 disables the memo.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ src/arch/parakeet/decoder.cpp | 93 +++++++++++++++++++++++++++++++----
+ src/arch/parakeet/decoder.h   | 10 ++++
+ 2 files changed, 93 insertions(+), 10 deletions(-)
+
+diff --git a/src/arch/parakeet/decoder.cpp b/src/arch/parakeet/decoder.cpp
+index 8ce1be73..9c01c179 100644
+--- a/src/arch/parakeet/decoder.cpp
++++ b/src/arch/parakeet/decoder.cpp
+@@ -43,6 +43,7 @@
+ #include <cstdio>
+ #include <cstdlib>
+ #include <cstring>
++#include <mutex>
+ #include <utility>
+ #include <vector>
+ 
+@@ -368,6 +369,15 @@ struct JointGraph {
+     ggml_tensor *         enc_in  = nullptr;  // [joint_h] fp32 input (enc_proj frame)
+     ggml_tensor *         logits  = nullptr;  // [joint_n] fp32 output
+     bool                  ready   = false;
++    // The prediction half (pred_w @ pred_state + pred_b) only changes when a
++    // token is emitted, so it is its own graph, recomputed when pred_state's
++    // bytes differ from the previous step's and fed to the main graph as an
++    // input. Same ops on the same values: logits are bit-identical.
++    ggml_cgraph *              pred_graph   = nullptr;
++    ggml_tensor *              pred_proj    = nullptr;  // [joint_h] output of pred_graph
++    ggml_tensor *              pred_proj_in = nullptr;  // [joint_h] input of graph
++    mutable std::vector<float> last_pred;               // pred_state behind pred_proj_in
++    mutable std::vector<float> proj_scratch;
+ 
+     JointGraph() = default;
+ 
+@@ -416,7 +426,7 @@ bool build_joint_graph(JointGraph & g, const HostJoint & j, ggml_backend_t backe
+     };
+ 
+     ggml_init_params ip{};
+-    ip.mem_size   = ggml_tensor_overhead() * 16 + ggml_graph_overhead();
++    ip.mem_size   = ggml_tensor_overhead() * 20 + 2 * ggml_graph_overhead();
+     ip.mem_buffer = nullptr;
+     ip.no_alloc   = true;
+     g.ctx         = ggml_init(ip);
+@@ -430,9 +440,11 @@ bool build_joint_graph(JointGraph & g, const HostJoint & j, ggml_backend_t backe
+     ggml_set_input(g.enc_in);
+ 
+     // pred_proj = pred_w @ pred_in + pred_b   [joint_h]
+-    ggml_tensor * pred_proj = ggml_add(g.ctx, ggml_mul_mat(g.ctx, j.g_pred_w, g.pred_in), j.g_pred_b);
+-    // summed = enc_proj + pred_proj           [joint_h]
+-    ggml_tensor * summed    = ggml_add(g.ctx, g.enc_in, pred_proj);
++    g.pred_proj = ggml_add(g.ctx, ggml_mul_mat(g.ctx, j.g_pred_w, g.pred_in), j.g_pred_b);
++    ggml_set_output(g.pred_proj);
++    g.pred_proj_in = ggml_new_tensor_1d(g.ctx, GGML_TYPE_F32, j.joint_h);
++    ggml_set_input(g.pred_proj_in);
++    ggml_tensor * summed = ggml_add(g.ctx, g.enc_in, g.pred_proj_in);
+     // activation — loader allow-list guarantees exactly one of relu/sigmoid/tanh.
+     ggml_tensor * activated;
+     if (j.activation == "relu") {
+@@ -454,6 +466,9 @@ bool build_joint_graph(JointGraph & g, const HostJoint & j, ggml_backend_t backe
+ 
+     g.graph = ggml_new_graph(g.ctx);
+     ggml_build_forward_expand(g.graph, g.logits);
++    g.pred_graph = ggml_new_graph(g.ctx);
++    ggml_build_forward_expand(g.pred_graph, g.pred_proj);
++    g.last_pred.clear();
+     g.ready = true;
+     return true;
+ }
+@@ -495,6 +510,14 @@ struct PredGraph {
+     ggml_cgraph *              graph   = nullptr;
+     ggml_threadpool_t          tp      = nullptr;
+     ggml_tensor *              x       = nullptr;  // [H] input embedding
++    // Layer 0's Wx @ x is fed as an input (wx0) taken from the per-token memo
++    // in HostPredictor; a miss runs wx_graph (the same mul_mat on the same
++    // weights and backend, so the value is the one the step graph would
++    // compute). Null when the memo is off: then the step graph does the mul_mat.
++    ggml_tensor *              wx0      = nullptr;  // [4H] input
++    ggml_tensor *              wx_x     = nullptr;  // [H] input of wx_graph
++    ggml_tensor *              wx_out   = nullptr;  // [4H] output of wx_graph
++    ggml_cgraph *              wx_graph = nullptr;
+     std::vector<ggml_tensor *> ph;                 // [H] prev hidden per layer (input)
+     std::vector<ggml_tensor *> pc;                 // [H] prev cell   per layer (input)
+     std::vector<ggml_tensor *> nh;                 // [H] new  hidden per layer (output)
+@@ -595,7 +618,7 @@ bool build_pred_graph(PredGraph & g, const HostPredictor & p, int n_threads) {
+ 
+     ggml_init_params ip{};
+     // ~17 op nodes/layer + (1 + 2L) input tensors; generous headroom.
+-    ip.mem_size   = ggml_tensor_overhead() * static_cast<size_t>(32 * L + 16) + ggml_graph_overhead();
++    ip.mem_size   = ggml_tensor_overhead() * static_cast<size_t>(32 * L + 24) + 2 * ggml_graph_overhead();
+     ip.mem_buffer = nullptr;
+     ip.no_alloc   = true;
+     g.ctx         = ggml_init(ip);
+@@ -618,11 +641,21 @@ bool build_pred_graph(PredGraph & g, const HostPredictor & p, int n_threads) {
+ 
+     // gates = Wx@x + Wh@h_prev + b; split [i,f,g,o]; c' = f*c + i*g; h' = o*tanh(c').
+     // Gate order [i, f, g, o] (PyTorch standard).
++    if (std::getenv("TRANSCRIBE_DECODER_NO_WX_CACHE") == nullptr) {
++        g.wx0 = ggml_new_tensor_1d(g.ctx, GGML_TYPE_F32, 4 * static_cast<int64_t>(H));
++        ggml_set_input(g.wx0);
++        g.wx_x = ggml_new_tensor_1d(g.ctx, GGML_TYPE_F32, H);
++        ggml_set_input(g.wx_x);
++        g.wx_out = ggml_mul_mat(g.ctx, p.lstm[0].g_Wx, g.wx_x);
++        ggml_set_output(g.wx_out);
++    }
++
+     ggml_tensor * in = g.x;
+     for (int l = 0; l < L; ++l) {
+-        const auto &  lh = p.lstm[static_cast<size_t>(l)];
++        const auto &  lh    = p.lstm[static_cast<size_t>(l)];
++        ggml_tensor * wx    = (l == 0 && g.wx0 != nullptr) ? g.wx0 : ggml_mul_mat(g.ctx, lh.g_Wx, in);
+         ggml_tensor * gates =
+-            ggml_add(g.ctx, ggml_add(g.ctx, ggml_mul_mat(g.ctx, lh.g_Wx, in), ggml_mul_mat(g.ctx, lh.g_Wh, g.ph[l])),
++            ggml_add(g.ctx, ggml_add(g.ctx, wx, ggml_mul_mat(g.ctx, lh.g_Wh, g.ph[l])),
+                      lh.g_b);  // [4H]
+         auto part = [&](int k) {
+             return ggml_view_1d(g.ctx, gates, H,
+@@ -649,6 +682,10 @@ bool build_pred_graph(PredGraph & g, const HostPredictor & p, int n_threads) {
+         ggml_build_forward_expand(g.graph, g.nh[l]);
+         ggml_build_forward_expand(g.graph, g.nc[l]);
+     }
++    if (g.wx_out != nullptr) {
++        g.wx_graph = ggml_new_graph(g.ctx);
++        ggml_build_forward_expand(g.wx_graph, g.wx_out);
++    }
+     g.ready = true;
+     return true;
+ }
+@@ -908,7 +945,30 @@ const float * predictor_step_ggml(const HostPredictor & predictor,
+     }
+ 
+     const size_t hb = static_cast<size_t>(H) * sizeof(float);
+-    ggml_backend_tensor_set(g.x, scratch_x.data(), 0, hb);
++    if (g.wx0 == nullptr) {
++        ggml_backend_tensor_set(g.x, scratch_x.data(), 0, hb);
++    } else {
++        // Wx @ x from the per-token memo (row pred_vocab: the zero start input).
++        const size_t                row     = last_token < 0 ? static_cast<size_t>(predictor.pred_vocab) : static_cast<size_t>(last_token);
++        const size_t                n_rows  = static_cast<size_t>(predictor.pred_vocab) + 1;
++        const size_t                row_len = 4 * static_cast<size_t>(H);
++        std::lock_guard<std::mutex> lock(predictor.wx0_mu);
++        if (predictor.wx0_have.size() != n_rows) {
++            predictor.wx0_have.assign(n_rows, 0);
++            predictor.wx0_cache.assign(n_rows * row_len, 0.0f);
++        }
++        float * cached = predictor.wx0_cache.data() + row * row_len;
++        if (predictor.wx0_have[row] == 0) {
++            ggml_backend_tensor_set(g.wx_x, scratch_x.data(), 0, hb);
++            if (const ggml_status gs = ggml_backend_graph_compute(g.backend, g.wx_graph); gs != GGML_STATUS_SUCCESS) {
++                log_msg(TRANSCRIBE_LOG_LEVEL_ERROR, "parakeet decoder: predictor Wx compute failed (%d)", static_cast<int>(gs));
++                return nullptr;
++            }
++            ggml_backend_tensor_get(g.wx_out, cached, 0, row_len * sizeof(float));
++            predictor.wx0_have[row] = 1;
++        }
++        ggml_backend_tensor_set(g.wx0, cached, 0, row_len * sizeof(float));
++    }
+     for (int l = 0; l < g.L; ++l) {
+         ggml_backend_tensor_set(g.ph[l], prev_state.h[static_cast<size_t>(l)].data(), 0, hb);
+         ggml_backend_tensor_set(g.pc[l], prev_state.c[static_cast<size_t>(l)].data(), 0, hb);
+@@ -947,8 +1007,21 @@ bool joint_step(const HostJoint &    j,
+         out_logits.resize(static_cast<size_t>(j.joint_n));
+     }
+ 
+-    // Full joint on the shared decoder pool, one graph, one dispatch.
+-    ggml_backend_tensor_set(g.pred_in, pred_state, 0, static_cast<size_t>(j.pred_hidden) * sizeof(float));
++    // Prediction half: only when pred_state changed (see JointGraph).
++    const size_t pred_bytes = static_cast<size_t>(j.pred_hidden) * sizeof(float);
++    if (g.last_pred.size() != static_cast<size_t>(j.pred_hidden) ||
++        std::memcmp(g.last_pred.data(), pred_state, pred_bytes) != 0) {
++        ggml_backend_tensor_set(g.pred_in, pred_state, 0, pred_bytes);
++        if (const ggml_status gs = ggml_backend_graph_compute(g.backend, g.pred_graph); gs != GGML_STATUS_SUCCESS) {
++            log_msg(TRANSCRIBE_LOG_LEVEL_ERROR, "parakeet decoder: joint pred compute failed (%d)", static_cast<int>(gs));
++            return false;
++        }
++        g.proj_scratch.resize(static_cast<size_t>(j.joint_h));
++        const size_t proj_bytes = static_cast<size_t>(j.joint_h) * sizeof(float);
++        ggml_backend_tensor_get(g.pred_proj, g.proj_scratch.data(), 0, proj_bytes);
++        ggml_backend_tensor_set(g.pred_proj_in, g.proj_scratch.data(), 0, proj_bytes);
++        g.last_pred.assign(pred_state, pred_state + j.pred_hidden);
++    }
+     ggml_backend_tensor_set(g.enc_in, enc_proj, 0, static_cast<size_t>(j.joint_h) * sizeof(float));
+     if (const ggml_status gs = ggml_backend_graph_compute(g.backend, g.graph); gs != GGML_STATUS_SUCCESS) {
+         log_msg(TRANSCRIBE_LOG_LEVEL_ERROR, "parakeet decoder: joint compute failed (%d)", static_cast<int>(gs));
+diff --git a/src/arch/parakeet/decoder.h b/src/arch/parakeet/decoder.h
+index 322c4b0e..b081c9de 100644
+--- a/src/arch/parakeet/decoder.h
++++ b/src/arch/parakeet/decoder.h
+@@ -32,6 +32,7 @@
+ #include "transcribe.h"
+ 
+ #include <cstdint>
++#include <mutex>
+ #include <string>
+ #include <vector>
+ 
+@@ -90,6 +91,15 @@ struct HostPredictor {
+     // per-step LSTM matmuls are n=1 GEMV (tinyBLAS skips n<2), so fp32 is
+     // closest to the host reference at no speed cost. Owned here, freed by
+     // dtor. On build failure lstm_ready stays false (hard decode error).
++    // Wx @ embedding of layer 0, per token id (row pred_vocab: the all-zero
++    // start input), filled the first time a token is fed to the predictor and
++    // kept for the life of the model: the product depends on the token only,
++    // and it is half of a one-layer predictor step. Up to (pred_vocab + 1) x 4H
++    // floats. TRANSCRIBE_DECODER_NO_WX_CACHE=1 turns it off.
++    mutable std::mutex           wx0_mu;
++    mutable std::vector<float>   wx0_cache;
++    mutable std::vector<uint8_t> wx0_have;
++
+     ggml_context *        lstm_w_ctx     = nullptr;
+     ggml_backend_t        lstm_w_backend = nullptr;  // alloc-only; never compute'd
+     ggml_backend_buffer_t lstm_w_buf     = nullptr;
+-- 
+2.53.0
+

@@ -7,7 +7,7 @@ import json,sys,re
 d=json.load(open(sys.argv[1])); p=d.get('page') or {}; m=d.get('memory',{})
 for c in p.get('clips',[]):
     g=lambda k: (c.get(k) or {}).get('median')
-    print(f"  {c['clip']} first {c['firstRunMs']['total']:.0f} | mel {g('preMs')} enc {g('encMs')} dec {g('decMs')} total {g('totalMs')} (worst {(c.get('totalMs') or {}).get('worst')}) match={c['matchesNative']} stable={c.get('textStable')}")
+    print(f"  {c['clip']} first {c['firstRunMs']['total']:.0f} (dec {c['firstRunMs']['dec']:.0f}) | mel {g('preMs')} enc {g('encMs')} dec {g('decMs')} total {g('totalMs')} (worst {(c.get('totalMs') or {}).get('worst')}) match={c['matchesNative']} stable={c.get('textStable')}")
 print(f"  load {p.get('load',{}).get('loadMs')} ms fetch {p.get('load',{}).get('fetchMs')} | gpu {m.get('gpuProcessGpuMibAfterLoad')}/{m.get('gpuProcessGpuMibPeak')} MiB renderer {m.get('rendererRssMibAfterLoad')}/{m.get('rendererRssMibPeak')} MiB | f16={p.get('shaderF16Used')} backend={p.get('load',{}).get('backend')} | {d['machineAtStart']['loadavg'][:14]}")
 if d.get('error'): print("  ERROR:", d['error'][:1500])
 for s in d.get('steps') or []:

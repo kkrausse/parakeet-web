@@ -141,6 +141,7 @@ async function run() {
   const env: Record<string, string> = { TRANSCRIBE_NO_FLASH: flash ? "" : "1", TRANSCRIBE_F32_MASK_CONCAT: flash ? "1" : "",
     GGML_WEBGPU_NO_F16: useF16 ? "" : "1", TRANSCRIBE_F32_POINTWISE: useF16 ? "" : "1",
     TRANSCRIBE_PRE_ENCODE_TILE: "128", // clips over 15 s: subsampling convs in 10 s time tiles (exact): their activations no longer grow with the clip
+    TRANSCRIBE_ENC_PROJ_GPU: "1", // the joint's encoder projection as the last encoder node; only it is read back
     ...(a.plan?.limits === "default" ? { GGML_WEBGPU_LIMITS: "default" } : {}), ...cfg.env };
   const ld = await call("load", { url: new URL(cfg.base + model.file, location.href).href, name: model.file, store: cfg.store, env, threads: cfg.threads, verbose: cfg.verbose });
   result.load = { fetchMs: Math.round(ld.fetchMs), loadMs: Math.round(ld.loadMs), from: ld.from, fileMb: r1(ld.mb), wasmHeapMb: ld.heapMb, wasmHeapUsedMb: ld.heapUsedMb, backend: ld.backend };
@@ -168,7 +169,7 @@ async function run() {
     const once = async () => {
       const r = await call("run", { pcm: audio });
       gpuFail(clip, r.gpuErrors);
-      if (cfg.verbose && r.log) for (const l of String(r.log).split("\n")) if (/decoder:/.test(l)) step(`library: ${l.trim().slice(0, 300)}`);
+      if (cfg.verbose && r.log) for (const l of String(r.log).split("\n")) if (/decoder:|mel:/.test(l)) step(`library: ${l.trim().slice(0, 300)}`);
       // encoder = until its output is on the CPU: with lazy synchronize the library's own encode_ms stops at submit
       return { pre: r.mel_ms as number, enc: (r.wallMs - r.mel_ms - r.decode_ms) as number, encSubmit: r.encode_ms as number, dec: r.decode_ms as number, total: r.wallMs as number, text: r.text as string, tokens: r.n_tokens as number, heapMb: r.heapMb as number, heapUsedMb: r.heapUsedMb as number };
     };

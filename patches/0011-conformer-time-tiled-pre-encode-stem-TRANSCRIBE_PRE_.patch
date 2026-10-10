@@ -1,7 +1,7 @@
 From 32a3a2d8685d5cac380994f6fab95078cd2949ed Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 04:50:34 -0700
-Subject: [PATCH 11/11] conformer: time-tiled pre-encode stem
+Subject: [PATCH 11/14] conformer: time-tiled pre-encode stem
  (TRANSCRIBE_PRE_ENCODE_TILE=<encoder frames>)
 
 conv0's output (channels x F/2 x T/2 fp32) is 184 MB for a 56 s clip with

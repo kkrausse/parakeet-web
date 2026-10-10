@@ -1,7 +1,7 @@
 From f2673d860e74b8cb8b5384a856a48ab9513c15c7 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 04:39:40 -0700
-Subject: [PATCH 10/11] ggml-webgpu: request only the limits in use, report
+Subject: [PATCH 10/14] ggml-webgpu: request only the limits in use, report
  shader/device errors instead of aborting in WASM
 
 The device was created with the adapter's whole limits struct: in a browser

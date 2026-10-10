@@ -1,0 +1,191 @@
+From b695cfe98dc3467c814fff403382eac3f7cc0652 Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 05:08:06 -0700
+Subject: [PATCH 12/14] mel: tabulated radix-2 twiddles (bit-identical),
+ SIMD128 for the mel source in WASM, timing line
+
+The butterflies recomputed each twiddle with a loop-carried complex multiply.
+The same recurrence now fills a per-size table once; every twiddle is the
+same double, so the STFT is bit-identical. Chrome, 56 s clip, one WASM
+thread: mel 45 -> 34 ms (110m), 49 -> 37 ms (0.6b); with -msimd128 on this
+file 32.6 ms. Hand-written f64x2 butterflies gave nothing more (22.4 vs 22.9 ms
+of STFT) and were not kept. Debug line: 'mel: N frames, stft X ms, total Y ms'.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ src/CMakeLists.txt     |  6 +++
+ src/transcribe-mel.cpp | 95 +++++++++++++++++++++++++++++++-----------
+ 2 files changed, 77 insertions(+), 24 deletions(-)
+
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 15c7685b..aa170fd9 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -154,6 +154,12 @@ add_library(transcribe
+     third_party/miniz/miniz.c
+ )
+ 
++# WASM: the fp64 STFT butterflies are 5x slower than native without SIMD128
++# (the rest of the library showed no gain from it, so only this file).
++if (EMSCRIPTEN)
++    set_source_files_properties(transcribe-mel.cpp PROPERTIES COMPILE_OPTIONS "-msimd128")
++endif()
++
+ target_include_directories(transcribe
+     PUBLIC
+         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+diff --git a/src/transcribe-mel.cpp b/src/transcribe-mel.cpp
+index af4e23ca..3c799f1e 100644
+--- a/src/transcribe-mel.cpp
++++ b/src/transcribe-mel.cpp
+@@ -33,7 +33,10 @@
+ #    include <cblas.h>
+ #endif
+ 
++#include "transcribe-log.h"
++
+ #include <algorithm>
++#include <chrono>
+ #include <cmath>
+ #include <cstddef>
+ #include <cstring>
+@@ -236,8 +239,25 @@ void mixed_radix_fft_f32(float * in, int N, const float * cos_lut, const float *
+     }
+ }
+ 
+-void fft_radix2(double * data, int n) {
+-    // Bit-reversal permutation.
++// Bit-reversal pairs and per-stage twiddle factors for fft_radix2, built once
++// per size. The twiddles are produced by the same incremental recurrence the
++// butterflies used to run inline (w *= wlen), so every value is the same
++// double as before and the transform is bit-identical; what goes away is the
++// loop-carried multiply chain that serialized all n/2 butterflies of a group.
++struct Radix2Plan {
++    int                 n = 0;
++    std::vector<int>    swaps;    // (i, j) pairs, i < j
++    std::vector<double> twiddle;  // per stage len = 2, 4, .., n: len/2 (re, im) pairs
++};
++
++const Radix2Plan & radix2_plan(int n) {
++    static thread_local Radix2Plan plan;
++    if (plan.n == n) {
++        return plan;
++    }
++    plan.n = n;
++    plan.swaps.clear();
++    plan.twiddle.clear();
+     int j = 0;
+     for (int i = 1; i < n; ++i) {
+         int bit = n >> 1;
+@@ -246,37 +266,58 @@ void fft_radix2(double * data, int n) {
+         }
+         j ^= bit;
+         if (i < j) {
+-            std::swap(data[2 * i], data[2 * j]);
+-            std::swap(data[2 * i + 1], data[2 * j + 1]);
++            plan.swaps.push_back(i);
++            plan.swaps.push_back(j);
+         }
+     }
+-    // Cooley-Tukey butterflies. Twiddle factors are computed
+-    // incrementally per butterfly group; this drifts by a few ULPs
+-    // for very large n but is bit-stable for n=512.
+     for (int len = 2; len <= n; len <<= 1) {
+         const double ang     = -2.0 * M_PI / static_cast<double>(len);
+         const double wlen_re = std::cos(ang);
+         const double wlen_im = std::sin(ang);
++        double       w_re    = 1.0;
++        double       w_im    = 0.0;
++        for (int k = 0; k < len / 2; ++k) {
++            plan.twiddle.push_back(w_re);
++            plan.twiddle.push_back(w_im);
++            const double tmp_re = w_re * wlen_re - w_im * wlen_im;
++            const double tmp_im = w_re * wlen_im + w_im * wlen_re;
++            w_re                = tmp_re;
++            w_im                = tmp_im;
++        }
++    }
++    return plan;
++}
++
++void fft_radix2(double * data, int n) {
++    const Radix2Plan & plan = radix2_plan(n);
++    // Bit-reversal permutation.
++    for (size_t s = 0; s + 1 < plan.swaps.size(); s += 2) {
++        const int i = plan.swaps[s];
++        const int j = plan.swaps[s + 1];
++        std::swap(data[2 * i], data[2 * j]);
++        std::swap(data[2 * i + 1], data[2 * j + 1]);
++    }
++    // Cooley-Tukey butterflies with the tabulated twiddles (see Radix2Plan).
++    const double * tw = plan.twiddle.data();
++    for (int len = 2; len <= n; len <<= 1) {
++        const int half = len / 2;
+         for (int i = 0; i < n; i += len) {
+-            double w_re = 1.0;
+-            double w_im = 0.0;
+-            for (int k = 0; k < len / 2; ++k) {
+-                const int    a      = 2 * (i + k);
+-                const int    b      = 2 * (i + k + len / 2);
+-                const double u_re   = data[a];
+-                const double u_im   = data[a + 1];
+-                const double v_re   = data[b] * w_re - data[b + 1] * w_im;
+-                const double v_im   = data[b] * w_im + data[b + 1] * w_re;
+-                data[a]             = u_re + v_re;
+-                data[a + 1]         = u_im + v_im;
+-                data[b]             = u_re - v_re;
+-                data[b + 1]         = u_im - v_im;
+-                const double tmp_re = w_re * wlen_re - w_im * wlen_im;
+-                const double tmp_im = w_re * wlen_im + w_im * wlen_re;
+-                w_re                = tmp_re;
+-                w_im                = tmp_im;
++            double * lo = data + 2 * i;
++            double * hi = lo + 2 * half;
++            for (int k = 0; k < half; ++k) {
++                const double w_re = tw[2 * k];
++                const double w_im = tw[2 * k + 1];
++                const double u_re = lo[2 * k];
++                const double u_im = lo[2 * k + 1];
++                const double v_re = hi[2 * k] * w_re - hi[2 * k + 1] * w_im;
++                const double v_im = hi[2 * k] * w_im + hi[2 * k + 1] * w_re;
++                lo[2 * k]         = u_re + v_re;
++                lo[2 * k + 1]     = u_im + v_im;
++                hi[2 * k]         = u_re - v_re;
++                hi[2 * k + 1]     = u_im - v_im;
+             }
+         }
++        tw += 2 * half;
+     }
+ }
+ 
+@@ -409,6 +450,8 @@ transcribe_status MelFrontend::compute(const float *        pcm,
+     // padded buffer directly in fp32 and skip the intermediate emph copy.
+     // The pow2 paths (vDSP / hand-rolled radix-2) stay fp64 since their
+     // FFT routines are fp64-native.
++    const auto t_mel0    = std::chrono::steady_clock::now();
++    double     t_stft_ms = 0.0;
+     const bool n_fft_is_pow2 = ((n_fft > 0) && ((n_fft & (n_fft - 1)) == 0));
+ 
+     std::vector<float>  padded_f32;
+@@ -662,7 +705,9 @@ transcribe_status MelFrontend::compute(const float *        pcm,
+                 }
+             }
+         };
++        const auto t_stft0 = std::chrono::steady_clock::now();
+         run_threaded(worker);
++        t_stft_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t_stft0).count();
+ #endif
+ 
+         // pow2 post-pass matmul + log → log_mel.
+@@ -751,6 +796,8 @@ transcribe_status MelFrontend::compute(const float *        pcm,
+ #endif
+     }
+ 
++    log_msg(TRANSCRIBE_LOG_LEVEL_DEBUG, "mel: %d frames, stft %.1f ms, total to log-mel %.1f ms", n_frames, t_stft_ms,
++            std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t_mel0).count());
+     std::vector<double>().swap(padded);
+     std::vector<float>().swap(padded_f32);
+     std::vector<float>().swap(window_f32);
+-- 
+2.53.0
+

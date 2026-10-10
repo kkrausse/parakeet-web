@@ -1,0 +1,204 @@
+From ed7460f5d13bafc43b7efb707ea27225853d8cad Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 05:21:28 -0700
+Subject: [PATCH 14/14] parakeet: joint encoder projection as the last encoder
+ node (TRANSCRIBE_ENC_PROJ_GPU=1)
+
+The greedy transducer decoders only use the encoder output through
+enc_w @ enc_out + enc_b, a T x d_enc x joint_h GEMM on the decoder's CPU
+thread (WASM, one thread, 56 s: 18 ms for 110m, 35 ms for 0.6b). With the
+flag it is one more mul_mat + add on the encoder's backend and only the
+projection is read back. Plain runs with a TDT/RNNT head only (no prompt, no
+length masking, no dumps). Text identical on all models and clips, f16 and
+f32-only shaders. Chrome 56 s total: 110m 245 -> 226 ms, 0.6b Q4_0 698 -> 672.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ src/arch/parakeet/decoder.cpp | 14 ++++++++++----
+ src/arch/parakeet/decoder.h   |  6 ++++--
+ src/arch/parakeet/encoder.cpp | 12 ++++++++++++
+ src/arch/parakeet/encoder.h   |  7 +++++++
+ src/arch/parakeet/model.cpp   | 23 ++++++++++++++++++++---
+ src/arch/parakeet/parakeet.h  |  4 ++++
+ 6 files changed, 57 insertions(+), 9 deletions(-)
+
+diff --git a/src/arch/parakeet/decoder.cpp b/src/arch/parakeet/decoder.cpp
+index 9c01c179..61843230 100644
+--- a/src/arch/parakeet/decoder.cpp
++++ b/src/arch/parakeet/decoder.cpp
+@@ -1181,7 +1181,8 @@ transcribe_status decode_tdt_greedy(const HostDecoderWeights & w,
+                                     int                        T_enc,
+                                     int                        d_enc,
+                                     int                        n_threads,
+-                                    std::vector<TdtToken> &    out_tokens) {
++                                    std::vector<TdtToken> &    out_tokens,
++                                    const std::vector<float> * enc_proj_pre) {
+     if (enc_out == nullptr || T_enc <= 0 || d_enc <= 0) {
+         return TRANSCRIBE_ERR_INVALID_ARG;
+     }
+@@ -1231,7 +1232,9 @@ transcribe_status decode_tdt_greedy(const HostDecoderWeights & w,
+     const int          joint_h = w.joint.joint_h;
+     std::vector<float> enc_proj_all;
+     const int64_t      t_enc_proj_start = ggml_time_us();
+-    if (!precompute_enc_proj_ggml(w.joint, pg.backend, enc_out, T_enc, d_enc, enc_proj_all)) {
++    if (enc_proj_pre != nullptr && enc_proj_pre->size() == static_cast<size_t>(T_enc) * static_cast<size_t>(joint_h)) {
++        enc_proj_all = *enc_proj_pre;  // computed by the encoder graph (EncoderBuild::enc_proj)
++    } else if (!precompute_enc_proj_ggml(w.joint, pg.backend, enc_out, T_enc, d_enc, enc_proj_all)) {
+         log_msg(TRANSCRIBE_LOG_LEVEL_ERROR, "parakeet decoder: enc_proj graph failed");
+         return TRANSCRIBE_ERR_BACKEND;
+     }
+@@ -1415,7 +1418,8 @@ transcribe_status decode_rnnt_greedy(const HostDecoderWeights & w,
+                                      int                        T_enc,
+                                      int                        d_enc,
+                                      int                        n_threads,
+-                                     std::vector<TdtToken> &    out_tokens) {
++                                     std::vector<TdtToken> &    out_tokens,
++                                     const std::vector<float> * enc_proj_pre) {
+     if (enc_out == nullptr || T_enc <= 0 || d_enc <= 0) {
+         return TRANSCRIBE_ERR_INVALID_ARG;
+     }
+@@ -1454,7 +1458,9 @@ transcribe_status decode_rnnt_greedy(const HostDecoderWeights & w,
+     const int          joint_h = w.joint.joint_h;
+     std::vector<float> enc_proj_all;
+     const int64_t      t_enc_proj_start = ggml_time_us();
+-    if (!precompute_enc_proj_ggml(w.joint, pg.backend, enc_out, T_enc, d_enc, enc_proj_all)) {
++    if (enc_proj_pre != nullptr && enc_proj_pre->size() == static_cast<size_t>(T_enc) * static_cast<size_t>(joint_h)) {
++        enc_proj_all = *enc_proj_pre;  // computed by the encoder graph (EncoderBuild::enc_proj)
++    } else if (!precompute_enc_proj_ggml(w.joint, pg.backend, enc_out, T_enc, d_enc, enc_proj_all)) {
+         log_msg(TRANSCRIBE_LOG_LEVEL_ERROR, "parakeet decoder: enc_proj graph failed");
+         return TRANSCRIBE_ERR_BACKEND;
+     }
+diff --git a/src/arch/parakeet/decoder.h b/src/arch/parakeet/decoder.h
+index b081c9de..615bdca8 100644
+--- a/src/arch/parakeet/decoder.h
++++ b/src/arch/parakeet/decoder.h
+@@ -240,7 +240,8 @@ transcribe_status decode_tdt_greedy(const HostDecoderWeights & w,
+                                     int                        T_enc,
+                                     int                        d_enc,
+                                     int                        n_threads,
+-                                    std::vector<TdtToken> &    out_tokens);
++                                    std::vector<TdtToken> &    out_tokens,
++                                    const std::vector<float> * enc_proj_pre = nullptr);
+ 
+ // Run RNNT greedy decode end-to-end. Same predictor + joint code as TDT,
+ // but the joint emits `vocab+1` logits (no duration extras) and the step
+@@ -252,7 +253,8 @@ transcribe_status decode_rnnt_greedy(const HostDecoderWeights & w,
+                                      int                        T_enc,
+                                      int                        d_enc,
+                                      int                        n_threads,
+-                                     std::vector<TdtToken> &    out_tokens);
++                                     std::vector<TdtToken> &    out_tokens,
++                                     const std::vector<float> * enc_proj_pre = nullptr);
+ 
+ // Streaming variant of RNN-T greedy decode. Consumes T_enc_new encoder
+ // frames (the chunk just produced) and APPENDS emitted tokens to
+diff --git a/src/arch/parakeet/encoder.cpp b/src/arch/parakeet/encoder.cpp
+index 6f48e453..992d66cf 100644
+--- a/src/arch/parakeet/encoder.cpp
++++ b/src/arch/parakeet/encoder.cpp
+@@ -682,6 +682,15 @@ EncoderBuild build_encoder_graph(ggml_context *                     ctx,
+     eb.out = x;
+     ggml_set_output(eb.out);
+ 
++    // See EncoderBuild::enc_proj. enc_w is stored [d_enc, joint_h] in ggml order.
++    if (std::getenv("TRANSCRIBE_ENC_PROJ_GPU") != nullptr && w.joint.enc_w != nullptr && w.joint.enc_b != nullptr &&
++        w.joint.enc_b->type == GGML_TYPE_F32 && w.joint.enc_w->ne[0] == x->ne[0] && x->ne[2] == 1 && x->ne[3] == 1) {
++        ggml_tensor * p = ggml_mul_mat(ctx, w.joint.enc_w, x);
++        eb.enc_proj     = ggml_add(ctx, p, w.joint.enc_b);
++        ggml_set_name(eb.enc_proj, "enc.joint_proj");
++        ggml_set_output(eb.enc_proj);
++    }
++
+     // 8192-node cgraph: the default 2048 is too small (each conformer
+     // block contributes ~90 ops, 24 blocks > 2200).
+     eb.graph = ggml_new_graph_custom(ctx, /*size=*/8192, /*grads=*/false);
+@@ -690,6 +699,9 @@ EncoderBuild build_encoder_graph(ggml_context *                     ctx,
+         return eb;
+     }
+     ggml_build_forward_expand(eb.graph, eb.out);
++    if (eb.enc_proj != nullptr) {
++        ggml_build_forward_expand(eb.graph, eb.enc_proj);
++    }
+     // With the prompt MLP present, final_out is otherwise an unconnected
+     // node; add it as a forward root so it stays materialised for the
+     // "dec.enc_out" dump.
+diff --git a/src/arch/parakeet/encoder.h b/src/arch/parakeet/encoder.h
+index 42abbb7d..01756d6a 100644
+--- a/src/arch/parakeet/encoder.h
++++ b/src/arch/parakeet/encoder.h
+@@ -91,6 +91,13 @@ struct EncoderBuild {
+     // ne[0]=fastest convention for this 2-D tensor).
+     ggml_tensor * mel_in = nullptr;
+ 
++    // Joint encoder projection enc_w @ out + enc_b, ne=[joint_h, T_enc], as the
++    // last node of the encoder graph (TRANSCRIBE_ENC_PROJ_GPU=1, transducer
++    // heads without a prompt only). The greedy decoders need nothing else from
++    // the encoder, so the driver reads this back instead of `out` and the
++    // T x d_enc x joint_h GEMM leaves the decoder's CPU thread. Null otherwise.
++    ggml_tensor * enc_proj = nullptr;
++
+     // Sinusoidal positional embedding handle, normally
+     // ne=[d_model, 2*T_enc-1, 1, 1]. Bounded ChunkedLimited attention uses
+     // ne=[d_model, window+chunk-1, 1, 1]. The driver computes the buffer
+diff --git a/src/arch/parakeet/model.cpp b/src/arch/parakeet/model.cpp
+index 0c3da178..490a8fd3 100644
+--- a/src/arch/parakeet/model.cpp
++++ b/src/arch/parakeet/model.cpp
+@@ -842,10 +842,12 @@ static transcribe_status decode_and_populate(ParakeetSession *             pc,
+         transcribe_status st = TRANSCRIBE_OK;
+         switch (pm->host_decoder.head_kind) {
+             case HostHeadKind::TDT:
+-                st = decode_tdt_greedy(pm->host_decoder, enc, T_enc, d_enc, pc->n_threads, pc->raw_tokens);
++                st = decode_tdt_greedy(pm->host_decoder, enc, T_enc, d_enc, pc->n_threads, pc->raw_tokens,
++                                       pc->enc_proj_rows == T_enc ? &pc->enc_proj_host : nullptr);
+                 break;
+             case HostHeadKind::RNNT:
+-                st = decode_rnnt_greedy(pm->host_decoder, enc, T_enc, d_enc, pc->n_threads, pc->raw_tokens);
++                st = decode_rnnt_greedy(pm->host_decoder, enc, T_enc, d_enc, pc->n_threads, pc->raw_tokens,
++                                        pc->enc_proj_rows == T_enc ? &pc->enc_proj_host : nullptr);
+                 break;
+             case HostHeadKind::CTC:
+                 st = decode_ctc_greedy(pm->host_decoder, enc, T_enc, d_enc, pc->n_threads, pc->raw_tokens);
+@@ -1425,8 +1427,23 @@ transcribe_status run_one_shot_inner(ParakeetSession *             pc,
+                 d_enc, T_enc);
+         return TRANSCRIBE_ERR_GGUF;
+     }
++    // Transducer head, plain run: only the joint projection is needed (see
++    // EncoderBuild::enc_proj). enc_host stays sized (and unspecified) so the
++    // decode entry points keep their contract.
++    pc->enc_proj_rows = 0;
++    const bool proj_only = eb.enc_proj != nullptr && T_valid < 0 && !pm->hparams.has_prompt &&
++                           !transcribe::debug::enabled() &&
++                           (pm->host_decoder.head_kind == HostHeadKind::TDT ||
++                            pm->host_decoder.head_kind == HostHeadKind::RNNT) &&
++                           eb.enc_proj->ne[1] == T_enc;
+     pc->enc_host.resize(static_cast<size_t>(d_enc) * static_cast<size_t>(T_enc));
+-    ggml_backend_tensor_get(eb.out, pc->enc_host.data(), 0, pc->enc_host.size() * sizeof(float));
++    if (proj_only) {
++        pc->enc_proj_host.resize(static_cast<size_t>(eb.enc_proj->ne[0]) * static_cast<size_t>(T_enc));
++        ggml_backend_tensor_get(eb.enc_proj, pc->enc_proj_host.data(), 0, pc->enc_proj_host.size() * sizeof(float));
++        pc->enc_proj_rows = T_enc;
++    } else {
++        ggml_backend_tensor_get(eb.out, pc->enc_host.data(), 0, pc->enc_host.size() * sizeof(float));
++    }
+ 
+     // kestrel length masking: frames past the valid length are padding (the
+     // reference masks them out of attention as queries too, so their values
+diff --git a/src/arch/parakeet/parakeet.h b/src/arch/parakeet/parakeet.h
+index 387138a1..5a552d4c 100644
+--- a/src/arch/parakeet/parakeet.h
++++ b/src/arch/parakeet/parakeet.h
+@@ -307,6 +307,10 @@ struct ParakeetSession final : public transcribe_session {
+     std::vector<float>    pos_buf;
+     std::vector<float>    pos_div_term;
+     std::vector<float>    enc_host;
++    // Joint encoder projection read back from the encoder graph, [T_enc, joint_h]
++    // (EncoderBuild::enc_proj); enc_proj_rows > 0 only for the decode that follows.
++    std::vector<float>    enc_proj_host;
++    int                   enc_proj_rows = 0;
+     std::vector<TdtToken> raw_tokens;
+ 
+     // Multitalker bundle scratch: streaming-diarizer AOSC/FIFO state for
+-- 
+2.53.0
+
