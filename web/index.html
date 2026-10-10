@@ -23,8 +23,8 @@
   .wrap { overflow-x: auto; } .text { font-size: 13px; } .bad { color: var(--bad); }
   summary { cursor: pointer; font-size: 13px; padding: 4px 0; }
 </style>
-<h1>Parakeet TDT 0.6b v2 on ggml WebGPU</h1>
-<p class="mut">transcribe.cpp + ggml WebGPU backend compiled to WASM; quantized weights stay packed on the GPU. The model file is fetched from this server and kept in this browser (OPFS). Tap a configuration to load it and run; every finished step is saved, so if the tab dies, reload and look under "Earlier runs".</p>
+<h1>Parakeet on ggml WebGPU</h1>
+<p class="mut">transcribe.cpp + ggml WebGPU backend compiled to WASM; quantized weights stay packed on the GPU. Models: NVIDIA parakeet-tdt_ctc-110m (default) and parakeet-tdt-0.6b-v2. The model file is fetched from this server and kept in this browser (OPFS). Tap a configuration to load it and run; every finished step is saved, so if the tab dies, reload and look under "Earlier runs".</p>
 <div class="presets" id="presets"></div>
 <h2>Or choose</h2>
 <div class="controls">

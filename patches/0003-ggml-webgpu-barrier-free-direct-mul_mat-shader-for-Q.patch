@@ -1,7 +1,7 @@
 From 5e5314ba543358109ce42c0ca9d55e8143c4d69a Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 02:19:00 -0700
-Subject: [PATCH 3/7] ggml-webgpu: barrier-free direct mul_mat shader for
+Subject: [PATCH 3/8] ggml-webgpu: barrier-free direct mul_mat shader for
  Q8_0/Q4_0/F16/F32; browser-like native mode
 
 mul_mat_direct.wgsl replaces mul_mat_reg_tile where it applies (f32

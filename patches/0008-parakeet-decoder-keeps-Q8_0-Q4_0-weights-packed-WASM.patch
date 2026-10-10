@@ -1,0 +1,258 @@
+From cc456b60b11f89c4f6108c9634149a60ac8c15d1 Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sat, 10 Oct 2026 03:43:25 -0700
+Subject: [PATCH 8/8] parakeet decoder keeps Q8_0/Q4_0 weights packed; WASM
+ builds compile the SIMD quant kernels
+
+The TDT decode loop is mat-vecs over the LSTM and joint matrices, which as
+fp32 mirrors (0.6b: 26 MB walked per token) are memory bound. When the model
+stores them as Q8_0 or Q4_0 they now stay packed as Q8_0 blocks (Q4_0 is
+rewritten losslessly: same scale, nibble - 8 as int8) and the CPU backend's
+integer dot kernels run on them. TRANSCRIBE_DECODER_F32=1 restores the mirrors.
+
+ggml-cpu: the Emscripten toolchain reports CMAKE_SYSTEM_PROCESSOR=x86, so
+arch/wasm/quants.c was never compiled and every quantized dot was scalar
+(packed weights were 2.5x slower than fp32 in WASM before this).
+
+Native 1 thread, decode ms fp32 -> packed: 7 s 54 -> 20, 13.7 s 104 -> 36,
+56 s 361 -> 121. Chrome (1 WASM thread): 7 s 80 -> 48, 56 s 547 -> 293.
+Identical text on all three clips for Q4_0 and Q8_0. WASM heap in use 37 -> 16 MB.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ ggml/src/ggml-cpu/CMakeLists.txt |   2 +-
+ src/arch/parakeet/decoder.cpp    | 124 ++++++++++++++++++++++++++-----
+ src/arch/parakeet/decoder.h      |   7 ++
+ 3 files changed, 114 insertions(+), 19 deletions(-)
+
+diff --git a/ggml/src/ggml-cpu/CMakeLists.txt b/ggml/src/ggml-cpu/CMakeLists.txt
+index 1c7338ee..9b9236b7 100644
+--- a/ggml/src/ggml-cpu/CMakeLists.txt
++++ b/ggml/src/ggml-cpu/CMakeLists.txt
+@@ -571,7 +571,7 @@ function(ggml_add_cpu_backend_variant_impl tag_name)
+         endif()
+ 
+         ggml_add_cpu_backend_features(${GGML_CPU_NAME} s390 ${ARCH_DEFINITIONS})
+-    elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "wasm")
++    elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "wasm" OR EMSCRIPTEN)  # the Emscripten toolchain reports "x86"
+         message(STATUS "Wasm detected")
+         list (APPEND GGML_CPU_SOURCES ggml-cpu/arch/wasm/quants.c)
+     else()
+diff --git a/src/arch/parakeet/decoder.cpp b/src/arch/parakeet/decoder.cpp
+index 52defc38..8ce1be73 100644
+--- a/src/arch/parakeet/decoder.cpp
++++ b/src/arch/parakeet/decoder.cpp
+@@ -108,6 +108,53 @@ bool read_tensor_to_f32(const ggml_tensor * t, std::vector<float> & out) {
+     return true;
+ }
+ 
++// The decode loop is two mat-vecs per LSTM layer and two in the joint for
++// every emitted token, over weights that as fp32 do not fit a cache (0.6b:
++// 26 MB of LSTM matrices walked once per token), so it is memory bound.
++// When the model stores those matrices as Q8_0 / Q4_0 they can stay packed:
++// the CPU backend then runs its integer dot kernels (activation quantized to
++// Q8_0 per 32 elements, as every quantized ggml CPU model does) over 4-8x
++// less memory. TRANSCRIBE_DECODER_F32=1 restores the fp32 mirrors.
++bool decoder_keeps_quantized(const ggml_tensor * t) {
++    static const bool f32_only = std::getenv("TRANSCRIBE_DECODER_F32") != nullptr;
++    return !f32_only && t != nullptr && (t->type == GGML_TYPE_Q8_0 || t->type == GGML_TYPE_Q4_0);
++}
++
++// Packed bytes of a Q8_0 / Q4_0 tensor as Q8_0 blocks. A Q4_0 block is
++// rewritten losslessly (same scale, the nibbles minus 8 as int8): the values
++// are identical, the Q8_0 dot kernel is the faster one (WASM SIMD: no nibble
++// unpacking), and the copy is still a quarter of the fp32 mirror.
++bool read_tensor_raw(const ggml_tensor * t, std::vector<uint8_t> & out) {
++    const size_t nbytes = ggml_nbytes(t);
++    if (nbytes == 0) {
++        return false;
++    }
++    if (t->type == GGML_TYPE_Q8_0) {
++        out.resize(nbytes);
++        ggml_backend_tensor_get(t, out.data(), 0, nbytes);
++        return true;
++    }
++    if (t->type != GGML_TYPE_Q4_0) {
++        return false;
++    }
++    std::vector<uint8_t> q4(nbytes);
++    ggml_backend_tensor_get(t, q4.data(), 0, nbytes);
++    const size_t q4_block = 2 + 16, q8_block = 2 + 32;
++    const size_t n_blocks = nbytes / q4_block;
++    out.resize(n_blocks * q8_block);
++    for (size_t ib = 0; ib < n_blocks; ++ib) {
++        const uint8_t * src = q4.data() + ib * q4_block;
++        uint8_t *       dst = out.data() + ib * q8_block;
++        dst[0]              = src[0];
++        dst[1]              = src[1];
++        for (int i = 0; i < 16; ++i) {
++            dst[2 + i]      = static_cast<uint8_t>(static_cast<int8_t>((src[2 + i] & 0x0F) - 8));
++            dst[2 + 16 + i] = static_cast<uint8_t>(static_cast<int8_t>((src[2 + i] >> 4) - 8));
++        }
++    }
++    return true;
++}
++
+ // Make the joint network's weights resident as fp32 ggml tensors on the
+ // model: enc / pred / out projections. Built once at load. out_w is
+ // dequantized from the model tensor src_out_w; the rest come from the
+@@ -159,9 +206,10 @@ bool build_joint_weight(HostJoint & j, const ggml_tensor * src_out_w) {
+ 
+     j.g_enc_w  = ggml_new_tensor_2d(j.w_ctx, GGML_TYPE_F32, j.d_enc, joint_h);
+     j.g_enc_b  = ggml_new_tensor_1d(j.w_ctx, GGML_TYPE_F32, joint_h);
+-    j.g_pred_w = ggml_new_tensor_2d(j.w_ctx, GGML_TYPE_F32, j.pred_hidden, joint_h);
++    j.g_pred_w = ggml_new_tensor_2d(j.w_ctx, j.pred_w_raw.empty() ? GGML_TYPE_F32 : GGML_TYPE_Q8_0, j.pred_hidden, joint_h);
+     j.g_pred_b = ggml_new_tensor_1d(j.w_ctx, GGML_TYPE_F32, joint_h);
+-    j.gw_w     = ggml_new_tensor_2d(j.w_ctx, GGML_TYPE_F32, joint_h, joint_n);
++    const bool out_w_packed = decoder_keeps_quantized(src_out_w);
++    j.gw_w     = ggml_new_tensor_2d(j.w_ctx, out_w_packed ? GGML_TYPE_Q8_0 : GGML_TYPE_F32, joint_h, joint_n);
+     j.gw_b     = ggml_new_tensor_1d(j.w_ctx, GGML_TYPE_F32, joint_n);
+ 
+     j.w_buf = ggml_backend_alloc_ctx_tensors(j.w_ctx, j.w_backend);
+@@ -169,8 +217,14 @@ bool build_joint_weight(HostJoint & j, const ggml_tensor * src_out_w) {
+         return fail();
+     }
+ 
+-    // out_w: dequantize the model tensor to fp32 once.
+-    {
++    // out_w: keep the packed blocks, or dequantize the model tensor to fp32 once.
++    if (out_w_packed) {
++        std::vector<uint8_t> raw;
++        if (!read_tensor_raw(src_out_w, raw) || raw.size() != ggml_nbytes(j.gw_w)) {
++            return fail();
++        }
++        ggml_backend_tensor_set(j.gw_w, raw.data(), 0, raw.size());
++    } else {
+         std::vector<float> tmp;
+         if (!read_tensor_to_f32(src_out_w, tmp)) {
+             return fail();
+@@ -180,7 +234,15 @@ bool build_joint_weight(HostJoint & j, const ggml_tensor * src_out_w) {
+     // The rest come from the host mirrors.
+     ggml_backend_tensor_set(j.g_enc_w, j.enc_w.data(), 0, j.enc_w.size() * sizeof(float));
+     ggml_backend_tensor_set(j.g_enc_b, j.enc_b.data(), 0, j.enc_b.size() * sizeof(float));
+-    ggml_backend_tensor_set(j.g_pred_w, j.pred_w.data(), 0, j.pred_w.size() * sizeof(float));
++    if (!j.pred_w_raw.empty()) {
++        if (j.pred_w_raw.size() != ggml_nbytes(j.g_pred_w)) {
++            return fail();
++        }
++        ggml_backend_tensor_set(j.g_pred_w, j.pred_w_raw.data(), 0, j.pred_w_raw.size());
++        std::vector<uint8_t>().swap(j.pred_w_raw);
++    } else {
++        ggml_backend_tensor_set(j.g_pred_w, j.pred_w.data(), 0, j.pred_w.size() * sizeof(float));
++    }
+     ggml_backend_tensor_set(j.g_pred_b, j.pred_b.data(), 0, j.pred_b.size() * sizeof(float));
+     ggml_backend_tensor_set(j.gw_b, j.out_b.data(), 0, j.out_b.size() * sizeof(float));
+ 
+@@ -248,8 +310,8 @@ bool build_pred_weights(HostPredictor & p) {
+ 
+     for (int l = 0; l < L; ++l) {
+         auto & lh = p.lstm[l];
+-        lh.g_Wx   = ggml_new_tensor_2d(p.lstm_w_ctx, GGML_TYPE_F32, H, four_H);
+-        lh.g_Wh   = ggml_new_tensor_2d(p.lstm_w_ctx, GGML_TYPE_F32, H, four_H);
++        lh.g_Wx   = ggml_new_tensor_2d(p.lstm_w_ctx, lh.Wx_raw.empty() ? GGML_TYPE_F32 : GGML_TYPE_Q8_0, H, four_H);
++        lh.g_Wh   = ggml_new_tensor_2d(p.lstm_w_ctx, lh.Wh_raw.empty() ? GGML_TYPE_F32 : GGML_TYPE_Q8_0, H, four_H);
+         lh.g_b    = ggml_new_tensor_1d(p.lstm_w_ctx, GGML_TYPE_F32, four_H);
+     }
+ 
+@@ -260,8 +322,18 @@ bool build_pred_weights(HostPredictor & p) {
+ 
+     for (int l = 0; l < L; ++l) {
+         auto & lh = p.lstm[l];
+-        ggml_backend_tensor_set(lh.g_Wx, lh.Wx.data(), 0, lh.Wx.size() * sizeof(float));
+-        ggml_backend_tensor_set(lh.g_Wh, lh.Wh.data(), 0, lh.Wh.size() * sizeof(float));
++        if (!lh.Wx_raw.empty()) {
++            if (lh.Wx_raw.size() != ggml_nbytes(lh.g_Wx) || lh.Wh_raw.size() != ggml_nbytes(lh.g_Wh)) {
++                return fail();
++            }
++            ggml_backend_tensor_set(lh.g_Wx, lh.Wx_raw.data(), 0, lh.Wx_raw.size());
++            ggml_backend_tensor_set(lh.g_Wh, lh.Wh_raw.data(), 0, lh.Wh_raw.size());
++            std::vector<uint8_t>().swap(lh.Wx_raw);
++            std::vector<uint8_t>().swap(lh.Wh_raw);
++        } else {
++            ggml_backend_tensor_set(lh.g_Wx, lh.Wx.data(), 0, lh.Wx.size() * sizeof(float));
++            ggml_backend_tensor_set(lh.g_Wh, lh.Wh.data(), 0, lh.Wh.size() * sizeof(float));
++        }
+         ggml_backend_tensor_set(lh.g_b, lh.b.data(), 0, lh.b.size() * sizeof(float));
+         // Host mirrors now resident in ggml — release them.
+         std::vector<float>().swap(lh.Wx);
+@@ -693,19 +765,30 @@ transcribe_status build_host_decoder_weights(const ParakeetModel & model, HostDe
+     for (int i = 0; i < hp.pred_n_layers; ++i) {
+         const auto & lw = w.predictor.lstm[i];
+         auto &       lh = out.predictor.lstm[i];
+-        if (!read_tensor_to_f32(lw.Wx, lh.Wx)) {
+-            return TRANSCRIBE_ERR_GGUF;
+-        }
+-        if (!read_tensor_to_f32(lw.Wh, lh.Wh)) {
+-            return TRANSCRIBE_ERR_GGUF;
++        const size_t gates    = static_cast<size_t>(4 * hp.pred_hidden);
++        const size_t mat_size = gates * static_cast<size_t>(hp.pred_hidden);
++        auto         is_mat   = [&](const ggml_tensor * t) {
++            return t != nullptr && t->ne[0] == hp.pred_hidden && t->ne[1] == 4 * hp.pred_hidden && t->ne[2] == 1;
++        };
++        const bool packed = decoder_keeps_quantized(lw.Wx) && lw.Wh != nullptr && lw.Wh->type == lw.Wx->type &&
++                            is_mat(lw.Wx) && is_mat(lw.Wh);
++        if (packed) {
++            if (!read_tensor_raw(lw.Wx, lh.Wx_raw) || !read_tensor_raw(lw.Wh, lh.Wh_raw)) {
++                return TRANSCRIBE_ERR_GGUF;
++            }
++        } else {
++            if (!read_tensor_to_f32(lw.Wx, lh.Wx)) {
++                return TRANSCRIBE_ERR_GGUF;
++            }
++            if (!read_tensor_to_f32(lw.Wh, lh.Wh)) {
++                return TRANSCRIBE_ERR_GGUF;
++            }
+         }
+         if (!read_tensor_to_f32(lw.b, lh.b)) {
+             return TRANSCRIBE_ERR_GGUF;
+         }
+ 
+-        const size_t gates    = static_cast<size_t>(4 * hp.pred_hidden);
+-        const size_t mat_size = gates * static_cast<size_t>(hp.pred_hidden);
+-        if (lh.Wx.size() != mat_size || lh.Wh.size() != mat_size) {
++        if (!packed && (lh.Wx.size() != mat_size || lh.Wh.size() != mat_size)) {
+             log_msg(TRANSCRIBE_LOG_LEVEL_ERROR, "parakeet decoder: pred.lstm.%d Wx/Wh wrong size", i);
+             return TRANSCRIBE_ERR_GGUF;
+         }
+@@ -737,7 +820,12 @@ transcribe_status build_host_decoder_weights(const ParakeetModel & model, HostDe
+     if (!read_tensor_to_f32(w.joint.enc_b, out.joint.enc_b)) {
+         return TRANSCRIBE_ERR_GGUF;
+     }
+-    if (!read_tensor_to_f32(w.joint.pred_w, out.joint.pred_w)) {
++    if (decoder_keeps_quantized(w.joint.pred_w) && w.joint.pred_w->ne[0] == hp.pred_hidden &&
++        w.joint.pred_w->ne[1] == hp.joint_hidden && w.joint.pred_w->ne[2] == 1) {
++        if (!read_tensor_raw(w.joint.pred_w, out.joint.pred_w_raw)) {
++            return TRANSCRIBE_ERR_GGUF;
++        }
++    } else if (!read_tensor_to_f32(w.joint.pred_w, out.joint.pred_w)) {
+         return TRANSCRIBE_ERR_GGUF;
+     }
+     if (!read_tensor_to_f32(w.joint.pred_b, out.joint.pred_b)) {
+diff --git a/src/arch/parakeet/decoder.h b/src/arch/parakeet/decoder.h
+index e7cb70a5..322c4b0e 100644
+--- a/src/arch/parakeet/decoder.h
++++ b/src/arch/parakeet/decoder.h
+@@ -64,6 +64,12 @@ struct HostLstmLayer {
+     std::vector<float> Wh;  // [4*pred_hidden, pred_hidden] (freed after load)
+     std::vector<float> b;   // [4*pred_hidden]              (freed after load)
+ 
++    // Packed copies of Wx / Wh when the model stores them as Q8_0 / Q4_0 and
++    // the decoder keeps them quantized (see decoder_keeps_quantized). Q8_0
++    // block bytes (a Q4_0 source is rewritten losslessly), ne [pred_hidden, 4*pred_hidden]; freed after load.
++    std::vector<uint8_t> Wx_raw;
++    std::vector<uint8_t> Wh_raw;
++
+     // Resident fp32 ggml mirrors consumed by the predictor graph.
+     // Row-major [4*H, H] host bytes map to ggml ne [H, 4*H] (the mul_mat
+     // operand); bias is [4*H]. Borrowed into lstm_w_ctx, freed by dtor.
+@@ -112,6 +118,7 @@ struct HostJoint {
+     std::vector<float> pred_w;  // [joint_h, pred_hidden] (freed after load)
+     std::vector<float> pred_b;  // [joint_h]              (freed after load)
+     std::vector<float> out_b;   // [joint_n]              (freed after load)
++    std::vector<uint8_t> pred_w_raw;  // packed pred_w when kept quantized (freed after load)
+ 
+     // --- resident ggml weights (immutable, model-owned) ---
+     // The whole joint runs as one ggml graph (build_joint_graph), so
+-- 
+2.53.0
+

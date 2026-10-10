@@ -1,0 +1,364 @@
+{
+ "name": "dec-f32-q8",
+ "url": "http://127.0.0.1:8791/?model=q8&clip=all&runs=5&env=TRANSCRIBE_DECODER_F32=1&auto=1",
+ "chromeArgs": [
+  "--enable-dawn-features=vulkan_enable_f16_on_nvidia"
+ ],
+ "machineAtStart": {
+  "loadavg": "4.88 4.33 4.04 9/2045 600874",
+  "cpuPressure": "some avg10=0.77 avg60=1.02 avg300=1.21 total=10073587680"
+ },
+ "chrome": "154.0.8037.97",
+ "error": null,
+ "memory": {
+  "gpuProcessGpuMibAfterLoad": 761,
+  "gpuProcessGpuMibPeak": 1231,
+  "rendererRssMibAfterLoad": 314,
+  "rendererRssMibPeak": 424,
+  "gpuProcessRssMibAfterLoad": 372,
+  "gpuProcessRssMibPeak": 411
+ },
+ "pids": {
+  "gpu": 600628,
+  "renderers": [
+   600917,
+   600781,
+   600749
+  ]
+ },
+ "page": {
+  "config": {
+   "model": "q8",
+   "clip": "all",
+   "runs": 5,
+   "threads": 1,
+   "store": "opfs",
+   "f16": true,
+   "flash": false,
+   "variant": "jspi",
+   "verbose": false,
+   "base": "models/",
+   "env": {
+    "TRANSCRIBE_DECODER_F32": "1"
+   }
+  },
+  "model": {
+   "label": "Q8_0 (8-bit weights)",
+   "file": "parakeet-tdt-0.6b-v2-Q8_0.gguf",
+   "mb": 696
+  },
+  "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "crossOriginIsolated": true,
+  "clips": [
+   {
+    "clip": "a07",
+    "seconds": 7,
+    "firstInPage": true,
+    "firstRunMs": {
+     "pre": 14.1,
+     "enc": 217.1,
+     "dec": 148.4,
+     "total": 379.5
+    },
+    "startToFirstTranscriptMs": 6476,
+    "decSteps": 47,
+    "text": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight.",
+    "matchesNative": true,
+    "warmRuns": 5,
+    "preMs": {
+     "median": 6.3,
+     "worst": 7.3,
+     "best": 6.1
+    },
+    "encMs": {
+     "median": 63.3,
+     "worst": 81.3,
+     "best": 56.8
+    },
+    "decMs": {
+     "median": 76,
+     "worst": 82,
+     "best": 72
+    },
+    "totalMs": {
+     "median": 145.7,
+     "worst": 169.6,
+     "best": 135.1
+    },
+    "xRealTime": 48,
+    "textStable": true,
+    "wasmHeapMb": 62,
+    "wasmHeapUsedMb": 37.4
+   },
+   {
+    "clip": "a14",
+    "seconds": 13.69,
+    "firstInPage": false,
+    "firstRunMs": {
+     "pre": 11.9,
+     "enc": 87.4,
+     "dec": 141.7,
+     "total": 240.9
+    },
+    "startToFirstTranscriptMs": null,
+    "decSteps": 90,
+    "text": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards.",
+    "matchesNative": true,
+    "warmRuns": 5,
+    "preMs": {
+     "median": 12.8,
+     "worst": 13,
+     "best": 11.8
+    },
+    "encMs": {
+     "median": 86.6,
+     "worst": 88.1,
+     "best": 85.6
+    },
+    "decMs": {
+     "median": 155.8,
+     "worst": 169.7,
+     "best": 138.3
+    },
+    "totalMs": {
+     "median": 256.9,
+     "worst": 269.7,
+     "best": 235.7
+    },
+    "xRealTime": 53.3,
+    "textStable": true,
+    "wasmHeapMb": 62,
+    "wasmHeapUsedMb": 38.7
+   },
+   {
+    "clip": "a56",
+    "seconds": 56.1,
+    "firstInPage": false,
+    "firstRunMs": {
+     "pre": 54.2,
+     "enc": 442.4,
+     "dec": 585.1,
+     "total": 1081.6
+    },
+    "startToFirstTranscriptMs": null,
+    "decSteps": 312,
+    "text": "Welcome to QuirkQuidQuill Inc., where finance meets innovation. Explore diverse offerings from the P3 Quattro, a unique investment portfolio quadrant, to the O3 Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B3 Bond X and experience non-standard equity trading with E3 Equity. Personalize your wealth management with W3 RAPZ and anticipate market trends with the O2 Outlier, our forward-thinking financial forecasting tool. Explore venture capital world with U3Unifund or move your money with the M3 Mover, our sophisticated monetary transfer module. At QuirkQuidQuill Inc., we turn complex finance into creative solutions. Join us in redefining financial services.",
+    "matchesNative": true,
+    "warmRuns": 5,
+    "preMs": {
+     "median": 49.1,
+     "worst": 51.3,
+     "best": 48.8
+    },
+    "encMs": {
+     "median": 404.7,
+     "worst": 405.6,
+     "best": 404
+    },
+    "decMs": {
+     "median": 572.6,
+     "worst": 581.2,
+     "best": 481.3
+    },
+    "totalMs": {
+     "median": 1025.7,
+     "worst": 1034.7,
+     "best": 937.5
+    },
+    "xRealTime": 54.7,
+    "textStable": true,
+    "wasmHeapMb": 107,
+    "wasmHeapUsedMb": 47
+   }
+  ],
+  "adapter": {
+   "available": true,
+   "vendor": "nvidia",
+   "architecture": "turing",
+   "device": "0x1e07",
+   "description": "NVIDIA GeForce RTX 2080 Ti",
+   "isFallbackAdapter": false,
+   "shaderF16": true,
+   "features": [
+    "bgra8unorm-storage",
+    "chromium-experimental-multi-draw-indirect",
+    "chromium-experimental-sampling-resource-table",
+    "chromium-experimental-subgroup-matrix",
+    "chromium-experimental-timestamp-query-inside-passes",
+    "clip-distances",
+    "core-features-and-limits",
+    "depth-clip-control",
+    "depth32float-stencil8",
+    "dual-source-blending",
+    "float32-blendable",
+    "float32-filterable",
+    "indirect-first-instance",
+    "primitive-index",
+    "rg11b10ufloat-renderable",
+    "shader-f16",
+    "subgroup-size-control",
+    "subgroups",
+    "texture-component-swizzle",
+    "texture-compression-bc",
+    "texture-compression-bc-sliced-3d",
+    "texture-compression-unaligned",
+    "texture-formats-tier1",
+    "texture-formats-tier2",
+    "timestamp-query"
+   ],
+   "maxBufferSizeMb": 4096,
+   "maxStorageBufferBindingSizeMb": 2048
+  },
+  "jspi": true,
+  "shaderF16Used": true,
+  "load": {
+   "fetchMs": 3133,
+   "loadMs": 1113,
+   "from": "network, streamed to OPFS",
+   "fileMb": 695.8,
+   "wasmHeapMb": 62,
+   "wasmHeapUsedMb": 36,
+   "backend": "WebGPU: WebGPU"
+  },
+  "session": {
+   "totalMs": 1113
+  },
+  "startToLoadedMs": 4689
+ },
+ "steps": [
+  {
+   "t": 0,
+   "name": "start: Q8_0 (8-bit weights), flash=off, store=opfs, jspi"
+  },
+  {
+   "t": 441,
+   "name": "WASM module ready",
+   "ms": 43.5,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 442,
+   "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 present; fallback=false"
+  },
+  {
+   "t": 442,
+   "name": "shader path: f16"
+  },
+  {
+   "t": 4689,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 3132.9,
+   "detail": "696 MB"
+  },
+  {
+   "t": 4689,
+   "name": "model loaded on WebGPU: WebGPU",
+   "ms": 1113,
+   "detail": "WASM heap 62 MB, 36 MB in use"
+  },
+  {
+   "t": 6476,
+   "name": "a07 (7.0 s) first run (cold)",
+   "ms": 379.5,
+   "detail": "mel 14.1 ms, encoder 217 ms, decode 148 ms, heap 62 MB (37.4 in use)"
+  },
+  {
+   "t": 6476,
+   "name": "a07 transcript matches the native one",
+   "detail": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day ..."
+  },
+  {
+   "t": 7416,
+   "name": "a07 warm x5",
+   "ms": 145.7,
+   "detail": "total median/worst 145.7 / 169.6 ms; encoder 63.3 / 81.3 ms; mel 6.3 ms; decode 76 ms; 48x real time; text stable=true"
+  },
+  {
+   "t": 7664,
+   "name": "a14 (13.7 s) first run",
+   "ms": 240.9,
+   "detail": "mel 11.9 ms, encoder 87.4 ms, decode 142 ms, heap 62 MB (38.7 in use)"
+  },
+  {
+   "t": 7664,
+   "name": "a14 transcript matches the native one",
+   "detail": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day ..."
+  },
+  {
+   "t": 9201,
+   "name": "a14 warm x5",
+   "ms": 256.9,
+   "detail": "total median/worst 256.9 / 269.7 ms; encoder 86.6 / 88.1 ms; mel 12.8 ms; decode 155.8 ms; 53.3x real time; text stable=true"
+  },
+  {
+   "t": 10304,
+   "name": "a56 (56.1 s) first run",
+   "ms": 1081.6,
+   "detail": "mel 54.2 ms, encoder 442 ms, decode 585 ms, heap 107 MB (47 in use)"
+  },
+  {
+   "t": 10304,
+   "name": "a56 transcript matches the native one",
+   "detail": "Welcome to QuirkQuidQuill Inc., where finance meets innovation. Explore diverse offerings ..."
+  },
+  {
+   "t": 16243,
+   "name": "a56 warm x5",
+   "ms": 1025.7,
+   "detail": "total median/worst 1025.7 / 1034.7 ms; encoder 404.7 / 405.6 ms; mel 49.1 ms; decode 572.6 ms; 54.7x real time; text stable=true"
+  },
+  {
+   "t": 16244,
+   "name": "done",
+   "ms": 16243.7
+  }
+ ],
+ "console": [],
+ "machineAtEnd": {
+  "loadavg": "4.91 4.36 4.06 7/2038 617493",
+  "cpuPressure": "some avg10=0.62 avg60=1.02 avg300=1.20 total=10073833131"
+ },
+ "chromeGpu": {
+  "devices": [
+   {
+    "vendorId": 4318,
+    "deviceId": 7687,
+    "vendorString": "Google Inc. (NVIDIA)",
+    "deviceString": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+    "driverVendor": "NVIDIA",
+    "driverVersion": "580.178.4.0"
+   }
+  ],
+  "featureStatus": {
+   "2d_canvas": "enabled",
+   "direct_rendering_display_compositor": "disabled_off_ok",
+   "gpu_compositing": "enabled",
+   "multiple_raster_threads": "enabled_on",
+   "opengl": "enabled_on",
+   "rasterization": "enabled",
+   "raw_draw": "disabled_off_ok",
+   "skia_graphite": "disabled_off",
+   "trees_in_viz": "disabled_off",
+   "video_decode": "enabled",
+   "video_encode": "disabled_software",
+   "vulkan": "enabled_on",
+   "webgl": "enabled",
+   "webgpu": "enabled",
+   "webgpu_on_vk_via_gl_interop": "disabled_off",
+   "webnn": "disabled_off"
+  },
+  "auxAttributes": {
+   "directRenderingVersion": "",
+   "displayType": "ANGLE_VULKAN",
+   "glRenderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+   "glVendor": "Google Inc. (NVIDIA)",
+   "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "glWsVendor": "Google Inc. (NVIDIA)",
+   "glWsVersion": "1.5 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "hardwareSupportsVulkan": true,
+   "passthroughCmdDecoder": true,
+   "pixelShaderVersion": "3.00",
+   "vertexShaderVersion": "3.00"
+  }
+ }
+}

@@ -1,14 +1,21 @@
-// Parakeet TDT 0.6b v2 in the browser on transcribe.cpp + ggml's WebGPU backend (WASM). One page,
+// Parakeet (TDT 0.6b v2 and tdt_ctc-110m) in the browser on transcribe.cpp + ggml's WebGPU backend (WASM). One page,
 // no framework. Everything heavy happens in src/worker.ts; this file is configuration, the step
 // trail (screen + localStorage, so a killed tab leaves one) and the benchmark loop.
 export {};
-const EXPECTED: Record<string, string> = {
+// Reference text per model family: 0.6b = native transcribe.cpp F16; 110m = onnx-asr / ONNX Runtime fp32
+// (../parakeet-webgpu-bench/results/110m/reference-ort-cpu-fp32.jsonl).
+const EXPECTED_06B: Record<string, string> = {
   a07: "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight.",
   a14: "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards.",
   a56: "Welcome to QuirkQuidQuill Inc., where finance meets innovation. Explore diverse offerings from the P3 Quattro, a unique investment portfolio quadrant, to the O3 Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B3 Bond X and experience non-standard equity trading with E3 Equity. Personalize your wealth management with W3 RAPZ and anticipate market trends with the O2 Outlier, our forward-thinking financial forecasting tool. Explore venture capital world with U3Unifund or move your money with the M3 Mover, our sophisticated monetary transfer module. At QuirkQuidQuill Inc., we turn complex finance into creative solutions. Join us in redefining financial services.",
 };
+const EXPECTED_110M: Record<string, string> = {
+  "a07": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight.",
+  "a14": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards",
+  "a56": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatro a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and our and experience non standard equity trading with E three equity, personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier, our forward thinking financial forecasting tool. Explore venture capital world with U three unifund or move your money with the M three mover, our sophisticated monetary transfer module. At Cork Quid Quill Inc. we turn complex finance into creative solutions. Join us in redefining financial services."
+};
 const CLIPS: Record<string, string> = { a07: "7.0 s", a14: "13.7 s", a56: "56.1 s" };
-declare const MODELS: Record<string, { label: string; file: string; mb: number }>; // filled in by build.ts from what is on disk
+declare const MODELS: Record<string, { label: string; file: string; mb: number; family: "0.6b" | "110m" }>; // filled in by build.ts from what is on disk
 
 interface Config {
   model: string; clip: string; runs: number; threads: number;
@@ -25,7 +32,7 @@ function readConfig(): Config {
   for (const kv of params.getAll("env")) { const i = kv.indexOf("="); if (i > 0) env[kv.slice(0, i)] = kv.slice(i + 1); }
   const names = Object.keys(MODELS);
   return {
-    model: pick("model", names, names.includes("q4") ? "q4" : names[0]),
+    model: pick("model", names, names[0]), // build.ts lists the smallest verified configuration first
     clip: pick("clip", [...Object.keys(CLIPS), "all"], "a07"),
     runs: Math.max(0, Number(params.get("runs") ?? 10) | 0),
     threads: Math.max(1, Number(params.get("threads") ?? 1) | 0),
@@ -99,6 +106,7 @@ async function run() {
   history.push(current);
   $("steps").textContent = "";
   const model = MODELS[cfg.model];
+  const EXPECTED = model.family === "110m" ? EXPECTED_110M : EXPECTED_06B;
   const result: any = { config: cfg, model, ua: navigator.userAgent, crossOriginIsolated, clips: [] };
   w.__pkb.result = result;
   step(`start: ${model.label}, flash=${cfg.flash ? "on" : "off"}, store=${cfg.store}, ${cfg.variant}`);
@@ -154,7 +162,7 @@ async function run() {
       startToFirstTranscriptMs: i === 0 ? Math.round(performance.now() - runStart) : null,
       decSteps: first.tokens, text: first.text, matchesNative: first.text === EXPECTED[clip],
     };
-    step(`${clip} transcript ${rec.matchesNative ? "matches" : "DIFFERS from"} the native one`, undefined, first.text.length > 90 ? first.text.slice(0, 90) + "..." : first.text);
+    step(`${clip} transcript ${rec.matchesNative ? "matches" : "DIFFERS from"} the reference`, undefined, first.text.length > 90 ? first.text.slice(0, 90) + "..." : first.text);
     result.clips.push(rec);
     if (cfg.runs > 0) {
       status(`${clip}: warm-up`);
@@ -190,7 +198,7 @@ function render(result: any) {
   const rows = result.clips.map((c: any) => `<tr><td>${c.clip} ${c.seconds} s</td><td>${fmtMs(c.firstRunMs.total)}</td>
     <td>${c.encMs ? `${c.encMs.median} / ${c.encMs.worst}` : "-"}</td><td>${c.totalMs ? `${c.totalMs.median} / ${c.totalMs.worst}` : "-"}</td>
     <td>${c.xRealTime ?? "-"}</td><td>${c.matchesNative ? "matches" : "differs"}</td></tr>`).join("");
-  $("summary").innerHTML = `<table><tr><th>clip</th><th>first run</th><th>encoder ms<br>median / worst</th><th>total ms<br>median / worst</th><th>x real time</th><th>transcript vs native</th></tr>${rows}</table>`
+  $("summary").innerHTML = `<table><tr><th>clip</th><th>first run</th><th>encoder ms<br>median / worst</th><th>total ms<br>median / worst</th><th>x real time</th><th>transcript vs reference</th></tr>${rows}</table>`
     + result.clips.map((c: any) => `<p class="text"><b>${c.clip}</b> ${esc(c.text)}</p>`).join("");
 }
 function link(over: Record<string, string | number>) {
@@ -217,8 +225,10 @@ function start() {
 }
 function init() {
   (window as any).__pkb = { done: false, phase: "idle" };
-  const preset = (key: string, n: number, note: string) => MODELS[key] ? `<a class="preset" href="${link({ model: key, clip: "a07", runs: 3, auto: 1 })}"><b>${n}. ${esc(MODELS[key].label)}</b><span>${MODELS[key].mb} MB download. ${note}</span></a>` : "";
-  $("presets").innerHTML = preset("q4", 1, "Smallest: 4-bit weights stay packed on the GPU. 7 s clip, 3 warm runs.") + preset("q8", 2, "8-bit weights.") + preset("f16", 3, "Half-float weights.");
+  const preset = (key: string, note: string) => MODELS[key] ? `<a class="preset" href="${link({ model: key, clip: "a07", runs: 3, auto: 1 })}"><b>${esc(MODELS[key].label)}</b><span>${MODELS[key].mb} MB download. ${note}</span></a>` : "";
+  $("presets").innerHTML = preset("s8", "Smallest verified: the 110M model with 8-bit weights packed on the GPU. 7 s clip, 3 warm runs.")
+    + preset("s4", "Smaller still, 4-bit weights; punctuation differs from the reference.")
+    + preset("q4", "The 0.6b model, 4-bit weights: more accurate, about 0.5 GB of GPU memory.") + preset("q8", "0.6b, 8-bit weights.") + preset("f16", "0.6b, half-float weights.");
   const sel = (id: string, key: keyof Config, options: [string, string][]) => {
     $(id).innerHTML = options.map(([v, l]) => `<option value="${v}"${String(cfg[key] === true ? 1 : cfg[key] === false ? 0 : cfg[key]) === v ? " selected" : ""}>${l}</option>`).join("");
     $(id).addEventListener("change", (e) => (location.href = link({ [key]: (e.target as HTMLSelectElement).value, auto: 0 })));

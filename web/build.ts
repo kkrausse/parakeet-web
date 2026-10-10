@@ -8,18 +8,21 @@ const here = import.meta.dir;
 const dist = join(here, "dist");
 const cache = process.env.PK_CACHE ?? join(process.env.HOME!, "devfs/cache/parakeet-ggml-webgpu");
 const f16 = join(process.env.HOME!, "devfs/repos/kkrausse/random/.claude/worktrees/parakeet-webgpu-bench/parakeet-webgpu-bench/cache/gguf/parakeet-tdt-0.6b-v2-F16.gguf");
-const candidates: [string, string, string][] = [
-  ["q4", "Q4_0 (4-bit weights)", join(cache, "gguf/parakeet-tdt-0.6b-v2-Q4_0.gguf")],
-  ["q8", "Q8_0 (8-bit weights)", join(cache, "gguf/parakeet-tdt-0.6b-v2-Q8_0.gguf")],
-  ["f16", "F16", existsSync(join(cache, "gguf/parakeet-tdt-0.6b-v2-F16.gguf")) ? join(cache, "gguf/parakeet-tdt-0.6b-v2-F16.gguf") : f16],
+// key, label, path, family. Order = order on the page; the first one present is the page default.
+const candidates: [string, string, string, string][] = [
+  ["s8", "110M, Q8_0 (8-bit weights)", join(cache, "gguf/parakeet-tdt_ctc-110m-Q8_0.gguf"), "110m"],
+  ["s4", "110M, Q4_0 (4-bit weights)", join(cache, "gguf/parakeet-tdt_ctc-110m-Q4_0.gguf"), "110m"],
+  ["q4", "0.6b v2, Q4_0 (4-bit weights)", join(cache, "gguf/parakeet-tdt-0.6b-v2-Q4_0.gguf"), "0.6b"],
+  ["q8", "0.6b v2, Q8_0 (8-bit weights)", join(cache, "gguf/parakeet-tdt-0.6b-v2-Q8_0.gguf"), "0.6b"],
+  ["f16", "0.6b v2, F16", existsSync(join(cache, "gguf/parakeet-tdt-0.6b-v2-F16.gguf")) ? join(cache, "gguf/parakeet-tdt-0.6b-v2-F16.gguf") : f16, "0.6b"],
 ];
 // Q4_K_M is left out: Q4_K blocks have no direct mul_mat kernel yet (2x slower encoder). PK_EXTRA_MODELS adds it back.
-for (const extra of (process.env.PK_EXTRA_MODELS ?? "").split(",").filter(Boolean)) { // key=label=path
-  const [k, l, p] = extra.split("=");
-  candidates.push([k, l, p]);
+for (const extra of (process.env.PK_EXTRA_MODELS ?? "").split(",").filter(Boolean)) { // key=label=path[=family]
+  const [k, l, p, fam] = extra.split("=");
+  candidates.push([k, l, p, fam ?? "0.6b"]);
 }
-const models: Record<string, { label: string; file: string; mb: number }> = {};
-for (const [k, label, path] of candidates) if (existsSync(path)) models[k] = { label, file: path.split("/").pop()!, mb: Math.round(statSync(path).size / 2 ** 20) };
+const models: Record<string, { label: string; file: string; mb: number; family: string }> = {};
+for (const [k, label, path, family] of candidates) if (existsSync(path)) models[k] = { label, file: path.split("/").pop()!, mb: Math.round(statSync(path).size / 2 ** 20), family };
 
 rmSync(dist, { recursive: true, force: true });
 const out = await Bun.build({
