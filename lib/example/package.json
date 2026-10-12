@@ -1,0 +1,1 @@
+{ "name": "parakeet-web-example", "private": true, "type": "module", "scripts": { "build": "bun build src/app.ts --outdir public --target browser", "serve": "bun serve.ts" } }

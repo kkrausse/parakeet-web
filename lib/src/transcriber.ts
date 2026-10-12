@@ -108,11 +108,11 @@ export interface Transcriber {
    * `transfer`: hand the buffer to the worker instead of copying it (the caller's array is empty afterwards).
    */
   transcribe(pcm: Float32Array, options?: { transfer?: boolean }): Promise<TranscribeResult>;
-  /** The GPU accounting after the most recent pass (null on the CPU backend). */
+  /** The GPU accounting after the most recent pass (all zeros on the CPU backend). */
   gpuStats(): GpuStats | null;
   /** Releases the GPU working buffers kept between passes (they are made again by the next pass). */
   releaseWorkingMemory(): Promise<GpuStats | null>;
-  /** Frees the model and the GPU device and stops the worker. Resolves with the accounting after the free (null: CPU, or the worker was busy or failed and was just stopped). */
+  /** Frees the model and the GPU device and stops the worker. Resolves with the accounting after the free (null: the worker was busy or failed and was just stopped). */
   dispose(): Promise<GpuStats | null>;
 }
 
@@ -264,9 +264,9 @@ export async function createTranscriber(options: TranscriberOptions): Promise<Tr
       const clean = state === "ready" && queued === 0;
       state = "disposed";
       let after: GpuStats | null = null;
-      // Idle and healthy: free the model and the device first, so the accounting can show nothing is left. Otherwise
+      // Idle and healthy: release the working buffers and free the model first, so the accounting can show what is left. Otherwise
       // (a pass in flight, a failed device) the worker is stopped where it stands, which also drops everything it holds.
-      if (clean) try { after = await Promise.race([rpc.call("free").then(() => rpc.call("gpu")), new Promise<null>((res) => setTimeout(() => res(null), 3000))]); } catch { /* stopped below */ }
+      if (clean) try { after = await Promise.race([rpc.call("trim").then(() => rpc.call("free")).then(() => rpc.call("gpu")), new Promise<null>((res) => setTimeout(() => res(null), 3000))]); } catch { /* stopped below */ }
       silent = true;
       rpc.terminate();
       return after;

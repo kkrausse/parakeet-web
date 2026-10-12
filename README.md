@@ -7,10 +7,14 @@ blocks directly. The encoder runs on WebGPU, mel and the TDT decoder on one WASM
 NVIDIA `parakeet-tdt_ctc-110m` (the page default) and `parakeet-tdt-0.6b-v2`. The comparison is the
 onnxruntime-web page in `../parakeet-webgpu-bench/` (same clips, same driver, same metrics).
 
+**As a library (11 Oct):** the runtime, the streaming engine and the microphone capture are now a package,
+`parakeet-web`, in `lib/` ([`lib/README.md`](lib/README.md): install, the ten-line dictation example, the API,
+browser support, limits). Both pages here are built on it; what was checked is under "Library" in "Live demo".
+
 **Live microphone page** (10 Oct 06:40-07:40, section "Live demo" below):
 https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-live/ re-transcribes the current utterance
 about four times a second and commits it on a pause or at 24 s (**replaced 11 Oct**: that endpointer lost
-speech on a phone; the page now runs on `web/src/stream.ts`, which commits words by agreement between
+speech on a phone; the page now runs on `lib/src/stream.ts`, which commits words by agreement between
 passes, see "Streaming engine" under "Live demo"; the published copy is still the old one). Chrome on this box, fake microphone,
 110m Q8_0: a pass on a 12 s buffer takes 105-111 ms, text trails speech by 0.1 s (0.7 s at worst),
 GPU 207-261 MiB and WASM heap 56 MB flat over 4.8 minutes; committed text differs from an offline
@@ -652,9 +656,11 @@ pass: simulator Safari (iOS 18.3) ran it on the CPU only; see "WebKit attempt" a
 ## Live demo
 
 `web/live.html` + `web/src/live.ts`: one Record / Stop button, the microphone, and the transcript
-appearing while you speak. Same worker, WASM module, loader, adapter probe, device-request ladder,
-`GPU ERROR` reporting and persisted step trail as the benchmark page (`web/src/common.ts` is what
-the two pages share; the runtime changes made for it since are patches 0020-0022, see "The tab killed on an iPhone" below).
+appearing while you speak. Same worker, WASM module, loader, adapter probe, device-request ladder and
+`GPU ERROR` reporting as the benchmark page: since 11 Oct that is the library in `lib/` (`createDictation`
+here, `createTranscriber` on the benchmark and replay pages; see "Library" below and `lib/README.md`).
+`web/src/common.ts` holds what is left that the two pages share (the persisted step trail, formatting); the
+runtime changes made for the live page are patches 0020-0022, see "The tab killed on an iPhone" below.
 
 Published (tailnet only): https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-live/
 (screenshots: https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-live-shots/). It is also
@@ -668,12 +674,12 @@ device rate (the worklet resamples), capture needs https, and without JSPI the A
 ### How it works
 
 - **Audio**: `getUserMedia` (mono, `echoCancellation` and `noiseSuppression` off unless the checkbox
-  under "details" is ticked, `autoGainControl` on) -> `AudioWorkletNode` (`src/live-worklet.ts`) ->
+  under "details" is ticked, `autoGainControl` on) -> `AudioWorkletNode` (`lib/src/worklet.ts`, started by `lib/src/microphone.ts`) ->
   40 ms blocks of 16 kHz float PCM. The resampler is a polyphase Kaiser-windowed sinc (12 zero
   crossings a side, beta 8.6, cutoff 0.94 of the lower Nyquist): 1 phase for 48 kHz, 160 for
   44.1 kHz, 512 quantized phases for rates with a larger ratio. The level meter is the block peak
   on a 60 dB scale, green while the gate calls the frame speech.
-- **Streaming** (the models are offline ones): `web/src/stream.ts`, a module with no DOM, worker,
+- **Streaming** (the models are offline ones): `lib/src/stream.ts`, a module with no DOM, worker,
   microphone or timer in it. It is fed 16 kHz PCM blocks and a `transcribe(pcm)` function and
   emits committed words, the current tentative text, utterance ends and gate events. Every position
   is a sample count since Record, so a replay gives the same events. See "Streaming engine" below
@@ -872,7 +878,7 @@ recordings over 6.5 min; the skip path with the real model (stand-in model only)
 while recording; the probe on real missed speech (it never fired with the gate as shipped, only
 with the gate disabled).
 
-Files: `web/src/stream.ts` (engine), `web/replay/old.ts` (the old endpointer), `web/replay/lib.ts`
+Files: `lib/src/stream.ts` (engine; moved from `web/src/` on 11 Oct, unchanged), `web/replay/old.ts` (the old endpointer), `web/replay/lib.ts`
 (conditions, virtual-clock runner, measurements), `web/replay/gate.ts` (bun, stand-in model:
 reproduction and guard, exit 1 when the engine loses words), `web/src/replay-page.ts` +
 `web/replay.html` + `web/drive-replay.ts` (real model in Chrome or WebKit),
@@ -1215,10 +1221,83 @@ clips), sampled every 2 s.
   0.022), which reads as speech; the test clips therefore end in silence and the driver stops 2 s
   before the file does.
 
+### Library (11 Oct): the runtime as a package, the pages moved onto it
+
+`lib/` is the package `parakeet-web` ([`lib/README.md`](lib/README.md) is its manual). Four entry points, each
+usable alone: `createTranscriber` (worker, JSPI-or-ASYNCIFY choice, WebGPU-or-CPU, OPFS model file, warm-up and
+sizing passes; `lib/src/transcriber.ts`), `createStream` (the engine, moved unchanged), `createMicrophone`
+(getUserMedia, the worklet, the iOS rules; `lib/src/microphone.ts`) and `createDictation` (the three together;
+`lib/src/dictation.ts`). The runtime files (`worker.js`, `worklet.js`, both Emscripten builds) are built into
+`lib/dist/assets/` and loaded by URL from the `assetsUrl` an app gives; no bundler worker or WASM handling is
+involved. The library sends nothing anywhere and uses no `localStorage`: step trail, GPU accounting, pass times
+and gate events come out through optional callbacks, and the collector, guard, soak test and step-trail UI are
+still in `web/src/live.ts` (646 -> 559 lines, no worker / WebGPU / Web Audio code left in it). `web/src/main.ts`
+and `web/src/replay-page.ts` use `createTranscriber`. The pages serve the assets from `pk/` in `web/dist`.
+
+What changed on the live page (nothing in the audio or commit path): the "WebGPU limits" step reads
+"(requested)" where it said "(the default on iOS; limits=raised changes it)"; "model file ready" names the full
+URL; the microphone messages say "start again" for "tap Record again", and a browser that never answers the
+microphone request now gets a message after 30 s; Record while the crash guard is up says the model is not
+loaded (it used to record with nothing transcribing); a soak or offline pass queues behind an engine pass instead
+of being refused. Benchmark page: a GPU error now ends the run at that pass instead of at the end; the library log
+step only with `verbose=1`. Replay page: no sizing pass on the CPU backend.
+
+Checked 11 Oct 21:20-21:50, Chrome 154 on diesel2 (f16 shaders), load average 7-13, fake microphone, 110m Q4_0:
+
+| Live page, `t56` 60 s, `phone=1&model=s4` (`scripts/lv.sh`) | Passes | Pass ms, median / p95 / max | on (median s) | Lag s, median / max | vs offline | vs reference | GPU MiB | WASM heap MB | Page errors |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| before (`lib-before-t56`) | 208 | 81 / 160 / 328 | 5.9 | 0.1 / 0.6 | 10 of 120 | 8 of 122 | 194-200 | 46 | 0 |
+| before, again (`lib-before2-t56`) | 211 | 84 / 216 / 377 | 5.8 | 0.1 / 0.7 | 13 of 120 | 9 of 122 | 194-200 | 46 | 0 |
+| after (`lib-after-t56`) | 210 | 80 / 105 / 131 | 5.8 | 0.1 / 0.4 | 13 of 120 | 9 of 122 | 194-201 | 46 | 0 |
+| after, again (`lib-after2-t56`) | 207 | 83 / 106 / 141 | 5.9 | 0.1 / 0.4 | 10 of 120 | 8 of 122 | 194-200 | 46 | 0 |
+| after, final build (`lib-after3-t56`) | 209 | 79 / 100 / 112 | 5.9 | 0.1 / 0.4 | 8 of 120 | 4 of 122 | 194-200 | 46 | 0 |
+| after, `variant=asyncify` (`lib-after-asyncify-t56`) | 209 | 79 / 102 / 118 | 5.8 | 0.1 / 0.4 | 15 of 120 | 15 of 122 | 194-200 | 46 | 0 |
+
+The committed text of this clip is not the same from run to run, before or after (the fake microphone starts at a
+slightly different offset): the differing words are the same handful each time ("Wrap" / "RAP", "our" / "are",
+"At Cork" / "a quark", "Quatro" / "Quatre"). Each run is one utterance committed by agreement. The lower p95 after
+is the machine (load 7-10 against 11-13), not the code.
+
+- **An app outside the repository** (`~/devfs/cache/parakeet-ggml-webgpu/scratch/pk-consumer`, written from
+  `lib/README.md` alone; a copy of its sources is `lib/example/`): `bun add` of the tarball, `bunx
+  parakeet-web-assets public/parakeet-web`, 13 lines of `createDictation` into a textarea, bundled with `bun
+  build`, its own static server, driven from outside by `web/drive-consumer.ts` (clicks the button, reads the
+  textarea): model ready 3.1-5.2 s after navigation, 120-121 words in the textarea for the 122-word reference, 12-14
+  words differing over three runs (case and punctuation ignored; desktop default cap of 24 s there, not
+  `phone=1`), words appearing at every 2 s sample from 4 s on, no page error. One console line, "404 (Not
+  Found)", in every run: not one of the requests Playwright reports, and `/favicon.ico` is a 404 on that server
+  and the page declares no icon, so taken to be the browser's favicon request (inferred). It fetched `worker.js`, `pk-web.js`,
+  `pk-web.wasm` and the model from where the README said to put them (`results/consumer/consumer-t56.json`).
+- **Model switch, dispose, fresh dictation** (`bun web/drive-lib.ts lifecycle`, `results/lib/lifecycle-chrome.json`):
+  `load()` of Q8_0 20 s into a recording: ready 1.9 s later, recording throughout, 33 words committed by Q4_0 before
+  and 58 by Q8_0 after, the engine not failed. Then five times `createDictation`, 6 s of recording, `dispose()`:
+  GPU process memory (nvidia-smi) 184-185 MiB at every ready and 45 MiB after every dispose (5 MiB before the
+  first model); the worker's accounting just before it is stopped: weights 81.2 -> 0 MiB, buffers 7 -> 2 (1 MiB).
+- **WebKit** (Playwright's Linux build 27.2, `bun web/drive-lib.ts webkit`, `results/lib/webkit-t14.json`):
+  `createTranscriber` loads on the CPU backend with the JSPI build in 1.5 s (model already on the server's
+  disk), one pass over the 19.7 s clip 4.2 s; `createStream` fed 40 ms blocks from the file on the audio's own
+  clock: 54 passes, 1.1 s median (6.8 s buffer at most), 42 words committed by agreement, identical to the offline
+  pass (2 of 42 off the reference: "drafty" / "draughty"). `getUserMedia` never answers there:
+  `createMicrophone().start()` rejects with code `timeout` after the limit given (8 s in the test) and
+  `createDictation().start()` resolves `false` after the default 30 s with the same message in `onError`.
+- Also run after the move: `bun web/replay/gate.ts` (exit 0); the replay page in Chrome on `iv90` (clean 241 / 238
+  words, 5.88%; phone 241 / 239, 4.6%: the numbers in the table above); the benchmark page on 110m Q4_0 (same
+  three texts as `ggml-s4.json`, 52 / 76 / 259 ms against 48 / 63 / 226 on a quieter machine); the soak test (60
+  passes, working memory 41 MiB throughout); `drive-diag.ts foreign` and `kill` (the guard, then "Try again").
+- Chrome with `--deny-permission-prompts` and no input device: `no-device`. A wrong `assetsUrl`: the load fails
+  in 10 ms naming the worker URL; a wrong `modelUrl`: "fetch ...: 404"; an aborted load: `AbortError`.
+
+Not tested with the library: see the list in `lib/README.md` (no phone, no Safari, no real microphone, no bundler
+but `bun build`).
+
 ### Run, test, deploy
 
 ```sh
-cd web && bun install && bun build.ts             # dist/ (both pages + replay.html) and dist-live/ (the live page alone, no models)
+(cd lib && bun install); cd web && bun install && bun build.ts   # everything: lib/dist + lib/parakeet-web-0.1.0.tgz, then dist/ (both pages, replay.html, libtest.html, the library's assets in pk/) and dist-live/ (the live page alone, no models)
+(cd lib && bun build.ts)                          # the library alone: dist/ and the tarball
+bun web/drive-consumer.ts NAME --wav $R/audio/live/t56.wav --expect $R/audio/live/t56.txt [--url http://127.0.0.1:8795/]   # an app built on the library, from outside: button, textarea -> results/consumer/NAME.json
+bun web/drive-lib.ts lifecycle NAME [--cycles 5]  # the API in Chrome: model switch while recording, dispose and recreate, GPU memory -> results/lib/NAME.json
+bun web/drive-lib.ts webkit NAME [--clip t14]     # the API in Playwright's WebKit: transcriber + stream from a file, the microphone where capture is unavailable
 tmux new -d -s pkl-live-8793 'bun serve.ts 8793 --no-coi'   # then http://127.0.0.1:8793/live.html (microphone works on localhost); the drivers default to this port
 python3 scripts/live-clips.py                     # test wavs with silences into $R/audio/live/
 python3 scripts/replay-clips.py                   # the replay recordings into $R/audio/replay/ (iv6 iv90 ivgap death sil60, iv6.wav)
@@ -1290,7 +1369,7 @@ scripts/nb.sh [ENV=1 ...]          # native rebuild + browser-like bench of Q8_0
 scripts/prof.sh Q8_0 [ENV=1 ...]   # per-shader GPU ms per run (native, browser-like)
 scripts/nt.sh [ENV=1 ...]          # native text + mel/enc/dec ms, MODELS="s8 s4 q4 q8 f16" x CLIPS="a07 a14 a56", against out/ref (SAVE=1 rewrites the references)
 
-cd web && bun install && bun build.ts            # dist/: page, worker, wasm, clips, hard-linked GGUFs
+(cd lib && bun install); cd web && bun install && bun build.ts   # the library (lib/dist, tarball), then dist/: pages, the library's assets in pk/, clips, hard-linked GGUFs
 tmux new -d -s pkg-serve 'bun serve.ts 8791'     # local server (running now in tmux session pkg-serve)
 scripts/cr.sh NAME "model=q4&clip=a07&runs=5"    # one Chrome run -> results/browser/NAME.json; STOCK=1 drops the Dawn f16 flag
 scripts/cs.sh NAME "model=s8&clip=all&runs=5"    # the same with a compact summary (clips, memory, error, steps matching STEPS=regex)

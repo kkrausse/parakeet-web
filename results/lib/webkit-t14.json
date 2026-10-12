@@ -1,0 +1,133 @@
+{
+ "name": "webkit-t14",
+ "mode": "webkit",
+ "browser": "webkit",
+ "browserVersion": "27.2",
+ "url": "http://127.0.0.1:8793/libtest.html",
+ "loadavg": "6.17 7.54 9.48 21/2800 905529",
+ "transcriberAndStream": {
+  "loadMs": 1523,
+  "steps": [
+   "WASM module ready: 87 ms",
+   "no WebGPU adapter: navigator.gpu is undefined in the worker (WebGPU is not enabled in this browser, or not exposed to workers)",
+   "WebGPU is unavailable: the model would run on one WASM thread (very slow)",
+   "model file: 85260576 bytes on the server, 0 bytes stored in this browser (OPFS)",
+   "download complete: 85260576 bytes in OPFS (sync access handle)",
+   "storage path: OPFS sync access handle (the file stays on disk; tensors are read one at a time)",
+   "loading the model into the backend: WASM heap 32 MB before",
+   "model file ready (network, streamed to OPFS): 884 ms",
+   "model loaded on CPU: 187 ms",
+   "after load: GPU: weights 0 MiB, working 0 MiB, 0 buffers · since load 0 buffers made, 0 destroyed",
+   "WARNING: not on WebGPU (backend \"CPU\"): navigator.gpu is undefined in the worker (WebGPU is not enabled in this browser, or not exposed to workers)",
+   "warm-up pass starting (1.5 s of noise: shaders compile here)",
+   "warm-up pass (1.5 s of noise): 345 ms"
+  ],
+  "progress": [
+   "runtime 2%",
+   "model 5%",
+   "model 31%",
+   "model 47%",
+   "model 67%",
+   "model 83%",
+   "warmup 92%",
+   "ready 100%"
+  ],
+  "info": {
+   "backend": "CPU",
+   "webgpu": false,
+   "variant": "jspi",
+   "jspi": true,
+   "adapter": "none: navigator.gpu is undefined in the worker (WebGPU is not enabled in this browser, or not exposed to workers)",
+   "cpuReason": "navigator.gpu is undefined in the worker (WebGPU is not enabled in this browser, or not exposed to workers)",
+   "modelFrom": "network, streamed to OPFS",
+   "storagePath": "opfs-sync"
+  },
+  "clipSeconds": 19.69,
+  "offline": {
+   "text": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards",
+   "ms": 4225,
+   "words": 42
+  },
+  "stream": {
+   "committed": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards.",
+   "tentativeUpdates": 55,
+   "wallS": 51.7,
+   "passes": 54,
+   "passMsMedian": 1115,
+   "passMsMax": 1367,
+   "byReason": {
+    "agree": 42,
+    "idle": 0,
+    "stop": 0,
+    "cap": 0,
+    "lag": 0,
+    "skip": 0
+   },
+   "utterances": 1,
+   "maxBufferS": 6.76
+  },
+  "disposeReturned": {
+   "weightsMb": 0,
+   "workingMb": 0,
+   "computeMb": 0,
+   "stagingMb": 0,
+   "liveMb": 0,
+   "buffers": 0,
+   "byType": {},
+   "created": 0,
+   "destroyed": 0,
+   "createdMb": 0,
+   "poolHits": 0,
+   "poolMisses": 0,
+   "pipelines": 0,
+   "layouts": 0,
+   "bindGroups": 0,
+   "encoders": 0,
+   "submits": 0,
+   "writes": 0,
+   "maps": 0
+  },
+  "transcribeAfterDispose": "disposed: the transcriber was disposed",
+  "state": "disposed",
+  "expected": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards",
+  "offlineVsExpected": "2 of 42 words",
+  "streamVsExpected": "2 of 42 words",
+  "streamVsOffline": "0 of 42 words"
+ },
+ "microphone": {
+  "secureContext": true,
+  "hasGetUserMedia": true,
+  "hasAudioWorklet": true,
+  "error": {
+   "isMicrophoneError": true,
+   "code": "timeout",
+   "message": "The browser did not answer the microphone request within 8 s (no permission prompt answered, or capture is not available here).",
+   "cause": null
+  },
+  "ms": 8005,
+  "statuses": [
+   "starting",
+   "off"
+  ],
+  "statusAfter": "off"
+ },
+ "dictationStart": {
+  "startResolved": false,
+  "ms": 30002,
+  "errors": [
+   {
+    "code": "timeout",
+    "message": "The browser did not answer the microphone request within 30 s (no permission prompt answered, or capture is not available here)."
+   }
+  ],
+  "states": [
+   "loading/false/starting",
+   "ready/false/starting",
+   "ready/false/off"
+  ],
+  "modelAfterStart": "CPU"
+ },
+ "console": [
+  "Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}

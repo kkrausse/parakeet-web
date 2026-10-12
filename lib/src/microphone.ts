@@ -49,7 +49,11 @@ export interface MicrophoneOptions {
   voiceProcessing?: boolean;
   /** Keep the screen awake while recording, where the browser allows it. Default true. */
   wakeLock?: boolean;
-  /** Give up when the browser has neither granted nor refused the microphone after this long. Default 0: wait for ever (a permission prompt may be open). */
+  /**
+   * Give up (code "timeout") when the browser has neither granted nor refused the microphone after this long.
+   * Default 30000: some browsers never answer where capture is unavailable (Playwright's WebKit does this), which
+   * cannot be told from a person looking at the permission prompt. 0 waits for ever.
+   */
   startTimeoutMs?: number;
   /** "mic-track" (mute / unmute / ended) and "audio-context" (state changes). */
   onDiagnostic?(kind: string, data: Record<string, unknown>): void;
@@ -66,6 +70,7 @@ export interface Microphone {
 }
 
 const SILENT_AFTER_MS = 4000;
+const START_TIMEOUT_MS = 30000;
 
 export function createMicrophone(options: MicrophoneOptions): Microphone {
   const workletUrl = new URL("worklet.js", directoryUrl(options.assetsUrl)).href;
@@ -111,9 +116,9 @@ export function createMicrophone(options: MicrophoneOptions): Microphone {
       if (!c.audioWorklet) throw micError("unsupported", "AudioWorklet is not available in this browser.");
       const proc = overrides.voiceProcessing ?? options.voiceProcessing ?? false;
       const asked = navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: proc, noiseSuppression: proc, autoGainControl: true }, video: false });
-      const limit = options.startTimeoutMs ?? 0;
+      const limit = options.startTimeoutMs ?? START_TIMEOUT_MS;
       let timer: ReturnType<typeof setTimeout> | undefined;
-      const s = await (limit > 0 ? Promise.race([asked, new Promise<never>((_, rej) => { timer = setTimeout(() => rej(micError("timeout", `The browser did not answer the microphone request within ${Math.round(limit / 1000)} s.`)), limit); })]) : asked)
+      const s = await (limit > 0 ? Promise.race([asked, new Promise<never>((_, rej) => { timer = setTimeout(() => rej(micError("timeout", `The browser did not answer the microphone request within ${Math.round(limit / 1000)} s (no permission prompt answered, or capture is not available here).`)), limit); })]) : asked)
         .catch((e) => { void asked.then((late) => late.getTracks().forEach((t) => t.stop()), () => {}); throw e; }) // a grant that arrives after the timeout is released at once
         .finally(() => clearTimeout(timer));
       if (mine !== session) { s.getTracks().forEach((t) => t.stop()); current(); }

@@ -1,0 +1,371 @@
+{
+ "name": "lifecycle-chrome",
+ "mode": "lifecycle",
+ "browser": "chrome",
+ "browserVersion": "154.0.8037.97",
+ "url": "http://127.0.0.1:8793/libtest.html",
+ "loadavg": "6.94 8.41 10.25 21/2895 521121",
+ "gpuMibBefore": 2,
+ "gpuMibS4Ready": 190,
+ "gpuMibS8Recording": 232,
+ "modelSwitch": {
+  "switchStartedAt": 21.7,
+  "switchReadyAt": 23.3,
+  "wordsBefore": 33,
+  "recordingThroughout": true,
+  "committed": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatre a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative",
+  "words": 33,
+  "commits": [
+   [
+    5.3,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    5.6,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    6.1,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    7,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    7.3,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    7.8,
+    2,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    8.4,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    8.7,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    9.5,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    10.1,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    10.6,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    10.9,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    11.2,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    11.5,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    11.7,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    12,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    13.2,
+    2,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    13.7,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    14,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    15.1,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    15.7,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    16.2,
+    2,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    16.5,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    17.3,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    18.5,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    18.7,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    19.3,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    19.6,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    20.7,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ],
+   [
+    21.3,
+    1,
+    "parakeet-tdt_ctc-110m-Q4_0.gguf"
+   ]
+  ],
+  "states": [
+   "0 loading/idle/off",
+   "1.6 ready/idle/off",
+   "1.6 ready/idle/starting",
+   "1.7 ready/idle/live",
+   "1.7 ready/rec/live",
+   "21.7 loading/rec/live",
+   "23.3 ready/rec/live",
+   "43.3 ready/idle/off"
+  ],
+  "errors": [],
+  "loads": [
+   {
+    "at": 1.6,
+    "file": "parakeet-tdt_ctc-110m-Q4_0.gguf",
+    "backend": "WebGPU: WebGPU",
+    "gpu": {
+     "weightsMb": 81.2,
+     "workingMb": 41,
+     "buffers": 7,
+     "created": 8,
+     "destroyed": 1,
+     "jsBuffersLive": 7,
+     "jsBufferLiveMb": 122.3
+    }
+   },
+   {
+    "at": 23.3,
+    "file": "parakeet-tdt_ctc-110m-Q8_0.gguf",
+    "backend": "WebGPU: WebGPU",
+    "gpu": {
+     "weightsMb": 129,
+     "workingMb": 42,
+     "buffers": 7,
+     "created": 9,
+     "destroyed": 2,
+     "jsBuffersLive": 7,
+     "jsBufferLiveMb": 171.1
+    }
+   }
+  ],
+  "engine": {
+   "passes": 71,
+   "utterances": 0,
+   "failed": true,
+   "byReason": {
+    "agree": 33,
+    "idle": 0,
+    "stop": 0,
+    "cap": 0,
+    "lag": 0,
+    "skip": 0
+   }
+  }
+ },
+ "gpuMibAfterDispose": 45,
+ "cycles": [
+  {
+   "cycle": 1,
+   "started": true,
+   "gpuMibReady": 185,
+   "words": 10,
+   "passes": 23,
+   "errors": [],
+   "live": {
+    "weightsMb": 81.2,
+    "workingMb": 41,
+    "buffers": 7,
+    "created": 8,
+    "destroyed": 1,
+    "jsBuffersLive": 7,
+    "jsBufferLiveMb": 122.3
+   },
+   "afterFree": {
+    "weightsMb": 0,
+    "workingMb": 1,
+    "buffers": 2,
+    "created": 8,
+    "destroyed": 6,
+    "jsBuffersLive": 2,
+    "jsBufferLiveMb": 1
+   },
+   "stateAfter": "failed",
+   "gpuMibAfterDispose": 45
+  },
+  {
+   "cycle": 2,
+   "started": true,
+   "gpuMibReady": 184,
+   "words": 10,
+   "passes": 23,
+   "errors": [],
+   "live": {
+    "weightsMb": 81.2,
+    "workingMb": 41,
+    "buffers": 7,
+    "created": 8,
+    "destroyed": 1,
+    "jsBuffersLive": 7,
+    "jsBufferLiveMb": 122.3
+   },
+   "afterFree": {
+    "weightsMb": 0,
+    "workingMb": 1,
+    "buffers": 2,
+    "created": 8,
+    "destroyed": 6,
+    "jsBuffersLive": 2,
+    "jsBufferLiveMb": 1
+   },
+   "stateAfter": "failed",
+   "gpuMibAfterDispose": 45
+  },
+  {
+   "cycle": 3,
+   "started": true,
+   "gpuMibReady": 184,
+   "words": 10,
+   "passes": 23,
+   "errors": [],
+   "live": {
+    "weightsMb": 81.2,
+    "workingMb": 41,
+    "buffers": 7,
+    "created": 8,
+    "destroyed": 1,
+    "jsBuffersLive": 7,
+    "jsBufferLiveMb": 122.3
+   },
+   "afterFree": {
+    "weightsMb": 0,
+    "workingMb": 1,
+    "buffers": 2,
+    "created": 8,
+    "destroyed": 6,
+    "jsBuffersLive": 2,
+    "jsBufferLiveMb": 1
+   },
+   "stateAfter": "failed",
+   "gpuMibAfterDispose": 45
+  },
+  {
+   "cycle": 4,
+   "started": true,
+   "gpuMibReady": 184,
+   "words": 10,
+   "passes": 23,
+   "errors": [],
+   "live": {
+    "weightsMb": 81.2,
+    "workingMb": 41,
+    "buffers": 7,
+    "created": 8,
+    "destroyed": 1,
+    "jsBuffersLive": 7,
+    "jsBufferLiveMb": 122.3
+   },
+   "afterFree": {
+    "weightsMb": 0,
+    "workingMb": 1,
+    "buffers": 2,
+    "created": 8,
+    "destroyed": 6,
+    "jsBuffersLive": 2,
+    "jsBufferLiveMb": 1
+   },
+   "stateAfter": "failed",
+   "gpuMibAfterDispose": 45
+  },
+  {
+   "cycle": 5,
+   "started": true,
+   "gpuMibReady": 184,
+   "words": 10,
+   "passes": 23,
+   "errors": [],
+   "live": {
+    "weightsMb": 81.2,
+    "workingMb": 41,
+    "buffers": 7,
+    "created": 8,
+    "destroyed": 1,
+    "jsBuffersLive": 7,
+    "jsBufferLiveMb": 122.3
+   },
+   "afterFree": {
+    "weightsMb": 0,
+    "workingMb": 1,
+    "buffers": 2,
+    "created": 8,
+    "destroyed": 6,
+    "jsBuffersLive": 2,
+    "jsBufferLiveMb": 1
+   },
+   "stateAfter": "failed",
+   "gpuMibAfterDispose": 45
+  }
+ ],
+ "console": [
+  "Failed to load resource: the server responded with a status of 404 (Not Found)"
+ ]
+}
