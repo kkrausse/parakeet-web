@@ -1,0 +1,1224 @@
+{
+ "name": "t1",
+ "clip": "iv90",
+ "clipSeconds": 90,
+ "model": "s4",
+ "capS": 12,
+ "params": {},
+ "latency": "measured",
+ "chrome": "154.0.8037.97",
+ "runs": [
+  {
+   "condition": "clean",
+   "engine": "old",
+   "refWords": 238,
+   "committedWords": 245,
+   "wer": 8.82,
+   "errors": 21,
+   "contradicted": 19,
+   "missed": 2,
+   "longestUnshownS": 0,
+   "longestUnshownWords": 0,
+   "unshownWords": 0,
+   "longestUncommittedS": 0,
+   "commitLatency": {
+    "median": 5.88,
+    "p95": 10.98,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.12,
+    "p95": 0.28,
+    "max": null
+   },
+   "spans": [
+    " [ -> dollars in]",
+    "receipt [falloff -> fall off]",
+    "hundred [ -> and]",
+    "they [ain't -> can]",
+    "point [ -> the]",
+    "at [one -> a]",
+    "hundred [ -> and]",
+    "about [one -> a]",
+    "hundred [ -> and]",
+    "fifteen [percent -> per cent]",
+    "hundred [and ten percent -> ten per cent]",
+    "ninety [percent -> per cent]",
+    "absolutely [want a -> one]",
+    "out [okay -> ]"
+   ],
+   "coverage": {
+    "speechS": 65.96,
+    "lostS": 0.02,
+    "lostPct": 0.03,
+    "longestLostS": 0.02,
+    "longestLostAtS": 61.56,
+    "segments": 16,
+    "dropped": 0,
+    "droppedWithText": 0
+   },
+   "stats": {
+    "passes": 311,
+    "commits": 16,
+    "dropped": 0,
+    "droppedWithText": 0,
+    "stale": 5,
+    "maxNoiseFloor": 0.0034530026835105396,
+    "noiseFloor": 0.001189560537176072
+   },
+   "wallS": 29.1,
+   "passes": 311,
+   "passMsMedian": 56,
+   "maxBufferS": 0,
+   "maxPassAudioS": 0,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 14.2,
+     "last": 13.4,
+     "min": 13.3,
+     "max": 14.7
+    },
+    "wasmHeapMb": {
+     "first": 46,
+     "last": 46,
+     "min": 46,
+     "max": 46
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 213,
+     "gpuProcRssMib": 307
+    },
+    "rssAfter": {
+     "rendererRssMib": 261,
+     "gpuProcRssMib": 325
+    }
+   },
+   "refText": "off balance sheet liabilities, social security payments annually, Medicare payments annually, Medicaid payments annually, as well as veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years fighting to little to no avail. When you add in interest plus entitlements, plus veterans affairs and compare it to receipts, you can see that in twenty twenty due to COVID, the receipt falloff, true, that's what we call true interest expense, true interest expense went to about one hundred ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. You remember like six hundred billion dollars a month in QE? Yeah, that's what they were doing. They ain't call it that. They'll never call it that. That's what they were doing. Here's the point US debt to GDP in COVID in twenty twenty was peaked at one hundred thirty percent. Less than eighteen months later, it was down to about one hundred fifteen percent. How did they do it? And true interest expense went from one hundred and ten percent down to about eighty five ninety percent of receipts. How did they do it? Simple, simple. Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent voila. They know it works. They absolutely want a hundred percent, know that inflation is one of the ways out. Okay.",
+   "committed": "dollars in off balance sheet liabilities. Social Security Payments annually, Medicare Payments annually. Medicaid payments annually, as well as veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years. fighting to little to no avail. When you add in interest plus entitlements, plus veterans affairs and compare it to receipts, You can see that in twenty twenty due to COVID, the receipt fall off, true, that's what we call true interest expense. True interest expense went to about one hundred and ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. You remember like six hundred billion dollars a month in QE? Yeah, that's what they were doing. They can call it that. They'll never call it that. That's what they were doing. Here's the point. The US debt to GDP. In COVID, in twenty twenty was peaked at a hundred and thirty percent. Less than eighteen months later it was down to about a hundred and fifteen per cent. How did they do it? And true interest expense went from one hundred ten per cent down to about eighty five ninety per cent of receipts. How did they do it? Simple. Simple, Fed does a bunch of QE. They pin rates at zero and inflation runs eight to twelve percent. Voila. They know it works. They absolutely one hundred percent know that inflation is one of the ways out."
+  },
+  {
+   "condition": "clean",
+   "engine": "new",
+   "refWords": 238,
+   "committedWords": 243,
+   "wer": 6.3,
+   "errors": 15,
+   "contradicted": 13,
+   "missed": 2,
+   "longestUnshownS": 0,
+   "longestUnshownWords": 0,
+   "unshownWords": 0,
+   "longestUncommittedS": 0,
+   "commitLatency": {
+    "median": 1.04,
+    "p95": 1.64,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.12,
+    "p95": 0.4,
+    "max": null
+   },
+   "spans": [
+    " [ -> dollars in]",
+    "add [in -> an]",
+    "plus [veterans -> veterans']",
+    "covid [ -> the]",
+    "receipt [falloff -> fall off]",
+    "hundred [ -> and]",
+    "interest [you -> ]",
+    "in [qe -> kiwi]",
+    "they [ain't -> didn't]",
+    "point [ -> the]",
+    "hundred [ -> and]",
+    "from [one -> a]",
+    "hundred [and -> ]"
+   ],
+   "coverage": {
+    "speechS": 65.96,
+    "lostS": 0.16,
+    "lostPct": 0.24,
+    "longestLostS": 0.16,
+    "longestLostAtS": 0,
+    "segments": 1,
+    "dropped": 0,
+    "droppedWithText": 0
+   },
+   "stats": {
+    "capturedS": 90,
+    "open": false,
+    "busy": false,
+    "failed": false,
+    "skipping": false,
+    "bufferS": 0,
+    "maxBufferS": 5.56,
+    "lagS": 0,
+    "maxLagS": 1.12,
+    "noiseFloor": 0.0006057237042114139,
+    "threshold": 0.0015143092605285347,
+    "lastRms": 0.2750863804521277,
+    "speech": true,
+    "gateOpens": 1,
+    "gateMisses": 0,
+    "modelHolds": 1,
+    "probes": 0,
+    "probesSilent": 0,
+    "passes": 312,
+    "livePasses": 311,
+    "finalPasses": 1,
+    "stale": 0,
+    "reusedFinals": 0,
+    "utterances": 1,
+    "commits": 169,
+    "wordsCommitted": 243,
+    "byReason": {
+     "agree": 241,
+     "idle": 0,
+     "stop": 2,
+     "cap": 0,
+     "lag": 0,
+     "skip": 0
+    },
+    "skippedS": 0,
+    "trims": 103,
+    "anchorShifts": 139
+   },
+   "wallS": 33.9,
+   "passes": 312,
+   "passMsMedian": 72.90000009536743,
+   "maxBufferS": 5.56,
+   "maxPassAudioS": 5.52,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 15,
+     "last": 15.6,
+     "min": 15,
+     "max": 15.8
+    },
+    "wasmHeapMb": {
+     "first": 46,
+     "last": 46,
+     "min": 46,
+     "max": 46
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 261,
+     "gpuProcRssMib": 325
+    },
+    "rssAfter": {
+     "rendererRssMib": 254,
+     "gpuProcRssMib": 325
+    }
+   },
+   "refText": "off balance sheet liabilities, social security payments annually, Medicare payments annually, Medicaid payments annually, as well as veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years fighting to little to no avail. When you add in interest plus entitlements, plus veterans affairs and compare it to receipts, you can see that in twenty twenty due to COVID, the receipt falloff, true, that's what we call true interest expense, true interest expense went to about one hundred ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. You remember like six hundred billion dollars a month in QE? Yeah, that's what they were doing. They ain't call it that. They'll never call it that. That's what they were doing. Here's the point US debt to GDP in COVID in twenty twenty was peaked at one hundred thirty percent. Less than eighteen months later, it was down to about one hundred fifteen percent. How did they do it? And true interest expense went from one hundred and ten percent down to about eighty five ninety percent of receipts. How did they do it? Simple, simple. Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent voila. They know it works. They absolutely want a hundred percent, know that inflation is one of the ways out. Okay.",
+   "committed": "dollars in off balance sheet liabilities. social security payments annually, Medicare payments annually, Medicaid payments annually as well as veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years fighting to little to no avail. When you add an interest plus entitlements plus veterans' affairs, and compare it to receipts, you can see that in twenty twenty due to COVID, the the receipt fall off, True, that's what we call true interest expense, true interest expense went to about one hundred and ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. Remember like six hundred billion dollars a month in Kiwi? Yeah, that's what they were doing. They didn't call it that, they'll never call it that. That's what they were doing. Here's the point The US debt to GDP in COVID in twenty twenty was peaked at one hundred thirty percent. Less than eighteen months later it was down to about one hundred and fifteen percent. How did they do it? And true interest expense went from a hundred ten percent down to about eighty five ninety percent of receipts. How did they do it? Simple, simple, Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent. voila. They know it works. They absolutely want a hundred percent know that inflation is one of the ways out. Okay."
+  },
+  {
+   "condition": "low",
+   "engine": "old",
+   "refWords": 238,
+   "committedWords": 238,
+   "wer": 5.46,
+   "errors": 13,
+   "contradicted": 8,
+   "missed": 5,
+   "longestUnshownS": 0,
+   "longestUnshownWords": 0,
+   "unshownWords": 0,
+   "longestUncommittedS": 0.48,
+   "commitLatency": {
+    "median": 2.3,
+    "p95": 7.46,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.16,
+    "p95": 0.2,
+    "max": null
+   },
+   "spans": [
+    " [off balance sheet -> ]",
+    "receipt [falloff -> fall off]",
+    "hundred [ -> and]",
+    "interest [ -> you]",
+    "in [qe -> qi]",
+    "hundred [ -> and]",
+    "hundred [ -> and]",
+    "runs [eight -> eighty]",
+    "absolutely [want -> ]",
+    "out [okay -> ]"
+   ],
+   "coverage": {
+    "speechS": 65.96,
+    "lostS": 3.62,
+    "lostPct": 5.49,
+    "longestLostS": 1.86,
+    "longestLostAtS": 0,
+    "segments": 22,
+    "dropped": 2,
+    "droppedWithText": 1
+   },
+   "stats": {
+    "passes": 290,
+    "commits": 22,
+    "dropped": 2,
+    "droppedWithText": 1,
+    "stale": 5,
+    "maxNoiseFloor": 0.003662553248710907,
+    "noiseFloor": 0.0006416512215612546
+   },
+   "wallS": 21.7,
+   "passes": 290,
+   "passMsMedian": 64.39999997615814,
+   "maxBufferS": 0,
+   "maxPassAudioS": 0,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 19.4,
+     "last": 19.3,
+     "min": 19,
+     "max": 20.2
+    },
+    "wasmHeapMb": {
+     "first": 67,
+     "last": 67,
+     "min": 67,
+     "max": 67
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 285,
+     "gpuProcRssMib": 325
+    },
+    "rssAfter": {
+     "rendererRssMib": 281,
+     "gpuProcRssMib": 346
+    }
+   },
+   "refText": "off balance sheet liabilities, social security payments annually, Medicare payments annually, Medicaid payments annually, as well as veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years fighting to little to no avail. When you add in interest plus entitlements, plus veterans affairs and compare it to receipts, you can see that in twenty twenty due to COVID, the receipt falloff, true, that's what we call true interest expense, true interest expense went to about one hundred ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. Remember like six hundred billion dollars a month in QE? Yeah, that's what they were doing. They ain't call it that. They'll never call it that. That's what they were doing. Here's the point. The US debt to GDP in COVID in twenty twenty was peaked at one hundred thirty percent. Less than eighteen months later, it was down to about one hundred fifteen percent. How did they do it? And true interest expense went from one hundred and ten percent down to about eighty five ninety percent of receipts. How did they do it? Simple, simple. Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent voila, they know it works. They absolutely want one hundred percent know that inflation is one of the ways out. Okay.",
+   "committed": "Liabilities. Social Security Payments Annually, Medicare Payments Annually, Medicaid payments annually. as well as veterans benefits. which are just the interest on the dumb wars that we spent the last twenty five years. fighting to little to no avail. When you add in interest, plus entitlements, plus veterans affairs and compare it to receipts, You can see that in twenty twenty due to COVID, the receipt fall off. True, that's what we call true interest expense. True interest expense went to about one hundred and ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. You remember like six hundred billion dollars a month in Qi? Yeah, that's what they were doing. They ain't call it that, they'll never call it that, that's what they were doing. Here's the point. The US debt to GDP. in COVID in twenty twenty was peaked at one hundred and thirty percent. Less than eighteen months later, it was down to about one hundred and fifteen percent. How did they do it? And true interest expense went from one hundred and ten percent down to about eighty five ninety percent. of receipts. How did they do it? Simple. Simple, Fed does a bunch of QE, they pin rates at zero and inflation runs eighty. to twelve percent. Voila. They know it works. They absolutely one hundred percent know that inflation is one of the ways out."
+  },
+  {
+   "condition": "low",
+   "engine": "new",
+   "refWords": 238,
+   "committedWords": 244,
+   "wer": 7.56,
+   "errors": 18,
+   "contradicted": 15,
+   "missed": 3,
+   "longestUnshownS": 0,
+   "longestUnshownWords": 0,
+   "unshownWords": 0,
+   "longestUncommittedS": 0,
+   "commitLatency": {
+    "median": 1,
+    "p95": 1.64,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.16,
+    "p95": 0.28,
+    "max": null
+   },
+   "spans": [
+    " [ -> dollars in]",
+    "little [to -> and]",
+    "add [in -> an]",
+    "and [compare it -> compared]",
+    "covid [ -> the]",
+    "receipt [falloff -> fall off]",
+    "hundred [ -> and]",
+    "in [qe -> kiwi]",
+    "they [ain't -> didn't]",
+    "were [ -> doing]",
+    "hundred [ -> and]",
+    "hundred [and -> ]",
+    "about [ -> eighty five]",
+    "absolutely [want -> ]"
+   ],
+   "coverage": {
+    "speechS": 65.96,
+    "lostS": 0.16,
+    "lostPct": 0.24,
+    "longestLostS": 0.16,
+    "longestLostAtS": 0,
+    "segments": 1,
+    "dropped": 0,
+    "droppedWithText": 0
+   },
+   "stats": {
+    "capturedS": 90,
+    "open": false,
+    "busy": false,
+    "failed": false,
+    "skipping": false,
+    "bufferS": 0,
+    "maxBufferS": 5.64,
+    "lagS": 0,
+    "maxLagS": 0.56,
+    "noiseFloor": 0.00003035810004803352,
+    "threshold": 0.0004,
+    "lastRms": 0.01378697814694055,
+    "speech": true,
+    "gateOpens": 1,
+    "gateMisses": 0,
+    "modelHolds": 2,
+    "probes": 0,
+    "probesSilent": 0,
+    "passes": 321,
+    "livePasses": 320,
+    "finalPasses": 1,
+    "stale": 0,
+    "reusedFinals": 0,
+    "utterances": 1,
+    "commits": 164,
+    "wordsCommitted": 244,
+    "byReason": {
+     "agree": 242,
+     "idle": 0,
+     "stop": 2,
+     "cap": 0,
+     "lag": 0,
+     "skip": 0
+    },
+    "skippedS": 0,
+    "trims": 100,
+    "anchorShifts": 134
+   },
+   "wallS": 27.9,
+   "passes": 321,
+   "passMsMedian": 81.79999995231628,
+   "maxBufferS": 5.64,
+   "maxPassAudioS": 5.56,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 16.3,
+     "last": 15.5,
+     "min": 15,
+     "max": 16.3
+    },
+    "wasmHeapMb": {
+     "first": 67,
+     "last": 67,
+     "min": 67,
+     "max": 67
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 281,
+     "gpuProcRssMib": 346
+    },
+    "rssAfter": {
+     "rendererRssMib": 294,
+     "gpuProcRssMib": 346
+    }
+   },
+   "refText": "off balance sheet liabilities, social security payments annually, Medicare payments annually, Medicaid payments annually, as well as veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years fighting to little to no avail. When you add in interest plus entitlements, plus veterans affairs and compare it to receipts, you can see that in twenty twenty due to COVID, the receipt falloff, true, that's what we call true interest expense, true interest expense went to about one hundred ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. Remember like six hundred billion dollars a month in QE? Yeah, that's what they were doing. They ain't call it that. They'll never call it that. That's what they were doing. Here's the point. The US debt to GDP in COVID in twenty twenty was peaked at one hundred thirty percent. Less than eighteen months later, it was down to about one hundred fifteen percent. How did they do it? And true interest expense went from one hundred and ten percent down to about eighty five ninety percent of receipts. How did they do it? Simple, simple. Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent voila, they know it works. They absolutely want one hundred percent know that inflation is one of the ways out. Okay.",
+   "committed": "dollars in off balance sheet liabilities. social security payments annually, Medicare Payments annually, Medicaid payments annually, as well as veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years fighting to little and no avail. When you add an interest plus entitlements plus veterans affairs and compared to receipts, you can see that in twenty twenty due to COVID, the the receipt fall off, True, that's what we call true interest expense true interest expense went to about one hundred and ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. Remember like six hundred billion dollars a month in Kiwi? Yeah, that's what they were doing. They didn't call it that, They'll never call it that. That's what they were doing. doing. Here's the point. The US debt to GDP in COVID in twenty twenty was peaked at one hundred thirty percent. Less than eighteen months later it was down to about one hundred and fifteen percent. How did they do it? And true interest expense went from one hundred ten percent down to about eighty five eighty five, ninety percent of receipts. How did they do it? Simple, simple, Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent. voila. They know it works. They absolutely one hundred percent know that inflation is one of the ways out. Okay."
+  },
+  {
+   "condition": "phone",
+   "engine": "old",
+   "refWords": 239,
+   "committedWords": 190,
+   "wer": 24.27,
+   "errors": 58,
+   "contradicted": 8,
+   "missed": 50,
+   "longestUnshownS": 3.12,
+   "longestUnshownWords": 12,
+   "unshownWords": 32,
+   "longestUncommittedS": 3.52,
+   "commitLatency": {
+    "median": 1.82,
+    "p95": 6.3,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.16,
+    "p95": 0.28,
+    "max": null
+   },
+   "spans": [
+    " [ -> in]",
+    "balance [sheet -> sheets]",
+    "on [the dumb wars that we spent the last twenty five years -> ]",
+    "to [little and no avail -> ]",
+    "plus [veterans -> veterans']",
+    "and [compare it -> compared]",
+    "hundred [ten percent of receipts uh oh they need to print the interest -> ]",
+    "month [in qe -> ]",
+    "hundred [thirty percent -> ]",
+    "was [down to about one hundred fifteen percent how did they do it -> ]",
+    "eighty [five -> percent]",
+    "eight [to twelve percent -> ]",
+    "absolutely [want -> won]",
+    "percent [know -> no]",
+    "of [the ways out okay -> these]"
+   ],
+   "coverage": {
+    "speechS": 65.96,
+    "lostS": 14.98,
+    "lostPct": 22.71,
+    "longestLostS": 3.82,
+    "longestLostAtS": 36.74,
+    "segments": 21,
+    "dropped": 2,
+    "droppedWithText": 2
+   },
+   "stats": {
+    "passes": 242,
+    "commits": 21,
+    "dropped": 2,
+    "droppedWithText": 2,
+    "stale": 6,
+    "maxNoiseFloor": 0.005195299101313222,
+    "noiseFloor": 0.0014183038462418267
+   },
+   "wallS": 19.5,
+   "passes": 242,
+   "passMsMedian": 68.10000002384186,
+   "maxBufferS": 0,
+   "maxPassAudioS": 0,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 18.9,
+     "last": 19,
+     "min": 18.8,
+     "max": 19.5
+    },
+    "wasmHeapMb": {
+     "first": 80,
+     "last": 80,
+     "min": 80,
+     "max": 80
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 302,
+     "gpuProcRssMib": 346
+    },
+    "rssAfter": {
+     "rendererRssMib": 293,
+     "gpuProcRssMib": 339
+    }
+   },
+   "refText": "off balance sheet liabilities, social security payments annually, Medicare payments annually, Medicaid payments annually, as well as veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years fighting to little and no avail. When you add in interest plus entitlements, plus veterans affairs and compare it to receipts, you can see that in twenty twenty due to COVID, the receipt fall off, true, that's what we call true interest expense, true interest expense went to about one hundred ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. Remember like six hundred billion dollars a month in QE? Yeah, that's what they were doing. They didn't call it that. They'll never call it that. That's what they were doing. Here's the point. The US debt to GDP in COVID in twenty twenty was peaked at one hundred thirty percent. Less than eighteen months later, it was down to about one hundred fifteen percent. How did they do it? And true interest expense went from one hundred and ten percent down to about eighty five ninety percent of receipts. How did they do it? Simple, simple. Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent. Voila. They know it works. They absolutely want a hundred percent know that inflation is one of the ways out. Okay.",
+   "committed": "in off balance sheets. Liabilities Social Security Payments annually, Medicare Payments annually, Medicaid payments annually, as well as Veterans Benefits, which are just the interest on fighting to When you add in interest plus entitlements, plus Veterans' affairs and compared to receipts You can see that in twenty twenty due to COVID, the receipt fall off. True, that's what we call true interest expense, true interest expense went to about one hundred They printed the interest. Remember like six hundred billion dollars a month? Yeah, that's what they were doing. They didn't call it that, they'll never call it that. That's what they were doing. Here's the point. The US debt to GDP in COVID In twenty twenty was peaked at one hundred Less than eighteen months later it was And true interest expense went from one hundred and ten percent down to about eighty percent ninety percent. of receipts. How did they do it? Simple, simple Fed does a bunch of QE, they pin rates at zero and inflation runs eight. Voila. They know it works. They absolutely won a hundred percent. No, that inflation is one of these."
+  },
+  {
+   "condition": "phone",
+   "engine": "new",
+   "refWords": 239,
+   "committedWords": 243,
+   "wer": 6.28,
+   "errors": 15,
+   "contradicted": 12,
+   "missed": 3,
+   "longestUnshownS": 0,
+   "longestUnshownWords": 0,
+   "unshownWords": 0,
+   "longestUncommittedS": 0,
+   "commitLatency": {
+    "median": 1.04,
+    "p95": 1.56,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.08,
+    "p95": 0.32,
+    "max": null
+   },
+   "spans": [
+    " [ -> in]",
+    "and [compare it -> compared]",
+    "hundred [ -> and]",
+    "the [interest -> entrance]",
+    "in [qe -> kiwi]",
+    "doing [they didn't -> ain't]",
+    "hundred [ -> and]",
+    "thirty [ -> percent]",
+    "hundred [ -> and]",
+    "fifteen [ -> percent]",
+    "hundred [and -> ]",
+    "twelve [ -> percent]",
+    "absolutely [want -> won]"
+   ],
+   "coverage": {
+    "speechS": 65.96,
+    "lostS": 0.24,
+    "lostPct": 0.36,
+    "longestLostS": 0.24,
+    "longestLostAtS": 0,
+    "segments": 1,
+    "dropped": 0,
+    "droppedWithText": 0
+   },
+   "stats": {
+    "capturedS": 90,
+    "open": false,
+    "busy": false,
+    "failed": false,
+    "skipping": false,
+    "bufferS": 0,
+    "maxBufferS": 5.12,
+    "lagS": 0,
+    "maxLagS": 0.68,
+    "noiseFloor": 0.0004504901880864054,
+    "threshold": 0.0011262254702160135,
+    "lastRms": 0.003872979685954906,
+    "speech": true,
+    "gateOpens": 1,
+    "gateMisses": 0,
+    "modelHolds": 1,
+    "probes": 0,
+    "probesSilent": 0,
+    "passes": 319,
+    "livePasses": 318,
+    "finalPasses": 1,
+    "stale": 0,
+    "reusedFinals": 0,
+    "utterances": 1,
+    "commits": 164,
+    "wordsCommitted": 243,
+    "byReason": {
+     "agree": 241,
+     "idle": 0,
+     "stop": 2,
+     "cap": 0,
+     "lag": 0,
+     "skip": 0
+    },
+    "skippedS": 0,
+    "trims": 101,
+    "anchorShifts": 132
+   },
+   "wallS": 33.9,
+   "passes": 319,
+   "passMsMedian": 96.19999992847443,
+   "maxBufferS": 5.12,
+   "maxPassAudioS": 4.96,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 21.5,
+     "last": 15.6,
+     "min": 14.9,
+     "max": 21.8
+    },
+    "wasmHeapMb": {
+     "first": 80,
+     "last": 80,
+     "min": 80,
+     "max": 80
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 293,
+     "gpuProcRssMib": 339
+    },
+    "rssAfter": {
+     "rendererRssMib": 286,
+     "gpuProcRssMib": 340
+    }
+   },
+   "refText": "off balance sheet liabilities, social security payments annually, Medicare payments annually, Medicaid payments annually, as well as veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years fighting to little and no avail. When you add in interest plus entitlements, plus veterans affairs and compare it to receipts, you can see that in twenty twenty due to COVID, the receipt fall off, true, that's what we call true interest expense, true interest expense went to about one hundred ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. Remember like six hundred billion dollars a month in QE? Yeah, that's what they were doing. They didn't call it that. They'll never call it that. That's what they were doing. Here's the point. The US debt to GDP in COVID in twenty twenty was peaked at one hundred thirty percent. Less than eighteen months later, it was down to about one hundred fifteen percent. How did they do it? And true interest expense went from one hundred and ten percent down to about eighty five ninety percent of receipts. How did they do it? Simple, simple. Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent. Voila. They know it works. They absolutely want a hundred percent know that inflation is one of the ways out. Okay.",
+   "committed": "in off balance sheet liabilities. social security payments annually, Medicare Payments annually, Medicaid payments annually as well as veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years fighting to little and no avail. When you add in interest plus entitlements plus veterans affairs and compared to receipts, you can see that in twenty twenty due to COVID the receipt fall off True that's what we call true interest expense, true interest expense went to about one hundred and ten percent of receipts. Uh oh, they need to print the entrance. They printed the interest. Remember like six hundred billion dollars a month in Kiwi. Yeah, that's what they were doing. Ain't call it that, they'll never call it that. That's what they were doing. Here's the point The US debt to GDP in COVID in twenty twenty was peaked at one hundred and thirty percent. percent. Less than eighteen months later it was down to about one hundred and fifteen percent percent. How did they do it? And true interest expense went from one hundred ten percent down to about eighty five ninety percent of receipts. How did they do it? Simple, simple Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent. percent. Voila. They know it works. They absolutely won a hundred percent know that inflation is one of the ways out. Okay."
+  },
+  {
+   "condition": "noisy",
+   "engine": "old",
+   "refWords": 235,
+   "committedWords": 146,
+   "wer": 39.57,
+   "errors": 93,
+   "contradicted": 4,
+   "missed": 89,
+   "longestUnshownS": 3.6,
+   "longestUnshownWords": 12,
+   "unshownWords": 59,
+   "longestUncommittedS": 8.4,
+   "commitLatency": {
+    "median": 1.38,
+    "p95": 3.5,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.12,
+    "p95": 0.44,
+    "max": null
+   },
+   "spans": [
+    " [off balance sheet -> ]",
+    "as [veterans -> veteran's]",
+    "just [the interest on the dumb wars that we spent last twenty five fighting to little and no band when -> ]",
+    "interest [plus entitlements -> ]",
+    "to [receipts -> received]",
+    "hundred [ten percent of receipts uh oh they need to print the interest -> ]",
+    "six [hundred billion dollars a month in q yeah that's what they were doing -> ]",
+    "twenty [was peaked at one hundred thirty percent less than eighteen months later it was down to about one hundred fifteen percent how did they do it -> ]",
+    "hundred [and -> ]",
+    "ninety [percent -> ]",
+    "runs [eight to twelve percent -> eighty]",
+    "they [absolutely want one hundred percent -> absolute]",
+    "is [one of the ways out -> ]"
+   ],
+   "coverage": {
+    "speechS": 65.96,
+    "lostS": 26.92,
+    "lostPct": 40.81,
+    "longestLostS": 8.98,
+    "longestLostAtS": 10.6,
+    "segments": 23,
+    "dropped": 4,
+    "droppedWithText": 4
+   },
+   "stats": {
+    "passes": 199,
+    "commits": 23,
+    "dropped": 4,
+    "droppedWithText": 4,
+    "stale": 5,
+    "maxNoiseFloor": 0.006652521748438096,
+    "noiseFloor": 0.0026406065115340462
+   },
+   "wallS": 13.7,
+   "passes": 199,
+   "passMsMedian": 51.700000047683716,
+   "maxBufferS": 0,
+   "maxPassAudioS": 0,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 20.1,
+     "last": 19.8,
+     "min": 19.5,
+     "max": 20.9
+    },
+    "wasmHeapMb": {
+     "first": 80,
+     "last": 80,
+     "min": 80,
+     "max": 80
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 299,
+     "gpuProcRssMib": 341
+    },
+    "rssAfter": {
+     "rendererRssMib": 295,
+     "gpuProcRssMib": 341
+    }
+   },
+   "refText": "off balance sheet liabilities, social security payments annually, Medicare payments annually, Medicaid payments annually, as well as Veterans benefits, which are just the interest on the dumb wars that we spent last twenty five fighting to little and no band. When you add in interest plus entitlements, plus Veterans Affairs and compare it to receipts, you can see that in twenty twenty due to COVID, the receipt fall off, true, that's what we call true interest expense. True interest expense went to about one hundred ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. Remember like six hundred billion dollars a month in Q? Yeah, that's what they were doing. Ain't call it that. They'll never call it that. That's what they were doing. Here's the point. The US debt to GDP in COVID in twenty twenty was peaked at one hundred thirty percent. Less than eighteen months later, it was down to about one hundred fifteen percent. How did they do it? And true interest expense went from one hundred and ten percent down to about eighty five ninety percent of receipts. How did they do it? Simple, simple. Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent. Voila, they know it works. They absolutely want one hundred percent know that inflation is one of the ways out.",
+   "committed": "Liabilities. Social Security Payments annually, Medicare Payments annually, Medicaid payments annually. as well as veteran's benefits. which are just you add in interest, Plus veterans affairs and compare it to received You can see that in twenty twenty due to COVID, the receipt fall off. True, that's what we call true interest expense, true interest expense went to about one hundred. They printed the interest. Remember like six Ain't call it that, they'll never call it that. That's what they were doing. Here's the point. The US debt to GDP in COVID in twenty twenty. and true interest expense. went from one hundred ten percent Down to about eighty five, ninety. of receipts. How did they do it? Simple. Simple. Fed does a bunch of QE, they pin rates at zero and inflation runs eighty. Voila. They know it works. They absolute know that inflation is"
+  },
+  {
+   "condition": "noisy",
+   "engine": "new",
+   "refWords": 235,
+   "committedWords": 245,
+   "wer": 9.79,
+   "errors": 23,
+   "contradicted": 22,
+   "missed": 1,
+   "longestUnshownS": 0,
+   "longestUnshownWords": 0,
+   "unshownWords": 0,
+   "longestUncommittedS": 0,
+   "commitLatency": {
+    "median": 0.96,
+    "p95": 2.32,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.16,
+    "p95": 0.2,
+    "max": null
+   },
+   "spans": [
+    "we [ -> stand]",
+    "spent [last twenty five -> the rest of the time]",
+    "little [and -> the than]",
+    "no [band -> advance]",
+    "to [ -> covid]",
+    "hundred [ -> and]",
+    "of [receipts -> the seats]",
+    "was [peaked -> a peak]",
+    "hundred [ -> and]",
+    "hundred [fifteen percent -> and fifty]",
+    "hundred [and -> ]",
+    "twelve [ -> percent]",
+    "absolutely [want one -> won a]",
+    "out [ -> okay]"
+   ],
+   "coverage": {
+    "speechS": 65.96,
+    "lostS": 0.8,
+    "lostPct": 1.21,
+    "longestLostS": 0.8,
+    "longestLostAtS": 0,
+    "segments": 1,
+    "dropped": 0,
+    "droppedWithText": 0
+   },
+   "stats": {
+    "capturedS": 90,
+    "open": false,
+    "busy": false,
+    "failed": false,
+    "skipping": false,
+    "bufferS": 0,
+    "maxBufferS": 7.76,
+    "lagS": 0,
+    "maxLagS": 0.48,
+    "noiseFloor": 0.001128867268562317,
+    "threshold": 0.0028221681714057922,
+    "lastRms": 0.00425902564905248,
+    "speech": true,
+    "gateOpens": 1,
+    "gateMisses": 0,
+    "modelHolds": 3,
+    "probes": 0,
+    "probesSilent": 0,
+    "passes": 318,
+    "livePasses": 317,
+    "finalPasses": 1,
+    "stale": 0,
+    "reusedFinals": 0,
+    "utterances": 1,
+    "commits": 156,
+    "wordsCommitted": 245,
+    "byReason": {
+     "agree": 243,
+     "idle": 0,
+     "stop": 2,
+     "cap": 0,
+     "lag": 0,
+     "skip": 0
+    },
+    "skippedS": 0,
+    "trims": 93,
+    "anchorShifts": 111
+   },
+   "wallS": 11.9,
+   "passes": 318,
+   "passMsMedian": 35.300000071525574,
+   "maxBufferS": 7.76,
+   "maxPassAudioS": 7.72,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 21.9,
+     "last": 21.1,
+     "min": 20.8,
+     "max": 22
+    },
+    "wasmHeapMb": {
+     "first": 80,
+     "last": 80,
+     "min": 80,
+     "max": 80
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 295,
+     "gpuProcRssMib": 341
+    },
+    "rssAfter": {
+     "rendererRssMib": 296,
+     "gpuProcRssMib": 341
+    }
+   },
+   "refText": "off balance sheet liabilities, social security payments annually, Medicare payments annually, Medicaid payments annually, as well as Veterans benefits, which are just the interest on the dumb wars that we spent last twenty five fighting to little and no band. When you add in interest plus entitlements, plus Veterans Affairs and compare it to receipts, you can see that in twenty twenty due to COVID, the receipt fall off, true, that's what we call true interest expense. True interest expense went to about one hundred ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. Remember like six hundred billion dollars a month in Q? Yeah, that's what they were doing. Ain't call it that. They'll never call it that. That's what they were doing. Here's the point. The US debt to GDP in COVID in twenty twenty was peaked at one hundred thirty percent. Less than eighteen months later, it was down to about one hundred fifteen percent. How did they do it? And true interest expense went from one hundred and ten percent down to about eighty five ninety percent of receipts. How did they do it? Simple, simple. Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent. Voila, they know it works. They absolutely want one hundred percent know that inflation is one of the ways out.",
+   "committed": "off balance sheet liabilities. social security payments annually, Medicare Payments annually, Medicaid Payments annually as well as veterans benefits, which are just the interest on the dumb wars that we stand spent the rest of the time fighting to little the than no advance. When you add in interest plus entitlements, plus veterans affairs and compare it to receipts, you can see that in twenty twenty due to COVID COVID, the receipt fall off True, that's what we call true interest expense, true interest expense went to about one hundred and ten percent of the seats. Uh oh, they need to print the interest. They printed the interest. Remember like six hundred billion dollars a month in Q? Yeah, that's what they were doing. Ain't call it that, they'll never call it that. That's what they were doing. Here's the point. The US debt to GDP in COVID in twenty twenty was a peak at one hundred and thirty percent. Less than eighteen months later, it was down to about one hundred and fifty. How did they do it? And true interest expense went from one hundred ten percent down to about eighty five ninety percent of receipts. How did they do it? Simple, simple Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent. percent. Voila. They know it works. They absolutely won a hundred percent know that inflation is one of the ways out. Okay."
+  },
+  {
+   "condition": "far",
+   "engine": "old",
+   "refWords": 238,
+   "committedWords": 89,
+   "wer": 64.29,
+   "errors": 153,
+   "contradicted": 3,
+   "missed": 150,
+   "longestUnshownS": 20.72,
+   "longestUnshownWords": 47,
+   "unshownWords": 135,
+   "longestUncommittedS": 21.44,
+   "commitLatency": {
+    "median": 1.22,
+    "p95": 3.86,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.16,
+    "p95": 0.44,
+    "max": null
+   },
+   "spans": [
+    " [off balance sheet -> ]",
+    "as [veterans -> veteran's]",
+    "just [the interest on the dumb wars that we spent the last twenty five years fighting to little and no avail when you add in interest plus entitlements plus veterans affairs and compare it to receipts you can see that in twenty twenty due to covid -> ]",
+    "the [receipt fall off -> ]",
+    "hundred [ -> and]",
+    "percent [of receipts -> ]",
+    "interest [you -> ]",
+    "month [in qe yeah that's what they were doing ain't call it that they'll never call it that that's what they were doing here's the point the us debt to gdp in covid in twenty twenty was peaked at one hundred thirty percent -> ]",
+    "months [later it was down to about one hundred fifteen percent how did they do it -> ]",
+    "eighty [five -> percent]",
+    "percent [of receipts how did they do it -> ]",
+    "qe [they pin rates at zero and inflation runs eight to twelve percent voila they know it works they absolutely want a hundred percent know that inflation is one of the ways out -> ]"
+   ],
+   "coverage": {
+    "speechS": 65.96,
+    "lostS": 44.92,
+    "lostPct": 68.1,
+    "longestLostS": 21.34,
+    "longestLostAtS": 10.62,
+    "segments": 12,
+    "dropped": 2,
+    "droppedWithText": 2
+   },
+   "stats": {
+    "passes": 102,
+    "commits": 12,
+    "dropped": 2,
+    "droppedWithText": 2,
+    "stale": 1,
+    "maxNoiseFloor": 0.0024404541273794975,
+    "noiseFloor": 0.0005622467029203255
+   },
+   "wallS": 4.4,
+   "passes": 102,
+   "passMsMedian": 32.90000009536743,
+   "maxBufferS": 0,
+   "maxPassAudioS": 0,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 13.3,
+     "last": 13.7,
+     "min": 13.3,
+     "max": 14.6
+    },
+    "wasmHeapMb": {
+     "first": 80,
+     "last": 80,
+     "min": 80,
+     "max": 80
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 295,
+     "gpuProcRssMib": 341
+    },
+    "rssAfter": {
+     "rendererRssMib": 292,
+     "gpuProcRssMib": 342
+    }
+   },
+   "refText": "off balance sheet liabilities, social security payments annually, Medicare payments annually, Medicaid payments annually, as well as Veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years fighting to little and no avail. When you add in interest, plus entitlements, plus Veterans Affairs and compare it to receipts, you can see that in twenty twenty due to COVID, the receipt fall off, true that's what we call true interest expense, true interest expense went to about one hundred ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. You remember like six hundred billion dollars a month in QE? Yeah, that's what they were doing. Ain't call it that, they'll never call it that. That's what they were doing. Here's the point. The US debt to GDP in COVID in twenty twenty was peaked at one hundred thirty percent. Less than eighteen months later, it was down to about one hundred fifteen percent. How did they do it? And true interest expense went from one hundred and ten percent down to about eighty five ninety percent of receipts. How did they do it? Simple, simple Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent. Voila. They know it works. They absolutely want a hundred percent know that inflation is one of the ways out.",
+   "committed": "Liabilities. Social Security Payments annually. Medicare payments annually, Medicaid payments annually. as well as veteran's benefits. which are just the True, that's what we call true interest expense, true interest expense went to about one hundred and ten percent. Uh, oh, they need to print the interest. They printed the interest. Remember like six hundred billion dollars a month? less than eighteen months. And true interest expense went from one hundred and ten percent down to about eighty percent ninety percent. Simple. Simple Fed does a bunch of QE."
+  },
+  {
+   "condition": "far",
+   "engine": "new",
+   "refWords": 238,
+   "committedWords": 241,
+   "wer": 4.62,
+   "errors": 11,
+   "contradicted": 9,
+   "missed": 2,
+   "longestUnshownS": 0,
+   "longestUnshownWords": 0,
+   "unshownWords": 0,
+   "longestUncommittedS": 0,
+   "commitLatency": {
+    "median": 1,
+    "p95": 1.44,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.16,
+    "p95": 0.24,
+    "max": null
+   },
+   "spans": [
+    "fighting [ -> to]",
+    "and [compare it to -> compared to receipts]",
+    "hundred [ -> and]",
+    "interest [you -> ]",
+    "hundred [ -> and]",
+    "hundred [ -> and]",
+    "hundred [and -> ]",
+    "absolutely [want -> won]",
+    "out [ -> okay]"
+   ],
+   "coverage": {
+    "speechS": 65.96,
+    "lostS": 0.48,
+    "lostPct": 0.73,
+    "longestLostS": 0.48,
+    "longestLostAtS": 0,
+    "segments": 1,
+    "dropped": 0,
+    "droppedWithText": 0
+   },
+   "stats": {
+    "capturedS": 90,
+    "open": false,
+    "busy": false,
+    "failed": false,
+    "skipping": false,
+    "bufferS": 0,
+    "maxBufferS": 5.72,
+    "lagS": 0,
+    "maxLagS": 0.6,
+    "noiseFloor": 0.00022525298118125647,
+    "threshold": 0.0005631324529531412,
+    "lastRms": 0.000893518682530816,
+    "speech": true,
+    "gateOpens": 1,
+    "gateMisses": 0,
+    "modelHolds": 2,
+    "probes": 0,
+    "probesSilent": 0,
+    "passes": 320,
+    "livePasses": 319,
+    "finalPasses": 1,
+    "stale": 0,
+    "reusedFinals": 0,
+    "utterances": 1,
+    "commits": 170,
+    "wordsCommitted": 241,
+    "byReason": {
+     "agree": 239,
+     "idle": 0,
+     "stop": 2,
+     "cap": 0,
+     "lag": 0,
+     "skip": 0
+    },
+    "skippedS": 0,
+    "trims": 95,
+    "anchorShifts": 129
+   },
+   "wallS": 25.9,
+   "passes": 320,
+   "passMsMedian": 74.5,
+   "maxBufferS": 5.72,
+   "maxPassAudioS": 5.68,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 21.5,
+     "last": 21.4,
+     "min": 21,
+     "max": 22.2
+    },
+    "wasmHeapMb": {
+     "first": 80,
+     "last": 80,
+     "min": 80,
+     "max": 80
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 292,
+     "gpuProcRssMib": 342
+    },
+    "rssAfter": {
+     "rendererRssMib": 303,
+     "gpuProcRssMib": 341
+    }
+   },
+   "refText": "off balance sheet liabilities, social security payments annually, Medicare payments annually, Medicaid payments annually, as well as Veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years fighting to little and no avail. When you add in interest, plus entitlements, plus Veterans Affairs and compare it to receipts, you can see that in twenty twenty due to COVID, the receipt fall off, true that's what we call true interest expense, true interest expense went to about one hundred ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. You remember like six hundred billion dollars a month in QE? Yeah, that's what they were doing. Ain't call it that, they'll never call it that. That's what they were doing. Here's the point. The US debt to GDP in COVID in twenty twenty was peaked at one hundred thirty percent. Less than eighteen months later, it was down to about one hundred fifteen percent. How did they do it? And true interest expense went from one hundred and ten percent down to about eighty five ninety percent of receipts. How did they do it? Simple, simple Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent. Voila. They know it works. They absolutely want a hundred percent know that inflation is one of the ways out.",
+   "committed": "off balance sheet liabilities. Social Security payments annually, Medicare Payments annually, Medicaid payments annually, as well as veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years fighting to to little and no avail. When you add in interest plus entitlements, plus veterans affairs and compared to receipts receipts, you can see that in twenty twenty due to COVID the receipt fall off True that's what we call true interest expense, true interest expense went to about one hundred and ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. Remember like six hundred billion dollars a month in QE? Yeah, that's what they were doing Ain't call it that they'll never call it that. That's what they were doing. Here's the point. The US debt to GDP in COVID in twenty twenty was peaked at one hundred and thirty percent. Less than eighteen months later it was down to about one hundred and fifteen percent. How did they do it? And true interest expense went from one hundred ten percent down to about eighty five ninety percent of receipts. How did they do it? Simple, simple Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent. voila. They know it works. They absolutely won a hundred percent know that inflation is one of the ways out. Okay."
+  }
+ ],
+ "backend": "WebGPU: WebGPU",
+ "webgpu": true,
+ "shaderF16": true,
+ "adapter": "nvidia turing NVIDIA GeForce RTX 2080 Ti",
+ "console": []
+}

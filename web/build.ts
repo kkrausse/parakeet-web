@@ -34,7 +34,7 @@ for (const k of Object.keys(models)) for (const c of LONG) {
 
 rmSync(dist, { recursive: true, force: true });
 const out = await Bun.build({
-  entrypoints: [join(here, "src/main.ts"), join(here, "src/worker.ts"), join(here, "src/live.ts"), join(here, "src/live-worklet.ts")], outdir: dist, target: "browser", format: "esm", minify: false,
+  entrypoints: [join(here, "src/main.ts"), join(here, "src/worker.ts"), join(here, "src/live.ts"), join(here, "src/live-worklet.ts"), join(here, "src/replay-page.ts")], outdir: dist, target: "browser", format: "esm", minify: false,
   // DIAG_URL: where both pages POST their step trail (scripts/diag-collector.ts on diesel2, tailnet https). PK_DIAG_URL= (empty) builds without it.
   define: { MODELS: JSON.stringify(models), EXPECTED_LONG: JSON.stringify(expectedLong), DIAG_URL: JSON.stringify(process.env.PK_DIAG_URL ?? "https://diesel2.guineafowl-truck.ts.net:9445/log") },
 });
@@ -49,6 +49,7 @@ const place = (from: string, to: string, link = false) => {
 };
 place(join(here, "index.html"), "index.html");
 place(join(here, "live.html"), "live.html");
+place(join(here, "replay.html"), "replay.html"); // the replay harness (drive-replay.ts); not part of dist-live
 for (const [dir, suffix] of [["build-web", ""], ["build-web-asyncify", "-asyncify"], ["build-web-prof", "-prof"]]) {
   // the asyncify build is linked as pk-web too; it is renamed here, and so is the .wasm it asks for
   const js = join(cache, dir, "bin/pk-web.js");

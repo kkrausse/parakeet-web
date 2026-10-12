@@ -322,7 +322,10 @@ async function run(msg: { pcm: Float32Array }) {
     throw new Error(`pk_run failed with status ${st}: ${brief}\n${gpuErr.join("\n")}\n${log}`);
   }
   if (gcMb > 0) gcNudge();
-  return { ...JSON.parse(json), gpuErrors: gpuErr, wallMs, heapMb: heapMb(), heapUsedMb: usedMb(), log, gpu: gpuBrief() };
+  // Word times of this run: [{w, s, e, p}], seconds from the start of `pcm`, p = lowest token probability in the word.
+  let words: { w: string; s: number; e: number; p: number }[] = [];
+  try { words = JSON.parse(M.UTF8ToString(M.ccall("pk_words", "number", [], []))); } catch { /* a module built before pk_words: text only */ }
+  return { ...JSON.parse(json), words, gpuErrors: gpuErr, wallMs, heapMb: heapMb(), heapUsedMb: usedMb(), log, gpu: gpuBrief() };
 }
 
 self.onmessage = async (e: MessageEvent) => {
