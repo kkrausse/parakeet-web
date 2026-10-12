@@ -1,0 +1,422 @@
+{
+ "name": "t-s8-all",
+ "url": "http://127.0.0.1:8791/?model=s8&clip=all&runs=5&auto=1",
+ "chromeArgs": [
+  "--enable-dawn-features=vulkan_enable_f16_on_nvidia"
+ ],
+ "machineAtStart": {
+  "loadavg": "3.65 3.85 3.26 15/2005 3497514",
+  "cpuPressure": "some avg10=1.57 avg60=1.59 avg300=1.37 total=10187916951"
+ },
+ "chrome": "154.0.8037.97",
+ "error": null,
+ "memory": {
+  "gpuProcessGpuMibAfterLoad": 199,
+  "gpuProcessGpuMibPeak": 268,
+  "rendererRssMibAfterLoad": 212,
+  "rendererRssMibPeak": 326,
+  "gpuProcessRssMibAfterLoad": 295,
+  "gpuProcessRssMibPeak": 321
+ },
+ "pids": {
+  "gpu": 3497162,
+  "renderers": [
+   3497577,
+   3497389,
+   3497334
+  ]
+ },
+ "page": {
+  "config": {
+   "model": "s8",
+   "clip": "all",
+   "runs": 5,
+   "threads": 1,
+   "store": "opfs",
+   "f16": true,
+   "flash": false,
+   "variant": "jspi",
+   "verbose": false,
+   "base": "models/",
+   "env": {}
+  },
+  "model": {
+   "label": "110M, Q8_0 (8-bit weights)",
+   "file": "parakeet-tdt_ctc-110m-Q8_0.gguf",
+   "mb": 129,
+   "family": "110m"
+  },
+  "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "crossOriginIsolated": true,
+  "clips": [
+   {
+    "clip": "a07",
+    "seconds": 7,
+    "firstInPage": true,
+    "firstRunMs": {
+     "pre": 11.4,
+     "enc": 160.4,
+     "dec": 64,
+     "total": 235.8
+    },
+    "startToFirstTranscriptMs": 3155,
+    "decSteps": 41,
+    "text": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight.",
+    "matchesNative": true,
+    "hasReference": true,
+    "warmRuns": 5,
+    "preMs": {
+     "median": 4.4,
+     "worst": 4.7,
+     "best": 4.3
+    },
+    "encMs": {
+     "median": 30.7,
+     "worst": 33.1,
+     "best": 30
+    },
+    "decMs": {
+     "median": 16,
+     "worst": 16.7,
+     "best": 15.4
+    },
+    "totalMs": {
+     "median": 51.3,
+     "worst": 53.4,
+     "best": 50.4
+    },
+    "xRealTime": 136.5,
+    "textStable": true,
+    "wasmHeapMb": 39,
+    "wasmHeapUsedMb": 20.8
+   },
+   {
+    "clip": "a14",
+    "seconds": 13.69,
+    "firstInPage": false,
+    "firstRunMs": {
+     "pre": 9.4,
+     "enc": 41.2,
+     "dec": 37,
+     "total": 87.6
+    },
+    "startToFirstTranscriptMs": null,
+    "decSteps": 84,
+    "text": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards",
+    "matchesNative": true,
+    "hasReference": true,
+    "warmRuns": 5,
+    "preMs": {
+     "median": 8.3,
+     "worst": 8.8,
+     "best": 8.2
+    },
+    "encMs": {
+     "median": 33.5,
+     "worst": 37.4,
+     "best": 32.5
+    },
+    "decMs": {
+     "median": 30.2,
+     "worst": 31.9,
+     "best": 27.5
+    },
+    "totalMs": {
+     "median": 71.5,
+     "worst": 77.6,
+     "best": 69.7
+    },
+    "xRealTime": 191.5,
+    "textStable": true,
+    "wasmHeapMb": 46,
+    "wasmHeapUsedMb": 21.8
+   },
+   {
+    "clip": "a56",
+    "seconds": 56.1,
+    "firstInPage": false,
+    "firstRunMs": {
+     "pre": 39.5,
+     "enc": 116.2,
+     "dec": 124.2,
+     "total": 279.8
+    },
+    "startToFirstTranscriptMs": null,
+    "decSteps": 292,
+    "text": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatro a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and our and experience non standard equity trading with E three equity, personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier, our forward thinking financial forecasting tool. Explore venture capital world with U three unifund or move your money with the M three mover, our sophisticated monetary transfer module. At Cork Quid Quill Inc. we turn complex finance into creative solutions. Join us in redefining financial services.",
+    "matchesNative": true,
+    "hasReference": true,
+    "warmRuns": 5,
+    "preMs": {
+     "median": 34.2,
+     "worst": 34.8,
+     "best": 32
+    },
+    "encMs": {
+     "median": 93.9,
+     "worst": 94.9,
+     "best": 93.7
+    },
+    "decMs": {
+     "median": 97.5,
+     "worst": 105.4,
+     "best": 96.7
+    },
+    "totalMs": {
+     "median": 226,
+     "worst": 235.1,
+     "best": 222.9
+    },
+    "xRealTime": 248.2,
+    "textStable": true,
+    "wasmHeapMb": 67,
+    "wasmHeapUsedMb": 27.5
+   }
+  ],
+  "adapter": {
+   "available": true,
+   "vendor": "nvidia",
+   "architecture": "turing",
+   "device": "0x1e07",
+   "description": "NVIDIA GeForce RTX 2080 Ti",
+   "isFallbackAdapter": false,
+   "shaderF16": true,
+   "features": [
+    "bgra8unorm-storage",
+    "chromium-experimental-multi-draw-indirect",
+    "chromium-experimental-sampling-resource-table",
+    "chromium-experimental-subgroup-matrix",
+    "chromium-experimental-timestamp-query-inside-passes",
+    "clip-distances",
+    "core-features-and-limits",
+    "depth-clip-control",
+    "depth32float-stencil8",
+    "dual-source-blending",
+    "float32-blendable",
+    "float32-filterable",
+    "indirect-first-instance",
+    "primitive-index",
+    "rg11b10ufloat-renderable",
+    "shader-f16",
+    "subgroup-size-control",
+    "subgroups",
+    "texture-component-swizzle",
+    "texture-compression-bc",
+    "texture-compression-bc-sliced-3d",
+    "texture-compression-unaligned",
+    "texture-formats-tier1",
+    "texture-formats-tier2",
+    "timestamp-query"
+   ],
+   "wgslLanguageFeatures": [
+    "buffer_view",
+    "immediate_address_space",
+    "linear_indexing",
+    "packed_4x8_integer_dot_product",
+    "pointer_composite_access",
+    "readonly_and_readwrite_storage_textures",
+    "subgroup_id",
+    "subgroup_uniformity",
+    "swizzle_assignment",
+    "texture_and_sampler_let",
+    "texture_formats_tier1",
+    "uniform_buffer_standard_layout",
+    "unrestricted_pointer_parameters"
+   ],
+   "limits": {
+    "maxStorageBufferBindingSize": 2147483644,
+    "maxBufferSize": 4294967292,
+    "maxComputeInvocationsPerWorkgroup": 1024,
+    "maxComputeWorkgroupSizeX": 1024,
+    "maxComputeWorkgroupStorageSize": 49152,
+    "maxStorageBuffersPerShaderStage": 16,
+    "maxComputeWorkgroupsPerDimension": 65535,
+    "maxBindGroups": 4,
+    "minStorageBufferOffsetAlignment": 256,
+    "minUniformBufferOffsetAlignment": 256
+   },
+   "belowSpecDefault": [],
+   "requested": {
+    "requiredFeatures": [
+     "shader-f16"
+    ],
+    "requiredLimits": {
+     "maxStorageBufferBindingSize": 1073741824,
+     "maxBufferSize": 1073741824,
+     "maxComputeInvocationsPerWorkgroup": 256,
+     "maxComputeWorkgroupSizeX": 256
+    }
+   },
+   "deviceProbe": "ok: binding 1024 MiB, buffer 1024 MiB, 256 invocations",
+   "deviceError": null,
+   "probeErrors": [],
+   "plan": {
+    "limits": "",
+    "f16": true
+   },
+   "maxBufferSizeMb": 4096,
+   "maxStorageBufferBindingSizeMb": 2048
+  },
+  "jspi": true,
+  "shaderF16Used": true,
+  "load": {
+   "fetchMs": 594,
+   "loadMs": 335,
+   "from": "network, streamed to OPFS",
+   "fileMb": 129.1,
+   "wasmHeapMb": 32,
+   "wasmHeapUsedMb": 9.9,
+   "backend": "WebGPU: WebGPU"
+  },
+  "session": {
+   "totalMs": 335
+  },
+  "startToLoadedMs": 1509
+ },
+ "steps": [
+  {
+   "t": 0,
+   "name": "start: 110M, Q8_0 (8-bit weights), flash=off, store=opfs, jspi"
+  },
+  {
+   "t": 577,
+   "name": "WASM module ready",
+   "ms": 42.1,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 577,
+   "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 present; fallback=false"
+  },
+  {
+   "t": 577,
+   "name": "adapter limits: binding 2048 MiB, buffer 4096 MiB, 1024 invocations/workgroup, workgroup storage 49152 B, 16 storage buffers/stage",
+   "detail": "all at or above the WebGPU spec defaults, which is all this page needs"
+  },
+  {
+   "t": 577,
+   "name": "device probe ok: binding 1024 MiB, buffer 1024 MiB, 256 invocations",
+   "detail": "requested {\"maxStorageBufferBindingSize\":1073741824,\"maxBufferSize\":1073741824,\"maxComputeInvocationsPerWorkgroup\":256,\"maxComputeWorkgroupSizeX\":256} shader-f16"
+  },
+  {
+   "t": 577,
+   "name": "shader path: f16"
+  },
+  {
+   "t": 1509,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 594.2,
+   "detail": "129 MB"
+  },
+  {
+   "t": 1509,
+   "name": "model loaded on WebGPU: WebGPU",
+   "ms": 335.2,
+   "detail": "WASM heap 32 MB, 9.9 MB in use"
+  },
+  {
+   "t": 3155,
+   "name": "a07 (7.0 s) first run (cold)",
+   "ms": 235.8,
+   "detail": "mel 11.4 ms, encoder 160 ms, decode 64 ms, heap 39 MB (20.8 in use)"
+  },
+  {
+   "t": 3155,
+   "name": "a07 transcript matches the reference",
+   "detail": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day ..."
+  },
+  {
+   "t": 3476,
+   "name": "a07 warm x5",
+   "ms": 51.3,
+   "detail": "total median/worst 51.3 / 53.4 ms; encoder 30.7 / 33.1 ms; mel 4.4 ms; decode 16 ms; 136.5x real time; text stable=true"
+  },
+  {
+   "t": 3576,
+   "name": "a14 (13.7 s) first run",
+   "ms": 87.6,
+   "detail": "mel 9.4 ms, encoder 41.2 ms, decode 37 ms, heap 46 MB (21.8 in use)"
+  },
+  {
+   "t": 3576,
+   "name": "a14 transcript matches the reference",
+   "detail": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms da..."
+  },
+  {
+   "t": 4029,
+   "name": "a14 warm x5",
+   "ms": 71.5,
+   "detail": "total median/worst 71.5 / 77.6 ms; encoder 33.5 / 37.4 ms; mel 8.3 ms; decode 30.2 ms; 191.5x real time; text stable=true"
+  },
+  {
+   "t": 4348,
+   "name": "a56 (56.1 s) first run",
+   "ms": 279.8,
+   "detail": "mel 39.5 ms, encoder 116 ms, decode 124 ms, heap 56 MB (27.5 in use)"
+  },
+  {
+   "t": 4348,
+   "name": "a56 transcript matches the reference",
+   "detail": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings..."
+  },
+  {
+   "t": 5749,
+   "name": "a56 warm x5",
+   "ms": 226,
+   "detail": "total median/worst 226 / 235.1 ms; encoder 93.9 / 94.9 ms; mel 34.2 ms; decode 97.5 ms; 248.2x real time; text stable=true"
+  },
+  {
+   "t": 5749,
+   "name": "done",
+   "ms": 5749
+  }
+ ],
+ "console": [],
+ "machineAtEnd": {
+  "loadavg": "3.49 3.81 3.25 5/2042 3503416",
+  "cpuPressure": "some avg10=1.55 avg60=1.60 avg300=1.38 total=10188005760"
+ },
+ "chromeGpu": {
+  "devices": [
+   {
+    "vendorId": 4318,
+    "deviceId": 7687,
+    "vendorString": "Google Inc. (NVIDIA)",
+    "deviceString": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+    "driverVendor": "NVIDIA",
+    "driverVersion": "580.178.4.0"
+   }
+  ],
+  "featureStatus": {
+   "2d_canvas": "enabled",
+   "direct_rendering_display_compositor": "disabled_off_ok",
+   "gpu_compositing": "enabled",
+   "multiple_raster_threads": "enabled_on",
+   "opengl": "enabled_on",
+   "rasterization": "enabled",
+   "raw_draw": "disabled_off_ok",
+   "skia_graphite": "disabled_off",
+   "trees_in_viz": "disabled_off",
+   "video_decode": "enabled",
+   "video_encode": "disabled_software",
+   "vulkan": "enabled_on",
+   "webgl": "enabled",
+   "webgpu": "enabled",
+   "webgpu_on_vk_via_gl_interop": "disabled_off",
+   "webnn": "disabled_off"
+  },
+  "auxAttributes": {
+   "directRenderingVersion": "",
+   "displayType": "ANGLE_VULKAN",
+   "glRenderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+   "glVendor": "Google Inc. (NVIDIA)",
+   "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "glWsVendor": "Google Inc. (NVIDIA)",
+   "glWsVersion": "1.5 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "hardwareSupportsVulkan": true,
+   "passthroughCmdDecoder": true,
+   "pixelShaderVersion": "3.00",
+   "vertexShaderVersion": "3.00"
+  }
+ }
+}

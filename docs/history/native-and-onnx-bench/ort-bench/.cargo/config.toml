@@ -1,0 +1,5 @@
+[build]
+# Build output lives with the models, outside the repo (../cache is a symlink to ~/devfs/cache/parakeet-webgpu-bench).
+target-dir = "../cache/target-ort"
+# libwebgpu_dawn.so is copied next to the binary by ort's copy-dylibs.
+rustflags = ["-C", "link-arg=-Wl,-rpath,$ORIGIN"]

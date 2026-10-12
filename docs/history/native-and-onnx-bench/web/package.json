@@ -1,0 +1,19 @@
+{
+  "name": "parakeet-webgpu-browser",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build.ts",
+    "serve": "bun serve.ts",
+    "bench": "bun drive.ts"
+  },
+  "dependencies": {
+    "onnxruntime-web": "1.30.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@webgpu/types": "latest",
+    "playwright-core": "latest",
+    "typescript": "latest"
+  }
+}

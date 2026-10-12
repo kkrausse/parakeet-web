@@ -1,0 +1,13 @@
+[package]
+name = "burn-bench"
+version = "0.0.0"
+edition = "2021"
+
+[features]
+# Default build is burn's wgpu backend with its WGSL compiler. `vulkan` adds cubecl's SPIR-V compiler.
+vulkan = ["burn/vulkan"]
+
+[dependencies]
+burn = { version = "0.22", default-features = false, features = ["std", "wgpu"] }
+burn-store = "0.22"
+serde_json = "1"

@@ -1,0 +1,348 @@
+{
+ "name": "published-110m-fp32-webgpu",
+ "url": "https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-webgpu-browser/?model=110m-fp32&clip=a07&runs=3&auto=1",
+ "chromeArgs": [],
+ "machineAtStart": {
+  "loadavg": "5.46 6.21 7.79 11/2140 24307",
+  "cpuPressure": "some avg10=3.87 avg60=2.70 avg300=2.60 total=9993548611"
+ },
+ "chrome": "154.0.8037.97",
+ "error": null,
+ "memory": {
+  "gpuProcessGpuMibAfterLoad": 495,
+  "gpuProcessGpuMibPeak": 569,
+  "rendererRssMibAfterLoad": 1183,
+  "rendererRssMibPeak": 1187,
+  "gpuProcessRssMibAfterLoad": 594,
+  "gpuProcessRssMibPeak": 628
+ },
+ "pids": {
+  "gpu": 24228,
+  "renderers": [
+   24277,
+   24279,
+   24268
+  ]
+ },
+ "page": {
+  "config": {
+   "model": "110m-fp32",
+   "clip": "a07",
+   "enc": "webgpu",
+   "dec": "wasm",
+   "rt": "webgpu",
+   "runs": 3,
+   "threads": 0,
+   "cache": true,
+   "base": "models/"
+  },
+  "ortVersion": "1.30.0",
+  "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "started": "2026-10-10T09:13:39.964Z",
+  "clips": [
+   {
+    "clip": "a07",
+    "seconds": 7,
+    "firstInPage": true,
+    "firstRunMs": {
+     "pre": 17.8,
+     "enc": 953.8,
+     "dec": 80.6,
+     "total": 1052.3
+    },
+    "startToFirstTranscriptMs": 17487,
+    "encFrames": 88,
+    "decSteps": 62,
+    "text": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight.",
+    "matchesNative": true,
+    "warmRuns": 3,
+    "preMs": {
+     "median": 9.9,
+     "worst": 14.9,
+     "best": 9.9
+    },
+    "encMs": {
+     "median": 151.9,
+     "worst": 161.2,
+     "best": 143
+    },
+    "decMs": {
+     "median": 69,
+     "worst": 72.3,
+     "best": 65.4
+    },
+    "totalMs": {
+     "median": 234.1,
+     "worst": 236.5,
+     "best": 226.9
+    },
+    "xRealTime": 29.9,
+    "textStable": true
+   }
+  ],
+  "crossOriginIsolated": false,
+  "hardwareConcurrency": 12,
+  "deviceMemoryGb": 32,
+  "adapter": {
+   "available": true,
+   "vendor": "nvidia",
+   "architecture": "turing",
+   "device": "0x1e07",
+   "description": "NVIDIA GeForce RTX 2080 Ti",
+   "isFallbackAdapter": false,
+   "shaderF16": false,
+   "features": [
+    "bgra8unorm-storage",
+    "chromium-experimental-multi-draw-indirect",
+    "chromium-experimental-sampling-resource-table",
+    "chromium-experimental-subgroup-matrix",
+    "chromium-experimental-timestamp-query-inside-passes",
+    "clip-distances",
+    "core-features-and-limits",
+    "depth-clip-control",
+    "depth32float-stencil8",
+    "dual-source-blending",
+    "float32-blendable",
+    "float32-filterable",
+    "indirect-first-instance",
+    "primitive-index",
+    "rg11b10ufloat-renderable",
+    "subgroup-size-control",
+    "subgroups",
+    "texture-component-swizzle",
+    "texture-compression-bc",
+    "texture-compression-bc-sliced-3d",
+    "texture-compression-unaligned",
+    "texture-formats-tier1",
+    "texture-formats-tier2",
+    "timestamp-query"
+   ],
+   "maxBufferSizeMb": 4096,
+   "maxStorageBufferBindingSizeMb": 2048
+  },
+  "model": {
+   "family": "110m",
+   "label": "110m fp32 (OpenVoiceOS export)"
+  },
+  "fetch": {
+   "totalMs": 10865,
+   "files": {
+    "vocab": {
+     "ms": 4,
+     "mb": 0,
+     "from": "network"
+    },
+    "fb": {
+     "ms": 6,
+     "mb": 0.1,
+     "from": "network"
+    },
+    "dec": {
+     "ms": 18,
+     "mb": 0,
+     "from": "network, via browser cache"
+    },
+    "decData": {
+     "ms": 485,
+     "mb": 20.4,
+     "from": "network, via browser cache"
+    },
+    "enc": {
+     "ms": 22,
+     "mb": 0.6,
+     "from": "network, via browser cache"
+    },
+    "encData": {
+     "ms": 10307,
+     "mb": 434.4,
+     "from": "network, via browser cache"
+    }
+   }
+  },
+  "session": {
+   "ms": {
+    "encoder": 3610,
+    "decoder": 50
+   },
+   "totalMs": 3721
+  },
+  "wasm": {
+   "numThreads": 1,
+   "simd": null,
+   "proxy": false
+  },
+  "ortDevice": {
+   "features": [
+    "chromium-experimental-subgroup-matrix",
+    "core-features-and-limits",
+    "subgroup-size-control",
+    "subgroups",
+    "timestamp-query"
+   ],
+   "shaderF16": false
+  },
+  "startToLoadedMs": 14989,
+  "memoryAfterLoad": {
+   "jsHeapUsedMb": 576,
+   "jsHeapTotalMb": 579
+  },
+  "userAgentSpecificMemory": "not supported",
+  "memoryAtEnd": {
+   "jsHeapUsedMb": 463,
+   "jsHeapTotalMb": 467
+  }
+ },
+ "steps": [
+  {
+   "t": 0,
+   "name": "page",
+   "detail": "crossOriginIsolated=false cores=12 deviceMemory=32 GB"
+  },
+  {
+   "t": 391,
+   "name": "WebGPU adapter",
+   "detail": "nvidia / turing / 0x1e07 / NVIDIA GeForce RTX 2080 Ti; shader-f16=false; fallback=false; maxBuffer=4096 MB"
+  },
+  {
+   "t": 402,
+   "name": "onnxruntime-web 1.30.0 script (native WebGPU EP build)",
+   "ms": 10.6
+  },
+  {
+   "t": 406,
+   "name": "fetched 110m/vocab.txt",
+   "ms": 3.6,
+   "detail": "0.0 MB, network"
+  },
+  {
+   "t": 412,
+   "name": "fetched 110m/melfb-257x80.f32",
+   "ms": 5.5,
+   "detail": "0.1 MB, network"
+  },
+  {
+   "t": 430,
+   "name": "fetched 110m/decoder_joint-model.onnx",
+   "ms": 17.8,
+   "detail": "0.0 MB, network, via browser cache"
+  },
+  {
+   "t": 915,
+   "name": "fetched 110m/decoder_joint-model.onnx_data",
+   "ms": 484.8,
+   "detail": "20.4 MB, network, via browser cache"
+  },
+  {
+   "t": 937,
+   "name": "fetched 110m/encoder-model.onnx",
+   "ms": 22.4,
+   "detail": "0.6 MB, network, via browser cache"
+  },
+  {
+   "t": 11244,
+   "name": "fetched 110m/encoder-model.onnx_data",
+   "ms": 10306.5,
+   "detail": "434.4 MB, network, via browser cache"
+  },
+  {
+   "t": 11267,
+   "name": "all model files in memory",
+   "ms": 10864.5,
+   "detail": "jsHeapUsedMb=825 jsHeapTotalMb=827"
+  },
+  {
+   "t": 14908,
+   "name": "encoder session created on webgpu",
+   "ms": 3610.4
+  },
+  {
+   "t": 14988,
+   "name": "decoder session created on wasm",
+   "ms": 50
+  },
+  {
+   "t": 14989,
+   "name": "ready",
+   "ms": 14989,
+   "detail": "wasm threads=1; jsHeapUsedMb=576 jsHeapTotalMb=579"
+  },
+  {
+   "t": 14989,
+   "name": "measureUserAgentSpecificMemory (asked after load): not supported"
+  },
+  {
+   "t": 17487,
+   "name": "a07 (7.0 s) first run (cold)",
+   "ms": 1052.3,
+   "detail": "mel 17.8 ms, encoder 954 ms, decode 80.6 ms"
+  },
+  {
+   "t": 17487,
+   "name": "a07 transcript matches the native fp32 one",
+   "detail": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day ..."
+  },
+  {
+   "t": 18548,
+   "name": "a07 warm x3",
+   "ms": 234.1,
+   "detail": "total median/worst 234.1 / 236.5 ms; encoder 151.9 / 161.2 ms; decode 69 ms; 29.9x real time; text stable=true"
+  },
+  {
+   "t": 18548,
+   "name": "done",
+   "ms": 18548.1,
+   "detail": "jsHeapUsedMb=463 jsHeapTotalMb=467"
+  }
+ ],
+ "console": [
+  "error: \u001b[0;93m2026-10-10 02:13:53.306399 [W:onnxruntime:, session_state.cc:1397 VerifyEachNodeIsAssignedToAnEp] Some nodes were not assigned to the preferred execution providers which may or may not have an negative impact on performance. e.g. ORT explicitly assigns shape related ops to CPU to improve perf.\u001b[m",
+  "error: \u001b[0;93m2026-10-10 02:13:53.308799 [W:onnxruntime:, session_state.cc:1399 VerifyEachNodeIsAssignedToAnEp] Rerunning with verbose output on a non-minimal build will show node assignments.\u001b[m"
+ ],
+ "machineAtEnd": {
+  "loadavg": "5.76 6.23 7.78 4/2178 42863",
+  "cpuPressure": "some avg10=2.45 avg60=2.70 avg300=2.61 total=9994209810"
+ },
+ "chromeGpu": {
+  "devices": [
+   {
+    "vendorId": 4318,
+    "deviceId": 7687,
+    "vendorString": "Google Inc. (NVIDIA)",
+    "deviceString": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+    "driverVendor": "NVIDIA",
+    "driverVersion": "580.178.4.0"
+   }
+  ],
+  "featureStatus": {
+   "2d_canvas": "enabled",
+   "direct_rendering_display_compositor": "disabled_off_ok",
+   "gpu_compositing": "enabled",
+   "multiple_raster_threads": "enabled_on",
+   "opengl": "enabled_on",
+   "rasterization": "enabled",
+   "raw_draw": "disabled_off_ok",
+   "skia_graphite": "disabled_off",
+   "trees_in_viz": "disabled_off",
+   "video_decode": "enabled",
+   "video_encode": "disabled_software",
+   "vulkan": "enabled_on",
+   "webgl": "enabled",
+   "webgpu": "enabled",
+   "webgpu_on_vk_via_gl_interop": "disabled_off",
+   "webnn": "disabled_off"
+  },
+  "auxAttributes": {
+   "directRenderingVersion": "",
+   "displayType": "ANGLE_VULKAN",
+   "glRenderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+   "glVendor": "Google Inc. (NVIDIA)",
+   "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "glWsVendor": "Google Inc. (NVIDIA)",
+   "glWsVersion": "1.5 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "hardwareSupportsVulkan": true,
+   "passthroughCmdDecoder": true,
+   "pixelShaderVersion": "3.00",
+   "vertexShaderVersion": "3.00"
+  }
+ }
+}

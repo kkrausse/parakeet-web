@@ -1,0 +1,42 @@
+start 23:07:28 some avg10=22.29 avg60=26.69 avg300=34.03 total=7275573907
+GPU memory in use by other processes: 1227 MiB
+
+## cold start (run.sh launch -> healthz, -> model ready)
+run 1: healthz 183 ms, ready 1793 ms, GPU 1202 MiB, RSS 249 MiB
+run 2: healthz 247 ms, ready 2187 ms, GPU 1202 MiB, RSS 249 MiB
+run 3: healthz 199 ms, ready 1508 ms, GPU 1202 MiB, RSS 249 MiB
+run 4: healthz 186 ms, ready 2096 ms, GPU 1202 MiB, RSS 249 MiB
+run 5: healthz 213 ms, ready 1840 ms, GPU 1202 MiB, RSS 249 MiB
+median ready 1840 ms
+
+## 20 consecutive recordings in one process (13.7 s fixture, sent as fast as acknowledged)
+transcript (identical 20 times): going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards
+wall ms per recording: 4493 6209 4253 2730 2369 2322 2788 3017 3163 2353 2285 3318 2219 2437 3277 5055 5642 3097 2808 2675
+start -> ready ms: 2 2 3 4 2 2 2 3 2 2 1 3 1 1 2 4 2 3 2 2
+GPU 1202 -> 1227 MiB, RSS 249 -> 257 MiB
+
+## one real-time recording, fixture x14 = 192 s
+(node:3654201) TimeoutNegativeWarning: -34.9101930000179 is a negative number.
+Timeout duration was set to 1.
+(Use `bun --trace-warnings ...` to show where the warning was created)
+57 |     if (value.type === "final") final = value.text;
+58 |     if (value.type === "error") failure = value.code;
+59 |     if (value.type === "done") done = true;
+60 |   };
+61 |   ws.onopen = () => ws.send(JSON.stringify({ type: "start", version: 1, recordingId: id, sampleRate: 16000, channels: 1, format: "f32le" }));
+62 |   const until = async (condition: () => boolean) => { while (!condition()) { assert(!failure, failure); await pause(1); } };
+                                                                                  ^
+AssertionError: overload
+ generatedMessage: false,
+     actual: false,
+   expected: true,
+   operator: "==",
+       diff: "simple",
+       code: "ERR_ASSERTION"
+
+      at /home/kkrausse/devfs/repos/kkrausse/random/dictation-server-linux/scripts/measure.ts:62:78
+      at record (/home/kkrausse/devfs/repos/kkrausse/random/dictation-server-linux/scripts/measure.ts:72:9)
+      at processTicksAndRejections (native:7:39)
+
+Bun v1.4.0 (Linux x64)
+end 23:11:58 some avg10=52.01 avg60=52.48 avg300=43.23 total=7407284780

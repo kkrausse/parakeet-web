@@ -1,0 +1,297 @@
+{
+ "name": "t-q4-deflim",
+ "url": "http://127.0.0.1:8791/?model=q4&clip=a56&runs=3&env=GGML_WEBGPU_LIMITS=default&auto=1",
+ "chromeArgs": [
+  "--enable-dawn-features=vulkan_enable_f16_on_nvidia"
+ ],
+ "machineAtStart": {
+  "loadavg": "3.97 4.42 3.86 12/2043 417771",
+  "cpuPressure": "some avg10=0.71 avg60=1.16 avg300=1.34 total=10140211789"
+ },
+ "chrome": "154.0.8037.97",
+ "error": null,
+ "memory": {
+  "gpuProcessGpuMibAfterLoad": 508,
+  "gpuProcessGpuMibPeak": 595,
+  "rendererRssMibAfterLoad": 232,
+  "rendererRssMibPeak": 362,
+  "gpuProcessRssMibAfterLoad": 302,
+  "gpuProcessRssMibPeak": 336
+ },
+ "pids": {
+  "gpu": 417519,
+  "renderers": [
+   417828,
+   417676,
+   417639
+  ]
+ },
+ "page": {
+  "config": {
+   "model": "q4",
+   "clip": "a56",
+   "runs": 3,
+   "threads": 1,
+   "store": "opfs",
+   "f16": true,
+   "flash": false,
+   "variant": "jspi",
+   "verbose": false,
+   "base": "models/",
+   "env": {
+    "GGML_WEBGPU_LIMITS": "default"
+   }
+  },
+  "model": {
+   "label": "0.6b v2, Q4_0 (4-bit weights)",
+   "file": "parakeet-tdt-0.6b-v2-Q4_0.gguf",
+   "mb": 438,
+   "family": "0.6b"
+  },
+  "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "crossOriginIsolated": true,
+  "clips": [
+   {
+    "clip": "a56",
+    "seconds": 56.1,
+    "firstInPage": true,
+    "firstRunMs": {
+     "pre": 103.2,
+     "enc": 580.8,
+     "dec": 340.2,
+     "total": 1024.2
+    },
+    "startToFirstTranscriptMs": 5740,
+    "decSteps": 312,
+    "text": "Welcome to QuirkQuidQuill Inc., where finance meets innovation. Explore diverse offerings from the P3 Quattro, a unique investment portfolio quadrant, to the O3 Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B3 Bond X and experience non-standard equity trading with E3Equity. Personalize your wealth management with W3 RAPZ and anticipate market trends with the O2 Outlier, our forward-thinking financial forecasting tool. Explore venture capital world with U3Unifund or move your money with the M3 Mover, our sophisticated monetary transfer module. At QuirkQuidQuill Inc., we turn complex finance into creative solutions. Join us in redefining financial services.",
+    "matchesNative": false,
+    "warmRuns": 3,
+    "preMs": {
+     "median": 50.1,
+     "worst": 50.2,
+     "best": 48.5
+    },
+    "encMs": {
+     "median": 425.8,
+     "worst": 427.4,
+     "best": 421.8
+    },
+    "decMs": {
+     "median": 304.6,
+     "worst": 305.7,
+     "best": 298.6
+    },
+    "totalMs": {
+     "median": 776.3,
+     "worst": 781.5,
+     "best": 774.9
+    },
+    "xRealTime": 72.3,
+    "textStable": true,
+    "wasmHeapMb": 67,
+    "wasmHeapUsedMb": 25.6
+   }
+  ],
+  "adapter": {
+   "available": true,
+   "vendor": "nvidia",
+   "architecture": "turing",
+   "device": "0x1e07",
+   "description": "NVIDIA GeForce RTX 2080 Ti",
+   "isFallbackAdapter": false,
+   "shaderF16": true,
+   "features": [
+    "bgra8unorm-storage",
+    "chromium-experimental-multi-draw-indirect",
+    "chromium-experimental-sampling-resource-table",
+    "chromium-experimental-subgroup-matrix",
+    "chromium-experimental-timestamp-query-inside-passes",
+    "clip-distances",
+    "core-features-and-limits",
+    "depth-clip-control",
+    "depth32float-stencil8",
+    "dual-source-blending",
+    "float32-blendable",
+    "float32-filterable",
+    "indirect-first-instance",
+    "primitive-index",
+    "rg11b10ufloat-renderable",
+    "shader-f16",
+    "subgroup-size-control",
+    "subgroups",
+    "texture-component-swizzle",
+    "texture-compression-bc",
+    "texture-compression-bc-sliced-3d",
+    "texture-compression-unaligned",
+    "texture-formats-tier1",
+    "texture-formats-tier2",
+    "timestamp-query"
+   ],
+   "wgslLanguageFeatures": [
+    "buffer_view",
+    "immediate_address_space",
+    "linear_indexing",
+    "packed_4x8_integer_dot_product",
+    "pointer_composite_access",
+    "readonly_and_readwrite_storage_textures",
+    "subgroup_id",
+    "subgroup_uniformity",
+    "swizzle_assignment",
+    "texture_and_sampler_let",
+    "texture_formats_tier1",
+    "uniform_buffer_standard_layout",
+    "unrestricted_pointer_parameters"
+   ],
+   "limits": {
+    "maxStorageBufferBindingSize": 2147483644,
+    "maxBufferSize": 4294967292,
+    "maxComputeInvocationsPerWorkgroup": 1024,
+    "maxComputeWorkgroupSizeX": 1024,
+    "maxComputeWorkgroupStorageSize": 49152,
+    "maxStorageBuffersPerShaderStage": 16,
+    "maxComputeWorkgroupsPerDimension": 65535,
+    "maxBindGroups": 4,
+    "minStorageBufferOffsetAlignment": 256,
+    "minUniformBufferOffsetAlignment": 256
+   },
+   "belowSpecDefault": [],
+   "requested": {
+    "requiredFeatures": [
+     "shader-f16"
+    ],
+    "requiredLimits": {}
+   },
+   "deviceProbe": "ok: binding 128 MiB, buffer 256 MiB, 256 invocations",
+   "deviceError": null,
+   "maxBufferSizeMb": 4096,
+   "maxStorageBufferBindingSizeMb": 2048
+  },
+  "jspi": true,
+  "shaderF16Used": true,
+  "load": {
+   "fetchMs": 1948,
+   "loadMs": 846,
+   "from": "network, streamed to OPFS",
+   "fileMb": 437.5,
+   "wasmHeapMb": 32,
+   "wasmHeapUsedMb": 14.6,
+   "backend": "WebGPU: WebGPU"
+  },
+  "session": {
+   "totalMs": 846
+  },
+  "startToLoadedMs": 3295
+ },
+ "steps": [
+  {
+   "t": 0,
+   "name": "start: 0.6b v2, Q4_0 (4-bit weights), flash=off, store=opfs, jspi"
+  },
+  {
+   "t": 499,
+   "name": "WASM module ready",
+   "ms": 43.6,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 499,
+   "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 present; fallback=false"
+  },
+  {
+   "t": 499,
+   "name": "adapter limits: binding 2048 MiB, buffer 4096 MiB, 1024 invocations/workgroup, workgroup storage 49152 B, 16 storage buffers/stage",
+   "detail": "all at or above the WebGPU spec defaults, which is all this page needs"
+  },
+  {
+   "t": 499,
+   "name": "device probe ok: binding 128 MiB, buffer 256 MiB, 256 invocations",
+   "detail": "requested {} shader-f16"
+  },
+  {
+   "t": 499,
+   "name": "shader path: f16"
+  },
+  {
+   "t": 3295,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 1948,
+   "detail": "438 MB"
+  },
+  {
+   "t": 3295,
+   "name": "model loaded on WebGPU: WebGPU",
+   "ms": 845.8,
+   "detail": "WASM heap 32 MB, 14.6 MB in use"
+  },
+  {
+   "t": 5740,
+   "name": "a56 (56.1 s) first run (cold)",
+   "ms": 1024.2,
+   "detail": "mel 103 ms, encoder 581 ms, decode 340 ms, heap 67 MB (25.6 in use)"
+  },
+  {
+   "t": 5740,
+   "name": "a56 transcript DIFFERS from the reference",
+   "detail": "Welcome to QuirkQuidQuill Inc., where finance meets innovation. Explore diverse offerings ..."
+  },
+  {
+   "t": 8898,
+   "name": "a56 warm x3",
+   "ms": 776.3,
+   "detail": "total median/worst 776.3 / 781.5 ms; encoder 425.8 / 427.4 ms; mel 50.1 ms; decode 304.6 ms; 72.3x real time; text stable=true"
+  },
+  {
+   "t": 8899,
+   "name": "done",
+   "ms": 8898.8
+  }
+ ],
+ "console": [],
+ "machineAtEnd": {
+  "loadavg": "3.99 4.41 3.86 2/2027 427429",
+  "cpuPressure": "some avg10=0.96 avg60=1.19 avg300=1.34 total=10140366293"
+ },
+ "chromeGpu": {
+  "devices": [
+   {
+    "vendorId": 4318,
+    "deviceId": 7687,
+    "vendorString": "Google Inc. (NVIDIA)",
+    "deviceString": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+    "driverVendor": "NVIDIA",
+    "driverVersion": "580.178.4.0"
+   }
+  ],
+  "featureStatus": {
+   "2d_canvas": "enabled",
+   "direct_rendering_display_compositor": "disabled_off_ok",
+   "gpu_compositing": "enabled",
+   "multiple_raster_threads": "enabled_on",
+   "opengl": "enabled_on",
+   "rasterization": "enabled",
+   "raw_draw": "disabled_off_ok",
+   "skia_graphite": "disabled_off",
+   "trees_in_viz": "disabled_off",
+   "video_decode": "enabled",
+   "video_encode": "disabled_software",
+   "vulkan": "enabled_on",
+   "webgl": "enabled",
+   "webgpu": "enabled",
+   "webgpu_on_vk_via_gl_interop": "disabled_off",
+   "webnn": "disabled_off"
+  },
+  "auxAttributes": {
+   "directRenderingVersion": "",
+   "displayType": "ANGLE_VULKAN",
+   "glRenderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+   "glVendor": "Google Inc. (NVIDIA)",
+   "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "glWsVendor": "Google Inc. (NVIDIA)",
+   "glWsVersion": "1.5 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "hardwareSupportsVulkan": true,
+   "passthroughCmdDecoder": true,
+   "pixelShaderVersion": "3.00",
+   "vertexShaderVersion": "3.00"
+  }
+ }
+}

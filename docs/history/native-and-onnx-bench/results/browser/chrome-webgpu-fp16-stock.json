@@ -1,0 +1,226 @@
+{
+ "name": "chrome-webgpu-fp16-stock",
+ "url": "http://127.0.0.1:8787/?model=fp16&enc=webgpu&dec=wasm&clip=all&runs=10&cache=0&auto=1",
+ "chromeArgs": [],
+ "machineAtStart": {
+  "loadavg": "24.26 25.60 26.25 22/2543 698040",
+  "cpuPressure": "some avg10=15.83 avg60=33.18 avg300=41.71 total=9233586475"
+ },
+ "chrome": "154.0.8037.97",
+ "error": "Error: Can't create a session. ERROR_CODE: 1, ERROR_MESSAGE: shader_helper.cc:416 GenerateSourceCode Program Transpose requires f16 but the device does not support it.\n    at S (http://127.0.0.1:8787/ort/ort.webgpu.min.mjs:6:26300)\n    at _e (http://127.0.0.1:8787/ort/ort.webgpu.min.mjs:7:22292)\n    at async Ke.loadModel (http://127.0.0.1:8787/ort/ort.webgpu.min.mjs:7:34990)\n    at async Qe.createInferenceSessionHandler (http://127.0.0.1:8787/ort/ort.webgpu.min.mjs:7:36699)\n    at async t.create (http://127.0.0.1:8787/ort/ort.webgpu.min.mjs:6:19889)\n    at async create (http://127.0.0.1:8787/main.js:399:15)\n    at async run (http://127.0.0.1:8787/main.js:410:15)",
+ "memory": {
+  "gpuProcessGpuMibAfterLoad": 0,
+  "gpuProcessGpuMibPeak": 572,
+  "rendererRssMibAfterLoad": 0,
+  "rendererRssMibPeak": 2306,
+  "gpuProcessRssMibAfterLoad": 0,
+  "gpuProcessRssMibPeak": 577
+ },
+ "pids": {
+  "gpu": 697692,
+  "renderers": [
+   698154,
+   697885,
+   697837
+  ]
+ },
+ "page": {
+  "config": {
+   "model": "fp16",
+   "clip": "all",
+   "enc": "webgpu",
+   "dec": "wasm",
+   "rt": "webgpu",
+   "runs": 10,
+   "threads": 0,
+   "cache": false,
+   "base": "models/"
+  },
+  "ortVersion": "1.30.0",
+  "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "started": "2026-10-10T08:01:40.090Z",
+  "clips": [],
+  "crossOriginIsolated": true,
+  "hardwareConcurrency": 12,
+  "deviceMemoryGb": 32,
+  "adapter": {
+   "available": true,
+   "vendor": "nvidia",
+   "architecture": "turing",
+   "device": "0x1e07",
+   "description": "NVIDIA GeForce RTX 2080 Ti",
+   "isFallbackAdapter": false,
+   "shaderF16": false,
+   "features": [
+    "bgra8unorm-storage",
+    "chromium-experimental-multi-draw-indirect",
+    "chromium-experimental-sampling-resource-table",
+    "chromium-experimental-subgroup-matrix",
+    "chromium-experimental-timestamp-query-inside-passes",
+    "clip-distances",
+    "core-features-and-limits",
+    "depth-clip-control",
+    "depth32float-stencil8",
+    "dual-source-blending",
+    "float32-blendable",
+    "float32-filterable",
+    "indirect-first-instance",
+    "primitive-index",
+    "rg11b10ufloat-renderable",
+    "subgroup-size-control",
+    "subgroups",
+    "texture-component-swizzle",
+    "texture-compression-bc",
+    "texture-compression-bc-sliced-3d",
+    "texture-compression-unaligned",
+    "texture-formats-tier1",
+    "texture-formats-tier2",
+    "timestamp-query"
+   ],
+   "maxBufferSizeMb": 4096,
+   "maxStorageBufferBindingSizeMb": 2048
+  },
+  "fetch": {
+   "totalMs": 6249,
+   "files": {
+    "vocab": {
+     "ms": 3,
+     "mb": 0,
+     "from": "network"
+    },
+    "fb": {
+     "ms": 5,
+     "mb": 0.1,
+     "from": "network"
+    },
+    "dec": {
+     "ms": 101,
+     "mb": 34.1,
+     "from": "network"
+    },
+    "enc": {
+     "ms": 77,
+     "mb": 20.6,
+     "from": "network"
+    },
+    "encData": {
+     "ms": 6062,
+     "mb": 1161.3,
+     "from": "network"
+    }
+   }
+  }
+ },
+ "steps": [
+  {
+   "t": 1,
+   "name": "page",
+   "detail": "crossOriginIsolated=true cores=12 deviceMemory=32 GB"
+  },
+  {
+   "t": 381,
+   "name": "WebGPU adapter",
+   "detail": "nvidia / turing / 0x1e07 / NVIDIA GeForce RTX 2080 Ti; shader-f16=false; fallback=false; maxBuffer=4096 MB"
+  },
+  {
+   "t": 381,
+   "name": "warning: fp16 encoder on an adapter without shader-f16"
+  },
+  {
+   "t": 394,
+   "name": "onnxruntime-web 1.30.0 script (native WebGPU EP build)",
+   "ms": 13.5
+  },
+  {
+   "t": 399,
+   "name": "fetched vocab.txt",
+   "ms": 3.3,
+   "detail": "0.0 MB, network"
+  },
+  {
+   "t": 404,
+   "name": "fetched melfb-257x128.f32",
+   "ms": 4.9,
+   "detail": "0.1 MB, network"
+  },
+  {
+   "t": 505,
+   "name": "fetched decoder_joint-model.onnx",
+   "ms": 100.8,
+   "detail": "34.1 MB, network"
+  },
+  {
+   "t": 582,
+   "name": "fetched fp16/encoder-model.onnx",
+   "ms": 76.8,
+   "detail": "20.6 MB, network"
+  },
+  {
+   "t": 6644,
+   "name": "fetched fp16/encoder-model.onnx.data",
+   "ms": 6061.6,
+   "detail": "1161.3 MB, network"
+  },
+  {
+   "t": 6645,
+   "name": "all model files in memory",
+   "ms": 6249.5,
+   "detail": "jsHeapUsedMb=1518 jsHeapTotalMb=1519"
+  },
+  {
+   "t": 11604,
+   "name": "ERROR: Error: Can't create a session. ERROR_CODE: 1, ERROR_MESSAGE: shader_helper.cc:416 GenerateSourceCode Program Transpose requires f16 but the device does not support it.\n    at S (http://127.0.0.1:8787/ort/ort.webgpu.min.mjs:6:26300)\n    at _e (http://127.0.0.1:8787/ort/ort.webgpu.min.mjs:7:22292)\n    at async Ke.loadModel (http://127.0.0.1:8787/ort/ort.webgpu.min.mjs:7:34990)\n    at async Qe.createInferenceSessionHandler (http://127.0.0.1:8787/ort/ort.webgpu.min.mjs:7:36699)\n    at async t.create (http://127.0.0.1:8787/ort/ort.webgpu.min.mjs:6:19889)\n    at async create (http://127.0.0.1:8787/main.js:399:15)\n    at async run (http://127.0.0.1:8787/main.js:410:15)"
+  }
+ ],
+ "console": [
+  "error: \u001b[0;93m2026-10-10 01:01:49.770579 [W:onnxruntime:, session_state.cc:1397 VerifyEachNodeIsAssignedToAnEp] Some nodes were not assigned to the preferred execution providers which may or may not have an negative impact on performance. e.g. ORT explicitly assigns shape related ops to CPU to improve perf.\u001b[m",
+  "error: \u001b[0;93m2026-10-10 01:01:49.774464 [W:onnxruntime:, session_state.cc:1399 VerifyEachNodeIsAssignedToAnEp] Rerunning with verbose output on a non-minimal build will show node assignments.\u001b[m"
+ ],
+ "machineAtEnd": {
+  "loadavg": "23.72 25.43 26.19 20/2601 709090",
+  "cpuPressure": "some avg10=28.66 avg60=33.05 avg300=41.37 total=9237099192"
+ },
+ "chromeGpu": {
+  "devices": [
+   {
+    "vendorId": 4318,
+    "deviceId": 7687,
+    "vendorString": "Google Inc. (NVIDIA)",
+    "deviceString": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+    "driverVendor": "NVIDIA",
+    "driverVersion": "580.178.4.0"
+   }
+  ],
+  "featureStatus": {
+   "2d_canvas": "enabled",
+   "direct_rendering_display_compositor": "disabled_off_ok",
+   "gpu_compositing": "enabled",
+   "multiple_raster_threads": "enabled_on",
+   "opengl": "enabled_on",
+   "rasterization": "enabled",
+   "raw_draw": "disabled_off_ok",
+   "skia_graphite": "disabled_off",
+   "trees_in_viz": "disabled_off",
+   "video_decode": "enabled",
+   "video_encode": "disabled_software",
+   "vulkan": "enabled_on",
+   "webgl": "enabled",
+   "webgpu": "enabled",
+   "webgpu_on_vk_via_gl_interop": "disabled_off",
+   "webnn": "disabled_off"
+  },
+  "auxAttributes": {
+   "directRenderingVersion": "",
+   "displayType": "ANGLE_VULKAN",
+   "glRenderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+   "glVendor": "Google Inc. (NVIDIA)",
+   "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "glWsVendor": "Google Inc. (NVIDIA)",
+   "glWsVersion": "1.5 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "hardwareSupportsVulkan": true,
+   "passthroughCmdDecoder": true,
+   "pixelShaderVersion": "3.00",
+   "vertexShaderVersion": "3.00"
+  }
+ }
+}

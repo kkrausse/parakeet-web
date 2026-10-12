@@ -1,0 +1,447 @@
+{
+ "name": "chrome-110m-wasm-fp32-1t",
+ "url": "http://127.0.0.1:8787/?model=110m-fp32&enc=wasm&dec=wasm&threads=1&clip=all&runs=10&cache=0&auto=1",
+ "chromeArgs": [],
+ "machineAtStart": {
+  "loadavg": "7.25 7.21 8.55 12/2110 3946570",
+  "cpuPressure": "some avg10=0.14 avg60=2.96 avg300=3.78 total=9987462888"
+ },
+ "chrome": "154.0.8037.97",
+ "error": null,
+ "memory": {
+  "gpuProcessGpuMibAfterLoad": 51,
+  "gpuProcessGpuMibPeak": 56,
+  "rendererRssMibAfterLoad": 1453,
+  "rendererRssMibPeak": 1672,
+  "gpuProcessRssMibAfterLoad": 253,
+  "gpuProcessRssMibPeak": 253
+ },
+ "pids": {
+  "gpu": 3946427,
+  "renderers": [
+   3946595,
+   3946513,
+   3946492
+  ]
+ },
+ "page": {
+  "config": {
+   "model": "110m-fp32",
+   "clip": "all",
+   "enc": "wasm",
+   "dec": "wasm",
+   "rt": "webgpu",
+   "runs": 10,
+   "threads": 1,
+   "cache": false,
+   "base": "models/"
+  },
+  "ortVersion": "1.30.0",
+  "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "started": "2026-10-10T09:09:05.826Z",
+  "clips": [
+   {
+    "clip": "a07",
+    "seconds": 7,
+    "firstInPage": true,
+    "firstRunMs": {
+     "pre": 14.7,
+     "enc": 796,
+     "dec": 89.4,
+     "total": 900.4
+    },
+    "startToFirstTranscriptMs": 6012,
+    "encFrames": 88,
+    "decSteps": 62,
+    "text": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight.",
+    "matchesNative": true,
+    "warmRuns": 10,
+    "preMs": {
+     "median": 9.5,
+     "worst": 11.3,
+     "best": 9
+    },
+    "encMs": {
+     "median": 729.6,
+     "worst": 768.5,
+     "best": 709.5
+    },
+    "decMs": {
+     "median": 63.4,
+     "worst": 82.7,
+     "best": 54.4
+    },
+    "totalMs": {
+     "median": 806.8,
+     "worst": 846.4,
+     "best": 778.5
+    },
+    "xRealTime": 8.7,
+    "textStable": true
+   },
+   {
+    "clip": "a14",
+    "seconds": 13.69,
+    "firstInPage": false,
+    "firstRunMs": {
+     "pre": 18.4,
+     "enc": 1414.3,
+     "dec": 126.2,
+     "total": 1558.9
+    },
+    "startToFirstTranscriptMs": null,
+    "encFrames": 172,
+    "decSteps": 123,
+    "text": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards",
+    "matchesNative": true,
+    "warmRuns": 10,
+    "preMs": {
+     "median": 18.4,
+     "worst": 22.9,
+     "best": 17.1
+    },
+    "encMs": {
+     "median": 1484.2,
+     "worst": 1504.6,
+     "best": 1469.9
+    },
+    "decMs": {
+     "median": 118.9,
+     "worst": 149.5,
+     "best": 102.3
+    },
+    "totalMs": {
+     "median": 1624.9,
+     "worst": 1647.3,
+     "best": 1602.7
+    },
+    "xRealTime": 8.4,
+    "textStable": true
+   },
+   {
+    "clip": "a56",
+    "seconds": 56.1,
+    "firstInPage": false,
+    "firstRunMs": {
+     "pre": 80.2,
+     "enc": 8852,
+     "dec": 731.8,
+     "total": 9664.1
+    },
+    "startToFirstTranscriptMs": null,
+    "encFrames": 702,
+    "decSteps": 482,
+    "text": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatro a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and our and experience non standard equity trading with E three equity, personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier, our forward thinking financial forecasting tool. Explore venture capital world with U three unifund or move your money with the M three mover, our sophisticated monetary transfer module. At Cork Quid Quill Inc. we turn complex finance into creative solutions. Join us in redefining financial services.",
+    "matchesNative": true,
+    "warmRuns": 10,
+    "preMs": {
+     "median": 72.7,
+     "worst": 120.2,
+     "best": 70.2
+    },
+    "encMs": {
+     "median": 7437.1,
+     "worst": 8843.3,
+     "best": 6972.7
+    },
+    "decMs": {
+     "median": 524,
+     "worst": 671.3,
+     "best": 409.9
+    },
+    "totalMs": {
+     "median": 8033.7,
+     "worst": 9432.5,
+     "best": 7485.5
+    },
+    "xRealTime": 7,
+    "textStable": true
+   }
+  ],
+  "crossOriginIsolated": true,
+  "hardwareConcurrency": 12,
+  "deviceMemoryGb": 32,
+  "adapter": {
+   "available": true,
+   "vendor": "nvidia",
+   "architecture": "turing",
+   "device": "0x1e07",
+   "description": "NVIDIA GeForce RTX 2080 Ti",
+   "isFallbackAdapter": false,
+   "shaderF16": false,
+   "features": [
+    "bgra8unorm-storage",
+    "chromium-experimental-multi-draw-indirect",
+    "chromium-experimental-sampling-resource-table",
+    "chromium-experimental-subgroup-matrix",
+    "chromium-experimental-timestamp-query-inside-passes",
+    "clip-distances",
+    "core-features-and-limits",
+    "depth-clip-control",
+    "depth32float-stencil8",
+    "dual-source-blending",
+    "float32-blendable",
+    "float32-filterable",
+    "indirect-first-instance",
+    "primitive-index",
+    "rg11b10ufloat-renderable",
+    "subgroup-size-control",
+    "subgroups",
+    "texture-component-swizzle",
+    "texture-compression-bc",
+    "texture-compression-bc-sliced-3d",
+    "texture-compression-unaligned",
+    "texture-formats-tier1",
+    "texture-formats-tier2",
+    "timestamp-query"
+   ],
+   "maxBufferSizeMb": 4096,
+   "maxStorageBufferBindingSizeMb": 2048
+  },
+  "model": {
+   "family": "110m",
+   "label": "110m fp32 (OpenVoiceOS export)"
+  },
+  "fetch": {
+   "totalMs": 624,
+   "files": {
+    "vocab": {
+     "ms": 2,
+     "mb": 0,
+     "from": "network"
+    },
+    "fb": {
+     "ms": 2,
+     "mb": 0.1,
+     "from": "network"
+    },
+    "dec": {
+     "ms": 1,
+     "mb": 0,
+     "from": "network"
+    },
+    "decData": {
+     "ms": 45,
+     "mb": 20.4,
+     "from": "network"
+    },
+    "enc": {
+     "ms": 3,
+     "mb": 0.6,
+     "from": "network"
+    },
+    "encData": {
+     "ms": 569,
+     "mb": 434.4,
+     "from": "network"
+    }
+   }
+  },
+  "session": {
+   "ms": {
+    "encoder": 2499,
+    "decoder": 37
+   },
+   "totalMs": 2607
+  },
+  "wasm": {
+   "numThreads": 1,
+   "simd": null,
+   "proxy": false
+  },
+  "startToLoadedMs": 3677,
+  "memoryAfterLoad": {
+   "jsHeapUsedMb": 458,
+   "jsHeapTotalMb": 463
+  },
+  "userAgentSpecificMemory": "1268 MB",
+  "memoryAtEnd": {
+   "jsHeapUsedMb": 490,
+   "jsHeapTotalMb": 492
+  }
+ },
+ "steps": [
+  {
+   "t": 0,
+   "name": "page",
+   "detail": "crossOriginIsolated=true cores=12 deviceMemory=32 GB"
+  },
+  {
+   "t": 412,
+   "name": "WebGPU adapter",
+   "detail": "nvidia / turing / 0x1e07 / NVIDIA GeForce RTX 2080 Ti; shader-f16=false; fallback=false; maxBuffer=4096 MB"
+  },
+  {
+   "t": 420,
+   "name": "onnxruntime-web 1.30.0 script (native WebGPU EP build)",
+   "ms": 7.5
+  },
+  {
+   "t": 423,
+   "name": "fetched 110m/vocab.txt",
+   "ms": 2.1,
+   "detail": "0.0 MB, network"
+  },
+  {
+   "t": 424,
+   "name": "fetched 110m/melfb-257x80.f32",
+   "ms": 1.7,
+   "detail": "0.1 MB, network"
+  },
+  {
+   "t": 426,
+   "name": "fetched 110m/decoder_joint-model.onnx",
+   "ms": 1.5,
+   "detail": "0.0 MB, network"
+  },
+  {
+   "t": 471,
+   "name": "fetched 110m/decoder_joint-model.onnx_data",
+   "ms": 45.2,
+   "detail": "20.4 MB, network"
+  },
+  {
+   "t": 475,
+   "name": "fetched 110m/encoder-model.onnx",
+   "ms": 3.4,
+   "detail": "0.6 MB, network"
+  },
+  {
+   "t": 1044,
+   "name": "fetched 110m/encoder-model.onnx_data",
+   "ms": 568.9,
+   "detail": "434.4 MB, network"
+  },
+  {
+   "t": 1045,
+   "name": "all model files in memory",
+   "ms": 624,
+   "detail": "jsHeapUsedMb=892 jsHeapTotalMb=894"
+  },
+  {
+   "t": 3600,
+   "name": "encoder session created on wasm",
+   "ms": 2499.2
+  },
+  {
+   "t": 3677,
+   "name": "decoder session created on wasm",
+   "ms": 37.1
+  },
+  {
+   "t": 3677,
+   "name": "ready",
+   "ms": 3677,
+   "detail": "wasm threads=1; jsHeapUsedMb=458 jsHeapTotalMb=463"
+  },
+  {
+   "t": 6012,
+   "name": "a07 (7.0 s) first run (cold)",
+   "ms": 900.4,
+   "detail": "mel 14.7 ms, encoder 796 ms, decode 89.4 ms"
+  },
+  {
+   "t": 6012,
+   "name": "a07 transcript matches the native fp32 one",
+   "detail": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day ..."
+  },
+  {
+   "t": 15260,
+   "name": "a07 warm x10",
+   "ms": 806.8,
+   "detail": "total median/worst 806.8 / 846.4 ms; encoder 729.6 / 768.5 ms; decode 63.4 ms; 8.7x real time; text stable=true"
+  },
+  {
+   "t": 16854,
+   "name": "a14 (13.7 s) first run",
+   "ms": 1558.9,
+   "detail": "mel 18.4 ms, encoder 1414 ms, decode 126 ms"
+  },
+  {
+   "t": 16855,
+   "name": "a14 transcript matches the native fp32 one",
+   "detail": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms da..."
+  },
+  {
+   "t": 20041,
+   "name": "measureUserAgentSpecificMemory (asked after load): 1268 MB"
+  },
+  {
+   "t": 34988,
+   "name": "a14 warm x10",
+   "ms": 1624.9,
+   "detail": "total median/worst 1624.9 / 1647.3 ms; encoder 1484.2 / 1504.6 ms; decode 118.9 ms; 8.4x real time; text stable=true"
+  },
+  {
+   "t": 44701,
+   "name": "a56 (56.1 s) first run",
+   "ms": 9664.1,
+   "detail": "mel 80.2 ms, encoder 8852 ms, decode 732 ms"
+  },
+  {
+   "t": 44701,
+   "name": "a56 transcript matches the native fp32 one",
+   "detail": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings..."
+  },
+  {
+   "t": 135173,
+   "name": "a56 warm x10",
+   "ms": 8033.7,
+   "detail": "total median/worst 8033.7 / 9432.5 ms; encoder 7437.1 / 8843.3 ms; decode 524 ms; 7x real time; text stable=true"
+  },
+  {
+   "t": 135174,
+   "name": "done",
+   "ms": 135173.8,
+   "detail": "jsHeapUsedMb=490 jsHeapTotalMb=492"
+  }
+ ],
+ "console": [],
+ "machineAtEnd": {
+  "loadavg": "5.35 6.64 8.17 3/2215 4080995",
+  "cpuPressure": "some avg10=1.48 avg60=1.40 avg300=2.87 total=9990050594"
+ },
+ "chromeGpu": {
+  "devices": [
+   {
+    "vendorId": 4318,
+    "deviceId": 7687,
+    "vendorString": "Google Inc. (NVIDIA)",
+    "deviceString": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+    "driverVendor": "NVIDIA",
+    "driverVersion": "580.178.4.0"
+   }
+  ],
+  "featureStatus": {
+   "2d_canvas": "enabled",
+   "direct_rendering_display_compositor": "disabled_off_ok",
+   "gpu_compositing": "enabled",
+   "multiple_raster_threads": "enabled_on",
+   "opengl": "enabled_on",
+   "rasterization": "enabled",
+   "raw_draw": "disabled_off_ok",
+   "skia_graphite": "disabled_off",
+   "trees_in_viz": "disabled_off",
+   "video_decode": "enabled",
+   "video_encode": "disabled_software",
+   "vulkan": "enabled_on",
+   "webgl": "enabled",
+   "webgpu": "enabled",
+   "webgpu_on_vk_via_gl_interop": "disabled_off",
+   "webnn": "disabled_off"
+  },
+  "auxAttributes": {
+   "directRenderingVersion": "",
+   "displayType": "ANGLE_VULKAN",
+   "glRenderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+   "glVendor": "Google Inc. (NVIDIA)",
+   "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "glWsVendor": "Google Inc. (NVIDIA)",
+   "glWsVersion": "1.5 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "hardwareSupportsVulkan": true,
+   "passthroughCmdDecoder": true,
+   "pixelShaderVersion": "3.00",
+   "vertexShaderVersion": "3.00"
+  }
+ }
+}

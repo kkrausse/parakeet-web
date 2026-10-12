@@ -1,0 +1,713 @@
+{
+ "name": "split-chk",
+ "url": "http://127.0.0.1:8791/?model=s8&clip=all&runs=5&variant=asyncify&auto=1",
+ "chromeArgs": [
+  "--enable-dawn-features=vulkan_enable_f16_on_nvidia"
+ ],
+ "machineAtStart": {
+  "loadavg": "5.81 8.96 8.85 6/2124 2322670",
+  "cpuPressure": "some avg10=3.01 avg60=4.33 avg300=10.31 total=10852696781"
+ },
+ "chrome": "154.0.8037.97",
+ "error": null,
+ "memory": {
+  "gpuProcessGpuMibAfterLoad": 198,
+  "gpuProcessGpuMibPeak": 272,
+  "rendererRssMibAfterLoad": 206,
+  "rendererRssMibPeak": 282,
+  "gpuProcessRssMibAfterLoad": 296,
+  "gpuProcessRssMibPeak": 322
+ },
+ "pids": {
+  "gpu": 2322597,
+  "renderers": [
+   2322644,
+   2322646,
+   2322635
+  ]
+ },
+ "page": {
+  "config": {
+   "model": "s8",
+   "clip": "all",
+   "runs": 5,
+   "threads": 1,
+   "store": "opfs",
+   "f16": true,
+   "flash": false,
+   "variant": "asyncify",
+   "verbose": false,
+   "base": "models/",
+   "env": {},
+   "limits": ""
+  },
+  "model": {
+   "label": "110M, Q8_0 (8-bit weights)",
+   "file": "parakeet-tdt_ctc-110m-Q8_0.gguf",
+   "mb": 129,
+   "family": "110m"
+  },
+  "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "crossOriginIsolated": false,
+  "clips": [
+   {
+    "clip": "a07",
+    "seconds": 7,
+    "firstInPage": true,
+    "firstRunMs": {
+     "pre": 10.1,
+     "enc": 223.8,
+     "dec": 35.5,
+     "total": 269.4
+    },
+    "startToFirstTranscriptMs": 3241,
+    "decSteps": 41,
+    "text": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight.",
+    "matchesNative": true,
+    "hasReference": true,
+    "warmRuns": 5,
+    "preMs": {
+     "median": 3.5,
+     "worst": 4.3,
+     "best": 3.1
+    },
+    "encMs": {
+     "median": 31.7,
+     "worst": 32.4,
+     "best": 31.1
+    },
+    "decMs": {
+     "median": 14.1,
+     "worst": 15.4,
+     "best": 13.5
+    },
+    "totalMs": {
+     "median": 49.4,
+     "worst": 51.6,
+     "best": 48.2
+    },
+    "xRealTime": 141.7,
+    "textStable": true,
+    "wasmHeapMb": 39,
+    "wasmHeapUsedMb": 20.9,
+    "gpu": {
+     "weightsMb": 129,
+     "workingMb": 20,
+     "computeMb": 18,
+     "stagingMb": 2,
+     "liveMb": 149,
+     "buffers": 7,
+     "byType": {
+      "f32": 2,
+      "q8_0": 101.6,
+      "f16": 25.5
+     },
+     "created": 8,
+     "destroyed": 1,
+     "createdMb": 150,
+     "poolHits": 6,
+     "poolMisses": 0,
+     "pipelines": 19,
+     "layouts": 19,
+     "bindGroups": 7777,
+     "encoders": 211,
+     "submits": 211,
+     "writes": 1063,
+     "maps": 85,
+     "js": {
+      "registry": true,
+      "objects": 8390,
+      "collected": 8343,
+      "buffers": 8,
+      "buffersDestroyed": 1,
+      "buffersCollected": 1,
+      "bufferLiveMb": 149,
+      "bindGroups": 7777,
+      "bindGroupsCollected": 7777,
+      "layouts": 19,
+      "encoders": 211,
+      "commandBuffers": 211,
+      "commandBuffersCollected": 210,
+      "pipelines": 19,
+      "shaderModules": 19
+     }
+    }
+   },
+   {
+    "clip": "a14",
+    "seconds": 13.69,
+    "firstInPage": false,
+    "firstRunMs": {
+     "pre": 6.3,
+     "enc": 39.5,
+     "dec": 35.1,
+     "total": 80.9
+    },
+    "startToFirstTranscriptMs": null,
+    "decSteps": 84,
+    "text": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms day after day for a fortnight. He'll have to put in an appearance at some place of worship on Sunday morning, and he can come to us immediately afterwards",
+    "matchesNative": true,
+    "hasReference": true,
+    "warmRuns": 5,
+    "preMs": {
+     "median": 6.1,
+     "worst": 6.5,
+     "best": 6
+    },
+    "encMs": {
+     "median": 31.9,
+     "worst": 32.5,
+     "best": 31.3
+    },
+    "decMs": {
+     "median": 27.4,
+     "worst": 28.3,
+     "best": 26.9
+    },
+    "totalMs": {
+     "median": 65.2,
+     "worst": 66.8,
+     "best": 65
+    },
+    "xRealTime": 210,
+    "textStable": true,
+    "wasmHeapMb": 47,
+    "wasmHeapUsedMb": 21.8,
+    "gpu": {
+     "weightsMb": 129,
+     "workingMb": 42,
+     "computeMb": 40,
+     "stagingMb": 2,
+     "liveMb": 171.1,
+     "buffers": 7,
+     "byType": {
+      "f32": 2,
+      "q8_0": 101.6,
+      "f16": 25.5
+     },
+     "created": 9,
+     "destroyed": 2,
+     "createdMb": 190,
+     "poolHits": 12,
+     "poolMisses": 1,
+     "pipelines": 19,
+     "layouts": 19,
+     "bindGroups": 15554,
+     "encoders": 344,
+     "submits": 344,
+     "writes": 1441,
+     "maps": 92,
+     "js": {
+      "registry": true,
+      "objects": 16560,
+      "collected": 15607,
+      "buffers": 9,
+      "buffersDestroyed": 2,
+      "buffersCollected": 2,
+      "bufferLiveMb": 171.1,
+      "bindGroups": 15554,
+      "bindGroupsCollected": 14697,
+      "layouts": 19,
+      "encoders": 344,
+      "commandBuffers": 344,
+      "commandBuffersCollected": 327,
+      "pipelines": 19,
+      "shaderModules": 19
+     }
+    }
+   },
+   {
+    "clip": "a56",
+    "seconds": 56.1,
+    "firstInPage": false,
+    "firstRunMs": {
+     "pre": 26.1,
+     "enc": 115.8,
+     "dec": 123.5,
+     "total": 265.4
+    },
+    "startToFirstTranscriptMs": null,
+    "decSteps": 292,
+    "text": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings from the P three Quatro a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and our and experience non standard equity trading with E three equity, personalize your wealth management with W three Wrap Z and anticipate market trends with the O two outlier, our forward thinking financial forecasting tool. Explore venture capital world with U three unifund or move your money with the M three mover, our sophisticated monetary transfer module. At Cork Quid Quill Inc. we turn complex finance into creative solutions. Join us in redefining financial services.",
+    "matchesNative": true,
+    "hasReference": true,
+    "warmRuns": 5,
+    "preMs": {
+     "median": 26.2,
+     "worst": 26.6,
+     "best": 25.1
+    },
+    "encMs": {
+     "median": 97.4,
+     "worst": 100.4,
+     "best": 96.7
+    },
+    "decMs": {
+     "median": 108.3,
+     "worst": 112,
+     "best": 102
+    },
+    "totalMs": {
+     "median": 232.8,
+     "worst": 236.2,
+     "best": 225.4
+    },
+    "xRealTime": 241,
+    "textStable": true,
+    "wasmHeapMb": 56,
+    "wasmHeapUsedMb": 27.5,
+    "gpu": {
+     "weightsMb": 129,
+     "workingMb": 66,
+     "computeMb": 64,
+     "stagingMb": 2,
+     "liveMb": 195.1,
+     "buffers": 7,
+     "byType": {
+      "f32": 2,
+      "q8_0": 101.6,
+      "f16": 25.5
+     },
+     "created": 10,
+     "destroyed": 3,
+     "createdMb": 254,
+     "poolHits": 18,
+     "poolMisses": 2,
+     "pipelines": 21,
+     "layouts": 21,
+     "bindGroups": 23870,
+     "encoders": 484,
+     "submits": 484,
+     "writes": 1826,
+     "maps": 99,
+     "js": {
+      "registry": true,
+      "objects": 25296,
+      "collected": 24000,
+      "buffers": 10,
+      "buffersDestroyed": 3,
+      "buffersCollected": 3,
+      "bufferLiveMb": 195.1,
+      "bindGroups": 23870,
+      "bindGroupsCollected": 22682,
+      "layouts": 21,
+      "encoders": 484,
+      "commandBuffers": 484,
+      "commandBuffersCollected": 464,
+      "pipelines": 21,
+      "shaderModules": 21
+     }
+    }
+   }
+  ],
+  "adapter": {
+   "available": true,
+   "vendor": "nvidia",
+   "architecture": "turing",
+   "device": "0x1e07",
+   "description": "NVIDIA GeForce RTX 2080 Ti",
+   "isFallbackAdapter": false,
+   "shaderF16": true,
+   "features": [
+    "bgra8unorm-storage",
+    "chromium-experimental-multi-draw-indirect",
+    "chromium-experimental-sampling-resource-table",
+    "chromium-experimental-subgroup-matrix",
+    "chromium-experimental-timestamp-query-inside-passes",
+    "clip-distances",
+    "core-features-and-limits",
+    "depth-clip-control",
+    "depth32float-stencil8",
+    "dual-source-blending",
+    "float32-blendable",
+    "float32-filterable",
+    "indirect-first-instance",
+    "primitive-index",
+    "rg11b10ufloat-renderable",
+    "shader-f16",
+    "subgroup-size-control",
+    "subgroups",
+    "texture-component-swizzle",
+    "texture-compression-bc",
+    "texture-compression-bc-sliced-3d",
+    "texture-compression-unaligned",
+    "texture-formats-tier1",
+    "texture-formats-tier2",
+    "timestamp-query"
+   ],
+   "wgslLanguageFeatures": [
+    "buffer_view",
+    "immediate_address_space",
+    "linear_indexing",
+    "packed_4x8_integer_dot_product",
+    "pointer_composite_access",
+    "readonly_and_readwrite_storage_textures",
+    "subgroup_id",
+    "subgroup_uniformity",
+    "swizzle_assignment",
+    "texture_and_sampler_let",
+    "texture_formats_tier1",
+    "uniform_buffer_standard_layout",
+    "unrestricted_pointer_parameters"
+   ],
+   "limits": {
+    "maxStorageBufferBindingSize": 2147483644,
+    "maxBufferSize": 4294967292,
+    "maxComputeInvocationsPerWorkgroup": 1024,
+    "maxComputeWorkgroupSizeX": 1024,
+    "maxComputeWorkgroupStorageSize": 49152,
+    "maxStorageBuffersPerShaderStage": 16,
+    "maxComputeWorkgroupsPerDimension": 65535,
+    "maxBindGroups": 4,
+    "minStorageBufferOffsetAlignment": 256,
+    "minUniformBufferOffsetAlignment": 256
+   },
+   "allLimits": {
+    "maxTextureDimension1D": 16384,
+    "maxTextureDimension2D": 16384,
+    "maxTextureDimension3D": 2048,
+    "maxTextureArrayLayers": 2048,
+    "maxBindGroups": 4,
+    "maxBindGroupsPlusVertexBuffers": 24,
+    "maxBindingsPerBindGroup": 1000,
+    "maxDynamicUniformBuffersPerPipelineLayout": 10,
+    "maxDynamicStorageBuffersPerPipelineLayout": 8,
+    "maxSampledTexturesPerShaderStage": 48,
+    "maxSamplersPerShaderStage": 16,
+    "maxStorageBuffersPerShaderStage": 16,
+    "maxStorageTexturesPerShaderStage": 8,
+    "maxUniformBuffersPerShaderStage": 12,
+    "maxUniformBufferBindingSize": 65536,
+    "maxStorageBufferBindingSize": 2147483644,
+    "minUniformBufferOffsetAlignment": 256,
+    "minStorageBufferOffsetAlignment": 256,
+    "maxVertexBuffers": 8,
+    "maxBufferSize": 4294967292,
+    "maxVertexAttributes": 30,
+    "maxVertexBufferArrayStride": 2048,
+    "maxInterStageShaderVariables": 28,
+    "maxColorAttachments": 8,
+    "maxColorAttachmentBytesPerSample": 128,
+    "maxComputeWorkgroupStorageSize": 49152,
+    "maxComputeInvocationsPerWorkgroup": 1024,
+    "maxComputeWorkgroupSizeX": 1024,
+    "maxComputeWorkgroupSizeY": 1024,
+    "maxComputeWorkgroupSizeZ": 64,
+    "maxComputeWorkgroupsPerDimension": 65535,
+    "maxImmediateSize": 64,
+    "maxStorageBuffersInFragmentStage": 16,
+    "maxStorageTexturesInFragmentStage": 8,
+    "maxStorageBuffersInVertexStage": 16,
+    "maxStorageTexturesInVertexStage": 8
+   },
+   "belowSpecDefault": [],
+   "requested": {
+    "requiredFeatures": [
+     "shader-f16"
+    ],
+    "requiredLimits": {
+     "maxStorageBufferBindingSize": 1073741824,
+     "maxBufferSize": 1073741824,
+     "maxComputeInvocationsPerWorkgroup": 256,
+     "maxComputeWorkgroupSizeX": 256
+    }
+   },
+   "deviceProbe": "ok: binding 1024 MiB, buffer 1024 MiB, 256 invocations",
+   "deviceError": null,
+   "probeErrors": [],
+   "plan": {
+    "limits": "",
+    "f16": true
+   },
+   "maxBufferSizeMb": 4096,
+   "maxStorageBufferBindingSizeMb": 2048
+  },
+  "jspi": true,
+  "shaderF16Used": true,
+  "load": {
+   "fetchMs": 698,
+   "loadMs": 352,
+   "from": "network, streamed to OPFS",
+   "fileMb": 129.1,
+   "wasmHeapMb": 32,
+   "wasmHeapUsedMb": 9.9,
+   "backend": "WebGPU: WebGPU"
+  },
+  "session": {
+   "totalMs": 352
+  },
+  "gpuAtLoad": {
+   "weightsMb": 129,
+   "workingMb": 2,
+   "computeMb": 0,
+   "stagingMb": 2,
+   "liveMb": 131.1,
+   "buffers": 6,
+   "byType": {
+    "f32": 2,
+    "q8_0": 101.6,
+    "f16": 25.5
+   },
+   "created": 7,
+   "destroyed": 1,
+   "createdMb": 132.1,
+   "poolHits": 0,
+   "poolMisses": 0,
+   "pipelines": 1,
+   "layouts": 1,
+   "bindGroups": 0,
+   "encoders": 78,
+   "submits": 78,
+   "writes": 685,
+   "maps": 78,
+   "js": {
+    "registry": true,
+    "objects": 166,
+    "collected": 137,
+    "buffers": 7,
+    "buffersDestroyed": 1,
+    "buffersCollected": 0,
+    "bufferLiveMb": 131.1,
+    "bindGroups": 0,
+    "bindGroupsCollected": 0,
+    "layouts": 1,
+    "encoders": 78,
+    "commandBuffers": 78,
+    "commandBuffersCollected": 68,
+    "pipelines": 1,
+    "shaderModules": 1
+   }
+  },
+  "startToLoadedMs": 1565
+ },
+ "steps": [
+  {
+   "t": 1,
+   "name": "start: 110M, Q8_0 (8-bit weights), flash=off, store=opfs, asyncify",
+   "detail": "session s9qek8; desktop user agent; limits raised; clip all"
+  },
+  {
+   "t": 505,
+   "name": "WASM module ready",
+   "ms": 60.1,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 505,
+   "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 present; fallback=false"
+  },
+  {
+   "t": 506,
+   "name": "adapter limits: binding 2048 MiB, buffer 4096 MiB, 1024 invocations/workgroup, workgroup storage 49152 B, 16 storage buffers/stage",
+   "detail": "all at or above the WebGPU spec defaults, which is all this page needs"
+  },
+  {
+   "t": 506,
+   "name": "device probe ok: binding 1024 MiB, buffer 1024 MiB, 256 invocations",
+   "detail": "requested {\"maxStorageBufferBindingSize\":1073741824,\"maxBufferSize\":1073741824,\"maxComputeInvocationsPerWorkgroup\":256,\"maxComputeWorkgroupSizeX\":256} shader-f16"
+  },
+  {
+   "t": 508,
+   "name": "shader path: f16"
+  },
+  {
+   "t": 508,
+   "name": "WebGPU limits: the two byte limits raised to {\"maxStorageBufferBindingSize\":1073741824,\"maxBufferSize\":1073741824,\"maxComputeInvocationsPerWorkgroup\":256,\"maxComputeWorkgroupSizeX\":256} (limits=default requests none)"
+  },
+  {
+   "t": 543,
+   "name": "model file: 135373280 bytes on the server, 0 bytes stored in this browser (OPFS)"
+  },
+  {
+   "t": 576,
+   "name": "download: 16777216 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 604,
+   "name": "download: 33554432 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 625,
+   "name": "download: 50331648 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 651,
+   "name": "download: 67108864 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 673,
+   "name": "download: 83886080 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 691,
+   "name": "download: 100663296 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 718,
+   "name": "download: 117440512 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 737,
+   "name": "download: 134217728 of 135373280 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 1206,
+   "name": "download complete: 135373280 bytes in OPFS (sync access handle)"
+  },
+  {
+   "t": 1208,
+   "name": "storage path: OPFS sync access handle (the file stays on disk; tensors are read one at a time)"
+  },
+  {
+   "t": 1209,
+   "name": "loading the model into the backend: WASM heap 32 MB before"
+  },
+  {
+   "t": 1564,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 697.6,
+   "detail": "129 MB; storage path opfs-sync"
+  },
+  {
+   "t": 1564,
+   "name": "model loaded on WebGPU: WebGPU",
+   "ms": 352.2,
+   "detail": "WASM heap 32 MB, 9.9 MB in use"
+  },
+  {
+   "t": 1565,
+   "name": "after load: GPU: weights 129 MiB (q8_0 101.6, f16 25.5, f32 2), working 2 MiB, 6 buffers · since load 7 buffers made, 1 destroyed · JS objects 166 made, 137 collected; JS buffers 6 live (131.1 MiB)"
+  },
+  {
+   "t": 2969,
+   "name": "a07 first run starting",
+   "detail": "7.0 s of audio"
+  },
+  {
+   "t": 3240,
+   "name": "a07 (7.0 s) first run (cold)",
+   "ms": 269.4,
+   "detail": "mel 10.1 ms, encoder 224 ms, decode 35.5 ms, heap 39 MB (20.9 in use)"
+  },
+  {
+   "t": 3241,
+   "name": "a07 transcript matches the reference",
+   "detail": "going along slushy country roads and speaking to damp audiences in drafty schoolrooms day ..."
+  },
+  {
+   "t": 3562,
+   "name": "a07 warm x5",
+   "ms": 49.4,
+   "detail": "total median/worst 49.4 / 51.6 ms; encoder 31.7 / 32.4 ms; mel 3.5 ms; decode 14.1 ms; 141.7x real time; text stable=true"
+  },
+  {
+   "t": 3562,
+   "name": "a07: GPU: weights 129 MiB (q8_0 101.6, f16 25.5, f32 2), working 20 MiB, 7 buffers, last pass +0 buffers +1111 bind groups +19 encoders +54 writes · since load 8 buffers made, 1 destroyed · JS objects 8390 made, 8343 collected; JS buffers 7 live (149 MiB)"
+  },
+  {
+   "t": 3571,
+   "name": "a14 first run starting",
+   "detail": "13.7 s of audio"
+  },
+  {
+   "t": 3654,
+   "name": "a14 (13.7 s) first run",
+   "ms": 80.9,
+   "detail": "mel 6.3 ms, encoder 39.5 ms, decode 35.1 ms, heap 47 MB (21.8 in use)"
+  },
+  {
+   "t": 3655,
+   "name": "a14 transcript matches the reference",
+   "detail": "going along slushy country roads and speaking to damp audiences in draughty schoolrooms da..."
+  },
+  {
+   "t": 4058,
+   "name": "a14 warm x5",
+   "ms": 65.2,
+   "detail": "total median/worst 65.2 / 66.8 ms; encoder 31.9 / 32.5 ms; mel 6.1 ms; decode 27.4 ms; 210x real time; text stable=true"
+  },
+  {
+   "t": 4058,
+   "name": "a14: GPU: weights 129 MiB (q8_0 101.6, f16 25.5, f32 2), working 42 MiB, 7 buffers, last pass +0 buffers +1111 bind groups +19 encoders +54 writes · since load 9 buffers made, 2 destroyed · JS objects 16560 made, 15607 collected; JS buffers 7 live (171.1 MiB)"
+  },
+  {
+   "t": 4078,
+   "name": "a56 first run starting",
+   "detail": "56.1 s of audio"
+  },
+  {
+   "t": 4351,
+   "name": "a56 (56.1 s) first run",
+   "ms": 265.4,
+   "detail": "mel 26.1 ms, encoder 116 ms, decode 124 ms, heap 56 MB (27.5 in use)"
+  },
+  {
+   "t": 4351,
+   "name": "a56 transcript matches the reference",
+   "detail": "Welcome to Quirk Quid Quill Inc. where finance meets innovation, explore diverse offerings..."
+  },
+  {
+   "t": 5780,
+   "name": "a56 warm x5",
+   "ms": 232.8,
+   "detail": "total median/worst 232.8 / 236.2 ms; encoder 97.4 / 100.4 ms; mel 26.2 ms; decode 108.3 ms; 241x real time; text stable=true"
+  },
+  {
+   "t": 5780,
+   "name": "a56: GPU: weights 129 MiB (q8_0 101.6, f16 25.5, f32 2), working 66 MiB, 7 buffers, last pass +0 buffers +1188 bind groups +20 encoders +55 writes · since load 10 buffers made, 3 destroyed · JS objects 25296 made, 24000 collected; JS buffers 7 live (195.1 MiB)"
+  },
+  {
+   "t": 5781,
+   "name": "done",
+   "ms": 5780.7
+  }
+ ],
+ "console": [],
+ "machineAtEnd": {
+  "loadavg": "5.89 8.88 8.83 2/2146 2328890",
+  "cpuPressure": "some avg10=2.70 avg60=4.14 avg300=10.14 total=10852870614"
+ },
+ "chromeGpu": {
+  "devices": [
+   {
+    "vendorId": 4318,
+    "deviceId": 7687,
+    "vendorString": "Google Inc. (NVIDIA)",
+    "deviceString": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+    "driverVendor": "NVIDIA",
+    "driverVersion": "580.178.4.0"
+   }
+  ],
+  "featureStatus": {
+   "2d_canvas": "enabled",
+   "direct_rendering_display_compositor": "disabled_off_ok",
+   "gpu_compositing": "enabled",
+   "multiple_raster_threads": "enabled_on",
+   "opengl": "enabled_on",
+   "rasterization": "enabled",
+   "raw_draw": "disabled_off_ok",
+   "skia_graphite": "disabled_off",
+   "trees_in_viz": "disabled_off",
+   "video_decode": "enabled",
+   "video_encode": "disabled_software",
+   "vulkan": "enabled_on",
+   "webgl": "enabled",
+   "webgpu": "enabled",
+   "webgpu_on_vk_via_gl_interop": "disabled_off",
+   "webnn": "disabled_off"
+  },
+  "auxAttributes": {
+   "directRenderingVersion": "",
+   "displayType": "ANGLE_VULKAN",
+   "glRenderer": "ANGLE (NVIDIA, Vulkan 1.4.312 (NVIDIA NVIDIA GeForce RTX 2080 Ti (0x00001E07)), NVIDIA-580.178.4.0)",
+   "glVendor": "Google Inc. (NVIDIA)",
+   "glVersion": "OpenGL ES 3.0 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "glWsVendor": "Google Inc. (NVIDIA)",
+   "glWsVersion": "1.5 (ANGLE 2.1.28734 git hash: e12217f3e133)",
+   "hardwareSupportsVulkan": true,
+   "passthroughCmdDecoder": true,
+   "pixelShaderVersion": "3.00",
+   "vertexShaderVersion": "3.00"
+  }
+ }
+}

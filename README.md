@@ -185,7 +185,5 @@ Pages on a private repository.
 
 Twenty-seven commits of this work came along from where it started: the `parakeet-ggml-web/` directory of
 `kkrausse/random`, on branches that were deleted there on 12 Oct 2026. The benchmark history, the attempt log, the
-phone investigation and the hand-off notes (a 128 KB README) are in this repository's history: `git show
-dbd44c0:README.md`. The benchmark result files and the earlier native / onnxruntime-web benchmark branch are not
-here; the deleted branches are kept as a git bundle on diesel2,
-`~/devfs/cache/parakeet-ggml-webgpu/random-parakeet-branches.bundle`.
+phone investigation and the hand-off notes (a 128 KB README), the benchmark result files, and the earlier native /
+onnxruntime-web benchmark branch are copied into [`docs/history/`](docs/history/README.md).
