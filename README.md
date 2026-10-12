@@ -1284,6 +1284,8 @@ is the machine (load 7-10 against 11-13), not the code.
   words, 5.88%; phone 241 / 239, 4.6%: the numbers in the table above); the benchmark page on 110m Q4_0 (same
   three texts as `ggml-s4.json`, 52 / 76 / 259 ms against 48 / 63 / 226 on a quieter machine); the soak test (60
   passes, working memory 41 MiB throughout); `drive-diag.ts foreign` and `kill` (the guard, then "Try again").
+- `env=GGML_WEBGPU_BREAK_SHADER=soft_max` on the live page: "GPU error (warm-up): shader/pipeline
+  'soft_max_inplace' failed: ..." with the compiler's message, the model stopped (the library's `kind: "gpu"` error).
 - Chrome with `--deny-permission-prompts` and no input device: `no-device`. A wrong `assetsUrl`: the load fails
   in 10 ms naming the worker URL; a wrong `modelUrl`: "fetch ...: 404"; an aborted load: `AbortError`.
 

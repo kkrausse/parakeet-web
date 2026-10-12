@@ -240,8 +240,9 @@ past 30 s of backlog audio is skipped (`advanced.streamEvents.onSkip`).
   and `mute` events; `voiceProcessing: true`.
 - Vite, webpack or any bundler other than `bun build`; a page served from a sub-path with a relative `assetsUrl`
   other than the demo's `pk/`; a cross-origin `modelUrl`.
-- Device loss and GPU errors through the library's callbacks (the paths are the demo's former ones; they were
-  last triggered on purpose before the move).
+- Device loss, and a GPU error in the middle of a recording. (A shader the browser rejects at load was checked:
+  `advanced.transcriber.env: { GGML_WEBGPU_BREAK_SHADER: "soft_max" }` gives `kind: "gpu"` with the compiler's
+  message, and the demo page shows it.)
 - The 0.6b models and Q8_0 through `createDictation` beyond one model switch; recordings over a minute through
   the library (the engine itself was measured to 6.5 min before the move); the audio-skipping path with the real
   model; two dictations at once.
