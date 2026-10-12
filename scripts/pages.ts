@@ -16,7 +16,7 @@ import { commitDir, git, ROOT } from "./branch";
 
 const out = join(ROOT, "dist-pages");
 const MODEL = { key: "s4", label: "110M, Q4_0 (4-bit weights)", file: "parakeet-tdt_ctc-110m-Q4_0.gguf", family: "110m" };
-const FORBIDDEN = ["ts.net", "guineafowl", "diesel2", "kkrausse97", "raspberrypi", "/home/", "devfs", "127.0.0.1"];
+const FORBIDDEN = ["ts.net", "guineafowl", "diesel2", "kkrausse97", "raspberrypi", "devfs", "127.0.0.1", process.env.HOME!]; // HOME: this machine's paths (Emscripten's own "/home/web_user" is fine)
 
 function walk(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]));
