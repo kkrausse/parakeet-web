@@ -1,0 +1,3486 @@
+{
+ "name": "pub-next2-t56",
+ "wav": "/home/kkrausse/devfs/cache/parakeet-ggml-webgpu/audio/live/t56.wav",
+ "wavSeconds": 62.104,
+ "recordSeconds": 60,
+ "chromeArgs": [],
+ "noWebgpu": false,
+ "loadavgStart": "14.08 9.03 8.81 44/2846 1977351",
+ "chrome": "154.0.8037.97",
+ "url": "https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-live-next/?phone=1",
+ "readyMs": 6891,
+ "beforeRecording": {
+  "t": 0,
+  "gpuMib": 195,
+  "rendererRssMib": 224,
+  "gpuProcRssMib": 310,
+  "wasmHeapMb": 0,
+  "jsHeapMb": 4,
+  "gpuWorkingMb": 41,
+  "gpuBuffers": 7,
+  "gpuBuffersMade": 8,
+  "jsGpuObjects": 2558,
+  "jsGpuCollected": 274,
+  "lagS": 0,
+  "bufferS": 0,
+  "passes": 0,
+  "words": 0,
+  "vad": {
+   "noiseFloor": 0,
+   "threshold": 0.0004,
+   "hasSpeech": false,
+   "lastRms": 0,
+   "gateMisses": 0
+  }
+ },
+ "drainMs": 1685,
+ "live": {
+  "committed": "Welcome to Quirk Quid Quill Inc, where finance meets innovation, explore diverse offerings from the P three Quatro, a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies, delve into unconventional bond markets with our B three bond X and our and experience non standard equity trading with E three equity. Personalize your wealth management with W three, Wrap, Z, and anticipate market trends with the O two outlier are forward thinking financial forecasting tool. Explore Venture Capital World with U three unifund or move your money with the M three mover sophisticated monetary transfer module, a quark Quid CorkidQuill Inc, we turn complex finance into creative solutions. Join us in redefining financial services.",
+  "provisional": "",
+  "segments": [
+   {
+    "startS": 0,
+    "endS": 57.5,
+    "reason": "idle",
+    "opened": "gate",
+    "words": 121
+   }
+  ],
+  "engine": {
+   "capturedS": 61.64,
+   "open": false,
+   "busy": false,
+   "failed": false,
+   "skipping": false,
+   "bufferS": 3.12,
+   "maxBufferS": 8.52,
+   "lagS": 0,
+   "maxLagS": 0.4,
+   "noiseFloor": 0,
+   "threshold": 0.0004,
+   "lastRms": 0,
+   "speech": false,
+   "gateOpens": 1,
+   "gateMisses": 0,
+   "modelHolds": 0,
+   "probes": 0,
+   "probesSilent": 1,
+   "passes": 210,
+   "livePasses": 210,
+   "finalPasses": 0,
+   "stale": 0,
+   "reusedFinals": 1,
+   "utterances": 1,
+   "commits": 93,
+   "wordsCommitted": 121,
+   "byReason": {
+    "agree": 121,
+    "idle": 0,
+    "stop": 0,
+    "cap": 0,
+    "lag": 0,
+    "skip": 0
+   },
+   "skippedS": 0,
+   "trims": 58,
+   "anchorShifts": 48
+  },
+  "gateEvents": [
+   {
+    "atS": 0.1,
+    "open": true,
+    "by": "energy",
+    "floor": 0,
+    "thr": 0.0004
+   },
+   {
+    "atS": 57.7,
+    "open": false,
+    "by": "idle",
+    "floor": 0,
+    "thr": 0.0004
+   }
+  ],
+  "passCount": 210,
+  "finalCount": 1,
+  "reusedCount": 1,
+  "staleCount": 0,
+  "maxLagS": 0.4,
+  "droppedS": 0,
+  "inputRate": 44100,
+  "backend": "WebGPU: WebGPU",
+  "webgpu": true,
+  "shaderF16": false,
+  "variant": "jspi",
+  "errors": [],
+  "params": {
+   "capS": 12,
+   "gapMs": 250,
+   "minNewS": 0.1,
+   "stableS": 0.5,
+   "minPasses": 2,
+   "holdS": 1.2,
+   "keepS": 4,
+   "emptyHoldS": 1,
+   "forceHoldS": 1,
+   "lagS": 3,
+   "backlogS": 30,
+   "hangS": 1.5,
+   "preRollS": 0.4,
+   "gateRatio": 2.5,
+   "gateAbsRms": 0.0004,
+   "floorWindowS": 4,
+   "onsetFrames": 2,
+   "probeEveryS": 2,
+   "probeS": 3,
+   "silencePeak": 0.0001,
+   "maxWordS": 1.2
+  },
+  "load": {
+   "fetchMs": 4252,
+   "loadMs": 391,
+   "from": "network, streamed to OPFS",
+   "base": "../parakeet-ggml-browser/models/",
+   "adapter": "nvidia turing NVIDIA GeForce RTX 2080 Ti"
+  }
+ },
+ "steps": [
+  {
+   "t": 4,
+   "name": "start: 110M, Q4_0 (4-bit weights), jspi",
+   "detail": "session 4e76xq; phone=1; cap 12 s; limits default; store opfs"
+  },
+  {
+   "t": 1329,
+   "name": "WASM module ready",
+   "ms": 761.3,
+   "detail": "heap 32 MB; JSPI available"
+  },
+  {
+   "t": 1332,
+   "name": "adapter: nvidia turing NVIDIA GeForce RTX 2080 Ti; shader-f16 ABSENT; fallback=false"
+  },
+  {
+   "t": 1333,
+   "name": "adapter limits: binding 2048 MiB, buffer 4096 MiB, 1024 invocations/workgroup, workgroup storage 49152 B, 16 storage buffers/stage",
+   "detail": "all at or above the WebGPU spec defaults, which is all this runtime needs"
+  },
+  {
+   "t": 1333,
+   "name": "device probe ok: binding 128 MiB, buffer 256 MiB, 256 invocations",
+   "detail": "spec-default limits"
+  },
+  {
+   "t": 1334,
+   "name": "shader path: f32 only (adapter has no shader-f16)"
+  },
+  {
+   "t": 1335,
+   "name": "WebGPU limits: spec defaults, nothing raised (requested)"
+  },
+  {
+   "t": 1471,
+   "name": "model file: 85260576 bytes on the server, 0 bytes stored in this browser (OPFS)"
+  },
+  {
+   "t": 2665,
+   "name": "download: 16777216 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 3548,
+   "name": "download: 33554432 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 4177,
+   "name": "download: 50331648 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 4756,
+   "name": "download: 67108864 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 5311,
+   "name": "download: 83886080 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB"
+  },
+  {
+   "t": 5659,
+   "name": "download complete: 85260576 bytes in OPFS (sync access handle)"
+  },
+  {
+   "t": 5661,
+   "name": "storage path: OPFS sync access handle (the file stays on disk; tensors are read one at a time)"
+  },
+  {
+   "t": 5661,
+   "name": "loading the model into the backend: WASM heap 32 MB before"
+  },
+  {
+   "t": 6054,
+   "name": "model file ready (network, streamed to OPFS)",
+   "ms": 4251.9,
+   "detail": "81 MB from https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-ggml-browser/models/parakeet-tdt_ctc-110m-Q4_0.gguf; storage path opfs-sync"
+  },
+  {
+   "t": 6055,
+   "name": "model loaded on WebGPU: WebGPU",
+   "ms": 391.4,
+   "detail": "WASM heap 32 MB, 9.9 MB in use"
+  },
+  {
+   "t": 6057,
+   "name": "after load: GPU: weights 81.2 MiB (q4_0 53.8, f16 25.5, f32 2), working 1 MiB, 6 buffers · since load 6 buffers made, 0 destroyed · JS objects 165 made, 0 collected; JS buffers 6 live (82.3 MiB)",
+   "detail": "JS object counting on; collector nudge off"
+  },
+  {
+   "t": 6059,
+   "name": "warm-up pass starting (1.5 s of noise: shaders compile here)"
+  },
+  {
+   "t": 6292,
+   "name": "warm-up pass (1.5 s of noise)",
+   "ms": 227,
+   "detail": "WASM heap 38 MB, 20.1 MB in use"
+  },
+  {
+   "t": 6293,
+   "name": "sizing pass starting (13 s of noise: the working buffer is made for the longest utterance)"
+  },
+  {
+   "t": 6357,
+   "name": "sizing pass (13 s of noise)",
+   "ms": 61,
+   "detail": "GPU: weights 81.2 MiB (q4_0 53.8, f16 25.5, f32 2), working 41 MiB, 7 buffers · since load 8 buffers made, 1 destroyed · JS objects 2558 made, 274 collected; JS buffers 7 live (122.3 MiB)"
+  },
+  {
+   "t": 6762,
+   "name": "recording: context running at 44100 Hz -> 16000 Hz, track 48000 Hz, 1 ch, echoCancellation=false noiseSuppression=false autoGainControl=true"
+  },
+  {
+   "t": 6827,
+   "name": "gate open at 0.1 s: energy",
+   "detail": "noise floor 0, threshold 0.0004"
+  },
+  {
+   "t": 6864,
+   "name": "first pass starting",
+   "detail": "0.1 s of audio"
+  },
+  {
+   "t": 6970,
+   "name": "first pass done",
+   "ms": 105.8,
+   "detail": "0.1 s of audio, WASM heap 46 MB"
+  },
+  {
+   "t": 64414,
+   "name": "utterance 1: 57.5 s of audio, 121 words, ended by idle, opened by gate",
+   "detail": "words committed so far by reason: agree 121; noise floor 0.00000, threshold 0.00040"
+  },
+  {
+   "t": 68393,
+   "name": "stopped after 61.6 s: 210 passes (0 probes), 1 utterances, 121 words committed (agree 121), gate opened 1x by energy and 0x by a probe, 0 held open by the model, max lag 0.4 s, max buffer 8.5 s"
+  }
+ ],
+ "console": [],
+ "provisionalPassMs": {
+  "n": 210,
+  "median": 80.3,
+  "p95": 103.1,
+  "max": 114.4
+ },
+ "finalPassMs": null,
+ "provisionalAudioS": {
+  "n": 210,
+  "median": 5.8,
+  "p95": 6.9,
+  "max": 8.4
+ },
+ "finalAudioS": null,
+ "lagS": {
+  "n": 31,
+  "median": 0.1,
+  "p95": 0.2,
+  "max": 0.3
+ },
+ "maxLagS": 0.4,
+ "memoryAfterWarmup": {
+  "gpuMib": {
+   "first": 194,
+   "last": 200,
+   "min": 194,
+   "max": 200
+  },
+  "rendererRssMib": {
+   "first": 268,
+   "last": 259,
+   "min": 255,
+   "max": 272
+  },
+  "gpuProcRssMib": {
+   "first": 329,
+   "last": 329,
+   "min": 329,
+   "max": 329
+  },
+  "wasmHeapMb": {
+   "first": 46,
+   "last": 46,
+   "min": 46,
+   "max": 46
+  },
+  "jsHeapMb": {
+   "first": 7,
+   "last": 6,
+   "min": 5,
+   "max": 8
+  },
+  "gpuWorkingMb": {
+   "first": 41,
+   "last": 41,
+   "min": 41,
+   "max": 41
+  },
+  "gpuBuffers": {
+   "first": 7,
+   "last": 7,
+   "min": 7,
+   "max": 7
+  },
+  "gpuBuffersMade": {
+   "first": 8,
+   "last": 8,
+   "min": 8,
+   "max": 8
+  }
+ },
+ "gpuAtLoad": {
+  "weightsMb": 81.2,
+  "workingMb": 1,
+  "computeMb": 0,
+  "stagingMb": 1,
+  "liveMb": 82.3,
+  "buffers": 6,
+  "byType": {
+   "f32": 2,
+   "q4_0": 53.8,
+   "f16": 25.5
+  },
+  "created": 6,
+  "destroyed": 0,
+  "createdMb": 82.3,
+  "poolHits": 0,
+  "poolMisses": 0,
+  "pipelines": 1,
+  "layouts": 1,
+  "bindGroups": 0,
+  "encoders": 78,
+  "submits": 78,
+  "writes": 685,
+  "maps": 78,
+  "js": {
+   "registry": true,
+   "objects": 165,
+   "collected": 0,
+   "buffers": 6,
+   "buffersDestroyed": 0,
+   "buffersCollected": 0,
+   "bufferLiveMb": 82.3,
+   "bindGroups": 0,
+   "bindGroupsCollected": 0,
+   "layouts": 1,
+   "encoders": 78,
+   "commandBuffers": 78,
+   "commandBuffersCollected": 0,
+   "pipelines": 1,
+   "shaderModules": 1
+  }
+ },
+ "gpuAfterWarmup": {
+  "weightsMb": 81.2,
+  "workingMb": 41,
+  "computeMb": 40,
+  "stagingMb": 1,
+  "liveMb": 122.3,
+  "buffers": 7,
+  "byType": {
+   "f32": 2,
+   "q4_0": 53.8,
+   "f16": 25.5
+  },
+  "created": 8,
+  "destroyed": 1,
+  "createdMb": 126.2,
+  "poolHits": 0,
+  "poolMisses": 1,
+  "pipelines": 20,
+  "layouts": 20,
+  "bindGroups": 2222,
+  "encoders": 116,
+  "submits": 116,
+  "writes": 793,
+  "maps": 80,
+  "js": {
+   "registry": true,
+   "objects": 2558,
+   "collected": 274,
+   "buffers": 8,
+   "buffersDestroyed": 1,
+   "buffersCollected": 0,
+   "bufferLiveMb": 122.3,
+   "bindGroups": 2222,
+   "bindGroupsCollected": 114,
+   "layouts": 20,
+   "encoders": 116,
+   "commandBuffers": 116,
+   "commandBuffersCollected": 79,
+   "pipelines": 20,
+   "shaderModules": 20
+  }
+ },
+ "gpuEnd": {
+  "weightsMb": 81.2,
+  "workingMb": 41,
+  "computeMb": 40,
+  "stagingMb": 1,
+  "liveMb": 122.3,
+  "buffers": 7,
+  "byType": {
+   "f32": 2,
+   "q4_0": 53.8,
+   "f16": 25.5
+  },
+  "created": 8,
+  "destroyed": 1,
+  "createdMb": 126.2,
+  "poolHits": 210,
+  "poolMisses": 1,
+  "pipelines": 27,
+  "layouts": 27,
+  "bindGroups": 235687,
+  "encoders": 4108,
+  "submits": 4108,
+  "writes": 12135,
+  "maps": 290,
+  "js": {
+   "registry": true,
+   "objects": 247810,
+   "collected": 246580,
+   "buffers": 8,
+   "buffersDestroyed": 1,
+   "buffersCollected": 1,
+   "bufferLiveMb": 122.3,
+   "bindGroups": 235687,
+   "bindGroupsCollected": 234576,
+   "layouts": 27,
+   "encoders": 4108,
+   "commandBuffers": 4108,
+   "commandBuffersCollected": 4088,
+   "pipelines": 27,
+   "shaderModules": 27
+  }
+ },
+ "series": [
+  {
+   "t": 0,
+   "gpuMib": 196,
+   "rendererRssMib": 232,
+   "gpuProcRssMib": 310,
+   "wasmHeapMb": 0,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 2558,
+   "jsGpuCollected": 274,
+   "lagS": 0,
+   "bufferS": 0,
+   "passes": 0,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0,
+    "threshold": 0.0004,
+    "hasSpeech": false,
+    "lastRms": 0,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 2,
+   "gpuMib": 200,
+   "rendererRssMib": 244,
+   "gpuProcRssMib": 317,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 10909,
+   "jsGpuCollected": 10325,
+   "lagS": 0.2,
+   "bufferS": 2,
+   "passes": 7,
+   "words": 0,
+   "vad": {
+    "noiseFloor": 0,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.37958,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 4,
+   "gpuMib": 200,
+   "rendererRssMib": 250,
+   "gpuProcRssMib": 328,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 19078,
+   "jsGpuCollected": 18806,
+   "lagS": 0.2,
+   "bufferS": 4,
+   "passes": 14,
+   "words": 2,
+   "vad": {
+    "noiseFloor": 0,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.01675,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 6,
+   "gpuMib": 194,
+   "rendererRssMib": 252,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 7,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 28414,
+   "jsGpuCollected": 28351,
+   "lagS": 0,
+   "bufferS": 5.2,
+   "passes": 22,
+   "words": 7,
+   "vad": {
+    "noiseFloor": 0.00017,
+    "threshold": 0.00043,
+    "hasSpeech": true,
+    "lastRms": 0.0361,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 8,
+   "gpuMib": 194,
+   "rendererRssMib": 257,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 7,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 36583,
+   "jsGpuCollected": 35087,
+   "lagS": 0.1,
+   "bufferS": 5.6,
+   "passes": 29,
+   "words": 10,
+   "vad": {
+    "noiseFloor": 0.00109,
+    "threshold": 0.00273,
+    "hasSpeech": true,
+    "lastRms": 0.01239,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 10,
+   "gpuMib": 194,
+   "rendererRssMib": 257,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 7,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 45919,
+   "jsGpuCollected": 45514,
+   "lagS": 0,
+   "bufferS": 5.2,
+   "passes": 37,
+   "words": 16,
+   "vad": {
+    "noiseFloor": 0.00007,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.00007,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 12,
+   "gpuMib": 194,
+   "rendererRssMib": 261,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 54088,
+   "jsGpuCollected": 54021,
+   "lagS": 0.2,
+   "bufferS": 7.3,
+   "passes": 44,
+   "words": 17,
+   "vad": {
+    "noiseFloor": 0.00006,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.00511,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 14,
+   "gpuMib": 194,
+   "rendererRssMib": 264,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 7,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 63424,
+   "jsGpuCollected": 63357,
+   "lagS": 0.1,
+   "bufferS": 5.6,
+   "passes": 52,
+   "words": 24,
+   "vad": {
+    "noiseFloor": 0.00006,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.00368,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 16,
+   "gpuMib": 194,
+   "rendererRssMib": 265,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 7,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 71593,
+   "jsGpuCollected": 69196,
+   "lagS": 0.1,
+   "bufferS": 5.9,
+   "passes": 59,
+   "words": 27,
+   "vad": {
+    "noiseFloor": 0.00006,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.06277,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 18,
+   "gpuMib": 194,
+   "rendererRssMib": 267,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 7,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 80929,
+   "jsGpuCollected": 79699,
+   "lagS": 0.1,
+   "bufferS": 6.2,
+   "passes": 67,
+   "words": 31,
+   "vad": {
+    "noiseFloor": 0.00006,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.00219,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 21,
+   "gpuMib": 194,
+   "rendererRssMib": 268,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 7,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 89098,
+   "jsGpuCollected": 87866,
+   "lagS": 0,
+   "bufferS": 6,
+   "passes": 74,
+   "words": 34,
+   "vad": {
+    "noiseFloor": 0.00006,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.06877,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 23,
+   "gpuMib": 194,
+   "rendererRssMib": 272,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 8,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 98434,
+   "jsGpuCollected": 94866,
+   "lagS": 0.1,
+   "bufferS": 6.3,
+   "passes": 82,
+   "words": 37,
+   "vad": {
+    "noiseFloor": 0.00007,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.05594,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 25,
+   "gpuMib": 194,
+   "rendererRssMib": 255,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 106603,
+   "jsGpuCollected": 105369,
+   "lagS": 0.2,
+   "bufferS": 6.2,
+   "passes": 89,
+   "words": 42,
+   "vad": {
+    "noiseFloor": 0.00009,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.15524,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 27,
+   "gpuMib": 194,
+   "rendererRssMib": 256,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 115939,
+   "jsGpuCollected": 115872,
+   "lagS": 0.1,
+   "bufferS": 5.2,
+   "passes": 97,
+   "words": 47,
+   "vad": {
+    "noiseFloor": 0.00008,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.04143,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 29,
+   "gpuMib": 194,
+   "rendererRssMib": 257,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 124108,
+   "jsGpuCollected": 121711,
+   "lagS": 0.1,
+   "bufferS": 6.4,
+   "passes": 104,
+   "words": 50,
+   "vad": {
+    "noiseFloor": 0.00008,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.06437,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 31,
+   "gpuMib": 194,
+   "rendererRssMib": 257,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 133444,
+   "jsGpuCollected": 132214,
+   "lagS": 0.1,
+   "bufferS": 5.9,
+   "passes": 112,
+   "words": 58,
+   "vad": {
+    "noiseFloor": 0.00011,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.03054,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 33,
+   "gpuMib": 194,
+   "rendererRssMib": 259,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 141613,
+   "jsGpuCollected": 140379,
+   "lagS": 0.2,
+   "bufferS": 5.6,
+   "passes": 119,
+   "words": 64,
+   "vad": {
+    "noiseFloor": 0.00011,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.00461,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 35,
+   "gpuMib": 194,
+   "rendererRssMib": 258,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 150949,
+   "jsGpuCollected": 147381,
+   "lagS": 0.1,
+   "bufferS": 6.2,
+   "passes": 127,
+   "words": 65,
+   "vad": {
+    "noiseFloor": 0.00007,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.0357,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 37,
+   "gpuMib": 194,
+   "rendererRssMib": 264,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 159118,
+   "jsGpuCollected": 159053,
+   "lagS": 0.1,
+   "bufferS": 5.2,
+   "passes": 134,
+   "words": 74,
+   "vad": {
+    "noiseFloor": 0.00007,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.08246,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 39,
+   "gpuMib": 194,
+   "rendererRssMib": 264,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 168454,
+   "jsGpuCollected": 161389,
+   "lagS": 0,
+   "bufferS": 5.4,
+   "passes": 142,
+   "words": 79,
+   "vad": {
+    "noiseFloor": 0.00034,
+    "threshold": 0.00085,
+    "hasSpeech": true,
+    "lastRms": 0.00034,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 41,
+   "gpuMib": 194,
+   "rendererRssMib": 264,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 176623,
+   "jsGpuCollected": 171892,
+   "lagS": 0.2,
+   "bufferS": 6,
+   "passes": 149,
+   "words": 82,
+   "vad": {
+    "noiseFloor": 0.0002,
+    "threshold": 0.00051,
+    "hasSpeech": true,
+    "lastRms": 0.06152,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 43,
+   "gpuMib": 194,
+   "rendererRssMib": 263,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 185959,
+   "jsGpuCollected": 182395,
+   "lagS": 0.1,
+   "bufferS": 5.6,
+   "passes": 157,
+   "words": 89,
+   "vad": {
+    "noiseFloor": 0.0002,
+    "threshold": 0.00051,
+    "hasSpeech": true,
+    "lastRms": 0.0589,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 45,
+   "gpuMib": 194,
+   "rendererRssMib": 263,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 194128,
+   "jsGpuCollected": 192898,
+   "lagS": 0.1,
+   "bufferS": 5.2,
+   "passes": 164,
+   "words": 98,
+   "vad": {
+    "noiseFloor": 0.00019,
+    "threshold": 0.00047,
+    "hasSpeech": true,
+    "lastRms": 0.00016,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 47,
+   "gpuMib": 194,
+   "rendererRssMib": 265,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 203464,
+   "jsGpuCollected": 201063,
+   "lagS": 0.1,
+   "bufferS": 6,
+   "passes": 172,
+   "words": 100,
+   "vad": {
+    "noiseFloor": 0.00012,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.02977,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 49,
+   "gpuMib": 194,
+   "rendererRssMib": 265,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 211633,
+   "jsGpuCollected": 204568,
+   "lagS": 0.2,
+   "bufferS": 6.1,
+   "passes": 179,
+   "words": 102,
+   "vad": {
+    "noiseFloor": 0.00012,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.00457,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 51,
+   "gpuMib": 194,
+   "rendererRssMib": 265,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 220969,
+   "jsGpuCollected": 215071,
+   "lagS": 0.1,
+   "bufferS": 6.7,
+   "passes": 187,
+   "words": 106,
+   "vad": {
+    "noiseFloor": 0.00015,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.02267,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 53,
+   "gpuMib": 194,
+   "rendererRssMib": 263,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 229138,
+   "jsGpuCollected": 225574,
+   "lagS": 0.2,
+   "bufferS": 6.1,
+   "passes": 194,
+   "words": 113,
+   "vad": {
+    "noiseFloor": 0.00009,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.03171,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 55,
+   "gpuMib": 194,
+   "rendererRssMib": 261,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 238474,
+   "jsGpuCollected": 236077,
+   "lagS": 0,
+   "bufferS": 5.8,
+   "passes": 202,
+   "words": 118,
+   "vad": {
+    "noiseFloor": 0.00008,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0.01644,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 58,
+   "gpuMib": 194,
+   "rendererRssMib": 258,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 5,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 246643,
+   "jsGpuCollected": 246580,
+   "lagS": 0.3,
+   "bufferS": 6.1,
+   "passes": 209,
+   "words": 120,
+   "vad": {
+    "noiseFloor": 0,
+    "threshold": 0.0004,
+    "hasSpeech": true,
+    "lastRms": 0,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 60,
+   "gpuMib": 199,
+   "rendererRssMib": 259,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 247810,
+   "jsGpuCollected": 246580,
+   "lagS": 0,
+   "bufferS": 2,
+   "passes": 210,
+   "words": 121,
+   "vad": {
+    "noiseFloor": 0,
+    "threshold": 0.0004,
+    "hasSpeech": false,
+    "lastRms": 0,
+    "gateMisses": 0
+   }
+  },
+  {
+   "t": 62,
+   "gpuMib": 200,
+   "rendererRssMib": 259,
+   "gpuProcRssMib": 329,
+   "wasmHeapMb": 46,
+   "jsHeapMb": 6,
+   "gpuWorkingMb": 41,
+   "gpuBuffers": 7,
+   "gpuBuffersMade": 8,
+   "jsGpuObjects": 247810,
+   "jsGpuCollected": 246580,
+   "lagS": 0,
+   "bufferS": 3.1,
+   "passes": 210,
+   "words": 121,
+   "vad": {
+    "noiseFloor": 0,
+    "threshold": 0.0004,
+    "hasSpeech": false,
+    "lastRms": 0,
+    "gateMisses": 0
+   }
+  }
+ ],
+ "passes": [
+  [
+   105.8,
+   0.1,
+   0,
+   0.1,
+   0.6
+  ],
+  [
+   43.2,
+   0.4,
+   0,
+   0.4,
+   0.9
+  ],
+  [
+   28.2,
+   0.7,
+   0,
+   0.3,
+   0.8
+  ],
+  [
+   28.3,
+   1,
+   0,
+   0.5,
+   1.4
+  ],
+  [
+   46,
+   1.2,
+   0,
+   0.8,
+   1.5
+  ],
+  [
+   29.8,
+   1.5,
+   0,
+   0.8,
+   2
+  ],
+  [
+   31.7,
+   1.8,
+   0,
+   0.9,
+   1.3
+  ],
+  [
+   29.9,
+   2.1,
+   0,
+   1.7,
+   1.6
+  ],
+  [
+   31.8,
+   2.4,
+   0,
+   1.3,
+   2.8
+  ],
+  [
+   69.2,
+   2.6,
+   0,
+   2.2,
+   7.3
+  ],
+  [
+   68.9,
+   2.9,
+   0,
+   1.6,
+   6.3
+  ],
+  [
+   80.3,
+   3.2,
+   0,
+   4.3,
+   6.1
+  ],
+  [
+   73.6,
+   3.4,
+   0,
+   1.7,
+   7.3
+  ],
+  [
+   71.1,
+   3.7,
+   0,
+   1.6,
+   8.6
+  ],
+  [
+   83.1,
+   4,
+   0,
+   2.6,
+   15.5
+  ],
+  [
+   75.3,
+   4.3,
+   0,
+   2.9,
+   9
+  ],
+  [
+   73.5,
+   4.6,
+   0,
+   2.8,
+   11
+  ],
+  [
+   83.2,
+   4.8,
+   0,
+   3.4,
+   13.5
+  ],
+  [
+   98.1,
+   5.1,
+   0,
+   3.4,
+   14.9
+  ],
+  [
+   78.4,
+   5.4,
+   0,
+   6.1,
+   16
+  ],
+  [
+   80.8,
+   5.6,
+   0,
+   3.8,
+   16
+  ],
+  [
+   80.2,
+   5.9,
+   0,
+   2.7,
+   18.6
+  ],
+  [
+   86.1,
+   5.4,
+   0,
+   2.7,
+   17.6
+  ],
+  [
+   80.7,
+   5.7,
+   0,
+   3,
+   17.4
+  ],
+  [
+   78.6,
+   6,
+   0,
+   3.7,
+   16.6
+  ],
+  [
+   79.5,
+   5.7,
+   0,
+   2.9,
+   17.7
+  ],
+  [
+   109.8,
+   6,
+   0,
+   4.5,
+   18.5
+  ],
+  [
+   86.4,
+   6.3,
+   0,
+   4.4,
+   18.5
+  ],
+  [
+   84.8,
+   5.4,
+   0,
+   3.2,
+   21.3
+  ],
+  [
+   81.1,
+   5.7,
+   0,
+   2.7,
+   18.9
+  ],
+  [
+   82.7,
+   6,
+   0,
+   3,
+   19.4
+  ],
+  [
+   93.1,
+   6.2,
+   0,
+   3.2,
+   24.3
+  ],
+  [
+   81.4,
+   5.8,
+   0,
+   4.1,
+   17.6
+  ],
+  [
+   85.6,
+   6.1,
+   0,
+   3.8,
+   19.4
+  ],
+  [
+   101.4,
+   5.6,
+   0,
+   3,
+   19.5
+  ],
+  [
+   103.3,
+   5.9,
+   0,
+   3.6,
+   19.2
+  ],
+  [
+   76.7,
+   5.1,
+   0,
+   4,
+   15.4
+  ],
+  [
+   78,
+   5.4,
+   0,
+   2.9,
+   16.5
+  ],
+  [
+   83.3,
+   5.7,
+   0,
+   3,
+   19.5
+  ],
+  [
+   82.5,
+   6,
+   0,
+   3.9,
+   17.2
+  ],
+  [
+   89.7,
+   6.2,
+   0,
+   3.1,
+   20.9
+  ],
+  [
+   85.5,
+   6.5,
+   0,
+   3.1,
+   23
+  ],
+  [
+   93.1,
+   6.8,
+   0,
+   4.6,
+   24.6
+  ],
+  [
+   110.6,
+   7.1,
+   0,
+   5.8,
+   23
+  ],
+  [
+   86.2,
+   7.3,
+   0,
+   5.5,
+   22.4
+  ],
+  [
+   89.6,
+   7.6,
+   0,
+   3.6,
+   22.9
+  ],
+  [
+   85.7,
+   7.9,
+   0,
+   3.7,
+   22
+  ],
+  [
+   93.5,
+   8.2,
+   0,
+   6.6,
+   26.2
+  ],
+  [
+   91.9,
+   8.4,
+   0,
+   4.7,
+   23.5
+  ],
+  [
+   79.8,
+   5.8,
+   0,
+   4.6,
+   18.4
+  ],
+  [
+   76.2,
+   6,
+   0,
+   2.9,
+   18.1
+  ],
+  [
+   82.7,
+   5.5,
+   0,
+   3.1,
+   15.7
+  ],
+  [
+   83.9,
+   5.8,
+   0,
+   4.5,
+   13.5
+  ],
+  [
+   87.9,
+   6,
+   0,
+   4,
+   15
+  ],
+  [
+   103.1,
+   6,
+   0,
+   3.5,
+   18.9
+  ],
+  [
+   83.3,
+   6.3,
+   0,
+   3.2,
+   16.6
+  ],
+  [
+   78.4,
+   6.6,
+   0,
+   3.3,
+   15.5
+  ],
+  [
+   84.5,
+   5.5,
+   0,
+   4,
+   14.9
+  ],
+  [
+   84.9,
+   5.8,
+   0,
+   3.7,
+   18.4
+  ],
+  [
+   81.6,
+   6,
+   0,
+   4.5,
+   17.2
+  ],
+  [
+   83,
+   6.3,
+   0,
+   4.5,
+   17.5
+  ],
+  [
+   74.8,
+   5.6,
+   0,
+   3.7,
+   12.9
+  ],
+  [
+   101.4,
+   5.9,
+   0,
+   3.9,
+   13.3
+  ],
+  [
+   99.2,
+   6.2,
+   0,
+   3.2,
+   15.8
+  ],
+  [
+   77.3,
+   5.6,
+   0,
+   2.8,
+   13.2
+  ],
+  [
+   78.1,
+   5.9,
+   0,
+   3.8,
+   14.3
+  ],
+  [
+   79.8,
+   6.2,
+   0,
+   3,
+   13.9
+  ],
+  [
+   76.8,
+   6.4,
+   0,
+   3.3,
+   15.6
+  ],
+  [
+   78.4,
+   6.7,
+   0,
+   4.7,
+   15.8
+  ],
+  [
+   73.3,
+   5.4,
+   0,
+   3.9,
+   14
+  ],
+  [
+   73.5,
+   5.7,
+   0,
+   2.7,
+   12.8
+  ],
+  [
+   97.3,
+   6,
+   0,
+   3.5,
+   14.6
+  ],
+  [
+   72.5,
+   6.2,
+   0,
+   3.1,
+   15.3
+  ],
+  [
+   75.2,
+   6.5,
+   0,
+   4.4,
+   15.4
+  ],
+  [
+   76.9,
+   6.2,
+   0,
+   5,
+   14.4
+  ],
+  [
+   77.7,
+   6.3,
+   0,
+   3.8,
+   13.9
+  ],
+  [
+   78.7,
+   6.6,
+   0,
+   3.1,
+   20.3
+  ],
+  [
+   75.4,
+   5.9,
+   0,
+   3.4,
+   13.8
+  ],
+  [
+   71.6,
+   6.1,
+   0,
+   2.9,
+   15.5
+  ],
+  [
+   97.5,
+   5.7,
+   0,
+   2.7,
+   18
+  ],
+  [
+   79.8,
+   5.9,
+   0,
+   3.9,
+   15.4
+  ],
+  [
+   80.5,
+   6.2,
+   0,
+   6.9,
+   15.8
+  ],
+  [
+   81.8,
+   6.5,
+   0,
+   3.3,
+   18.8
+  ],
+  [
+   78.2,
+   6.2,
+   0,
+   3,
+   16.1
+  ],
+  [
+   84.5,
+   5.6,
+   0,
+   3.4,
+   14.8
+  ],
+  [
+   79.2,
+   5.9,
+   0,
+   4.3,
+   16.5
+  ],
+  [
+   84,
+   6.2,
+   0,
+   5,
+   19.6
+  ],
+  [
+   91.5,
+   5.7,
+   0,
+   3,
+   13.8
+  ],
+  [
+   80.8,
+   6,
+   0,
+   3.2,
+   14.7
+  ],
+  [
+   79.7,
+   6.2,
+   0,
+   4.6,
+   15.8
+  ],
+  [
+   76.7,
+   5.9,
+   0,
+   3,
+   13.1
+  ],
+  [
+   73.2,
+   5.3,
+   0,
+   2.6,
+   13
+  ],
+  [
+   76.6,
+   5.6,
+   0,
+   3.9,
+   15
+  ],
+  [
+   77.6,
+   5.8,
+   0,
+   4.1,
+   11.2
+  ],
+  [
+   80.8,
+   6.1,
+   0,
+   3,
+   15
+  ],
+  [
+   84.6,
+   5.8,
+   0,
+   3,
+   14.4
+  ],
+  [
+   91.7,
+   5.1,
+   0,
+   2.6,
+   11.8
+  ],
+  [
+   72,
+   5.4,
+   0,
+   3.9,
+   11.6
+  ],
+  [
+   71.6,
+   5.7,
+   0,
+   2.6,
+   13
+  ],
+  [
+   74.1,
+   6,
+   0,
+   3.5,
+   12.6
+  ],
+  [
+   80.3,
+   6.2,
+   0,
+   4.5,
+   17.1
+  ],
+  [
+   71.5,
+   5.8,
+   0,
+   2.9,
+   12.9
+  ],
+  [
+   78,
+   6,
+   0,
+   3.4,
+   11.6
+  ],
+  [
+   78.6,
+   6.3,
+   0,
+   3.3,
+   13.5
+  ],
+  [
+   103.9,
+   6.6,
+   0,
+   5.4,
+   14
+  ],
+  [
+   78.1,
+   6.9,
+   0,
+   4.7,
+   15.2
+  ],
+  [
+   74.9,
+   5.4,
+   0,
+   4.2,
+   13.4
+  ],
+  [
+   80.6,
+   5.7,
+   0,
+   3.3,
+   14.7
+  ],
+  [
+   74.6,
+   6,
+   0,
+   3.1,
+   14
+  ],
+  [
+   69.4,
+   5.2,
+   0,
+   2.7,
+   12.9
+  ],
+  [
+   78,
+   5.5,
+   0,
+   2.7,
+   17.8
+  ],
+  [
+   82.4,
+   5.8,
+   0,
+   3.4,
+   16.1
+  ],
+  [
+   101.7,
+   6.1,
+   0,
+   4.1,
+   21.4
+  ],
+  [
+   96.8,
+   6.4,
+   0,
+   2.9,
+   16.9
+  ],
+  [
+   82.1,
+   5.9,
+   0,
+   3.4,
+   17.1
+  ],
+  [
+   74.5,
+   5.4,
+   0,
+   3.5,
+   14.1
+  ],
+  [
+   75.2,
+   5.6,
+   0,
+   3.2,
+   15.1
+  ],
+  [
+   74.3,
+   5.9,
+   0,
+   3.3,
+   14.5
+  ],
+  [
+   72.2,
+   5.4,
+   0,
+   2.4,
+   15.5
+  ],
+  [
+   82.3,
+   5.7,
+   0,
+   5.2,
+   17.5
+  ],
+  [
+   85.4,
+   5.9,
+   0,
+   3.3,
+   17.2
+  ],
+  [
+   98.9,
+   6.2,
+   0,
+   3.9,
+   17.9
+  ],
+  [
+   78.2,
+   6.5,
+   0,
+   3.8,
+   14.9
+  ],
+  [
+   71,
+   5.3,
+   0,
+   2.3,
+   13.1
+  ],
+  [
+   76.5,
+   5.6,
+   0,
+   3.7,
+   15
+  ],
+  [
+   76.3,
+   5.9,
+   0,
+   3.1,
+   15.8
+  ],
+  [
+   81.7,
+   6.2,
+   0,
+   3.4,
+   18
+  ],
+  [
+   86.5,
+   6.4,
+   0,
+   4.7,
+   17.7
+  ],
+  [
+   84.1,
+   6.7,
+   0,
+   3.3,
+   18.3
+  ],
+  [
+   95,
+   5.6,
+   0,
+   2.6,
+   15.3
+  ],
+  [
+   80.1,
+   5.8,
+   0,
+   2.8,
+   15.7
+  ],
+  [
+   80.3,
+   6.1,
+   0,
+   3.4,
+   17.3
+  ],
+  [
+   82.7,
+   6,
+   0,
+   4.4,
+   16.9
+  ],
+  [
+   77.8,
+   6.2,
+   0,
+   3,
+   14.9
+  ],
+  [
+   82.4,
+   5.4,
+   0,
+   4.3,
+   16.4
+  ],
+  [
+   81.5,
+   5.7,
+   0,
+   2.8,
+   16.6
+  ],
+  [
+   90.1,
+   5.9,
+   0,
+   3.3,
+   17.6
+  ],
+  [
+   79.7,
+   5.4,
+   0,
+   3.2,
+   14.3
+  ],
+  [
+   97.9,
+   5.7,
+   0,
+   3.3,
+   17.6
+  ],
+  [
+   83.8,
+   6,
+   0,
+   2.8,
+   20.8
+  ],
+  [
+   94.1,
+   6.2,
+   0,
+   4.7,
+   24.4
+  ],
+  [
+   75.3,
+   5.3,
+   0,
+   3.6,
+   15.7
+  ],
+  [
+   91,
+   5.6,
+   0,
+   3.7,
+   29.2
+  ],
+  [
+   85.1,
+   5.8,
+   0,
+   4.9,
+   19.9
+  ],
+  [
+   78.9,
+   6.1,
+   0,
+   4.3,
+   16.1
+  ],
+  [
+   86.6,
+   6.4,
+   0,
+   4.7,
+   18.4
+  ],
+  [
+   104.3,
+   5.2,
+   0,
+   3.7,
+   15.7
+  ],
+  [
+   79.2,
+   5.5,
+   0,
+   2.8,
+   18.2
+  ],
+  [
+   81.4,
+   5.8,
+   0,
+   3.3,
+   17
+  ],
+  [
+   80.1,
+   6,
+   0,
+   4.2,
+   18
+  ],
+  [
+   82.6,
+   5.8,
+   0,
+   3.5,
+   20.9
+  ],
+  [
+   79.7,
+   6.1,
+   0,
+   3.3,
+   17.5
+  ],
+  [
+   77.2,
+   5.5,
+   0,
+   2.6,
+   15.3
+  ],
+  [
+   80.8,
+   5.8,
+   0,
+   3,
+   18.5
+  ],
+  [
+   114.4,
+   5.8,
+   0,
+   3.5,
+   17.6
+  ],
+  [
+   79.4,
+   5.3,
+   0,
+   3.2,
+   16
+  ],
+  [
+   81.2,
+   5.6,
+   0,
+   3.6,
+   17.2
+  ],
+  [
+   79.3,
+   5.8,
+   0,
+   2.9,
+   16.4
+  ],
+  [
+   85.7,
+   6.1,
+   0,
+   3.8,
+   20.3
+  ],
+  [
+   79.5,
+   5.8,
+   0,
+   3.4,
+   17.3
+  ],
+  [
+   82.6,
+   6.1,
+   0,
+   4.6,
+   18.8
+  ],
+  [
+   76.3,
+   5.6,
+   0,
+   2.9,
+   15.4
+  ],
+  [
+   85.2,
+   5.8,
+   0,
+   3.3,
+   17.7
+  ],
+  [
+   106.9,
+   5.1,
+   0,
+   2.7,
+   18.5
+  ],
+  [
+   79,
+   5.4,
+   0,
+   3,
+   16.4
+  ],
+  [
+   78.4,
+   5.6,
+   0,
+   5.2,
+   15.7
+  ],
+  [
+   74.2,
+   5.9,
+   0,
+   3.3,
+   14.5
+  ],
+  [
+   72,
+   5,
+   0,
+   3.9,
+   12.9
+  ],
+  [
+   80.1,
+   5.3,
+   0,
+   6.6,
+   15.9
+  ],
+  [
+   76.1,
+   5.6,
+   0,
+   4.5,
+   14.4
+  ],
+  [
+   76,
+   5.8,
+   0,
+   3,
+   13.2
+  ],
+  [
+   109.1,
+   6.1,
+   0,
+   3.9,
+   15
+  ],
+  [
+   75.7,
+   6.1,
+   0,
+   3.7,
+   14.9
+  ],
+  [
+   79.1,
+   5.4,
+   0,
+   3.4,
+   14.1
+  ],
+  [
+   72.2,
+   5.7,
+   0,
+   3.9,
+   13.7
+  ],
+  [
+   72.7,
+   6,
+   0,
+   4.1,
+   11.6
+  ],
+  [
+   78.7,
+   6.3,
+   0,
+   5,
+   14.9
+  ],
+  [
+   72.5,
+   5.6,
+   0,
+   3.1,
+   14.5
+  ],
+  [
+   73.6,
+   5.9,
+   0,
+   2.9,
+   15.5
+  ],
+  [
+   94.4,
+   6.2,
+   0,
+   3.5,
+   15
+  ],
+  [
+   79.2,
+   5.9,
+   0,
+   3.4,
+   17.7
+  ],
+  [
+   75.4,
+   6.2,
+   0,
+   3.2,
+   15
+  ],
+  [
+   82.2,
+   5.6,
+   0,
+   3.3,
+   15.3
+  ],
+  [
+   79.1,
+   5.8,
+   0,
+   6,
+   14.6
+  ],
+  [
+   81.9,
+   6.1,
+   0,
+   5.3,
+   17.2
+  ],
+  [
+   79.8,
+   6.4,
+   0,
+   4.3,
+   18.4
+  ],
+  [
+   83.8,
+   6.6,
+   0,
+   3.9,
+   20.1
+  ],
+  [
+   87.2,
+   6.9,
+   0,
+   3.6,
+   16.8
+  ],
+  [
+   105,
+   7.2,
+   0,
+   4.9,
+   13.5
+  ],
+  [
+   88.5,
+   7.4,
+   0,
+   4.9,
+   17
+  ],
+  [
+   91.7,
+   7.7,
+   0,
+   5.2,
+   19.6
+  ],
+  [
+   97,
+   5.9,
+   0,
+   3.2,
+   17.9
+  ],
+  [
+   78.1,
+   5.7,
+   0,
+   3.2,
+   14.3
+  ],
+  [
+   84.2,
+   6,
+   0,
+   3.4,
+   15.7
+  ],
+  [
+   88.9,
+   6.2,
+   0,
+   4.2,
+   22.8
+  ],
+  [
+   81.4,
+   5.6,
+   0,
+   3.1,
+   16.9
+  ],
+  [
+   96.6,
+   5.9,
+   0,
+   2.7,
+   15.3
+  ],
+  [
+   81.4,
+   6.2,
+   0,
+   4.2,
+   18
+  ],
+  [
+   81.7,
+   5.9,
+   0,
+   2.9,
+   19.3
+  ],
+  [
+   74.3,
+   5.2,
+   0,
+   2.9,
+   12.6
+  ],
+  [
+   81.5,
+   5.5,
+   0,
+   2.6,
+   15.1
+  ],
+  [
+   78.9,
+   5.8,
+   0,
+   3,
+   15.6
+  ],
+  [
+   82.8,
+   6,
+   0,
+   4,
+   17.8
+  ],
+  [
+   77,
+   6.3,
+   0,
+   2.9,
+   15.7
+  ],
+  [
+   77.9,
+   5.3,
+   0,
+   4.2,
+   11.7
+  ],
+  [
+   99.4,
+   5.6,
+   0,
+   2.7,
+   19.9
+  ],
+  [
+   84.5,
+   5.8,
+   0,
+   5.8,
+   16.1
+  ],
+  [
+   77.9,
+   5.6,
+   0,
+   3.5,
+   12.2
+  ],
+  [
+   77.2,
+   5.8,
+   0,
+   3,
+   12
+  ],
+  [
+   86.3,
+   6.1,
+   0,
+   2.9,
+   14.4
+  ]
+ ],
+ "offline": {
+  "text": "Welcome to Quirk Quid Quill Inc, where finance meets innovation, explore diverse offerings from the P three Quatro, a unique investment portfolio quadrant to the O three Omni, a platform for intricate derivative trading strategies. Delve into unconventional bond markets with our B three Bond X and our and experience non standard equity trading with E three equity. Personalize your wealth management with W three Wrap Z and anticipate market trends with the OE two outlier our forward thinking financial forecasting tool. Explore venture capital world with U three Unifund or move your money with the M three Mover or sophisticated monetary transfer module. At CorkidQuill Inc, we turn complex finance into creative solutions. Join us in redefining financial services.",
+  "words": [
+   {
+    "w": "Welcome",
+    "s": 1.92,
+    "e": 2.32,
+    "p": 0.992
+   },
+   {
+    "w": "to",
+    "s": 2.4,
+    "e": 2.48,
+    "p": 0.997
+   },
+   {
+    "w": "Quirk",
+    "s": 2.48,
+    "e": 3.04,
+    "p": 0.855
+   },
+   {
+    "w": "Quid",
+    "s": 3.28,
+    "e": 3.76,
+    "p": 0.855
+   },
+   {
+    "w": "Quill",
+    "s": 3.92,
+    "e": 4.24,
+    "p": 0.853
+   },
+   {
+    "w": "Inc,",
+    "s": 4.4,
+    "e": 4.8,
+    "p": 0.88
+   },
+   {
+    "w": "where",
+    "s": 4.88,
+    "e": 5.04,
+    "p": 0.99
+   },
+   {
+    "w": "finance",
+    "s": 5.12,
+    "e": 5.36,
+    "p": 0.936
+   },
+   {
+    "w": "meets",
+    "s": 5.52,
+    "e": 5.68,
+    "p": 0.966
+   },
+   {
+    "w": "innovation,",
+    "s": 5.84,
+    "e": 6.48,
+    "p": 0.878
+   },
+   {
+    "w": "explore",
+    "s": 6.48,
+    "e": 6.96,
+    "p": 0.986
+   },
+   {
+    "w": "diverse",
+    "s": 7.04,
+    "e": 7.52,
+    "p": 0.985
+   },
+   {
+    "w": "offerings",
+    "s": 7.52,
+    "e": 7.84,
+    "p": 0.993
+   },
+   {
+    "w": "from",
+    "s": 8.16,
+    "e": 8.32,
+    "p": 0.994
+   },
+   {
+    "w": "the",
+    "s": 8.4,
+    "e": 8.56,
+    "p": 0.988
+   },
+   {
+    "w": "P",
+    "s": 8.56,
+    "e": 8.64,
+    "p": 0.962
+   },
+   {
+    "w": "three",
+    "s": 8.8,
+    "e": 8.88,
+    "p": 0.978
+   },
+   {
+    "w": "Quatro,",
+    "s": 9.04,
+    "e": 10.16,
+    "p": 0.894
+   },
+   {
+    "w": "a",
+    "s": 10.24,
+    "e": 10.32,
+    "p": 0.963
+   },
+   {
+    "w": "unique",
+    "s": 10.32,
+    "e": 10.72,
+    "p": 0.913
+   },
+   {
+    "w": "investment",
+    "s": 10.8,
+    "e": 11.28,
+    "p": 0.976
+   },
+   {
+    "w": "portfolio",
+    "s": 11.36,
+    "e": 12,
+    "p": 0.936
+   },
+   {
+    "w": "quadrant",
+    "s": 12.16,
+    "e": 12.8,
+    "p": 0.938
+   },
+   {
+    "w": "to",
+    "s": 12.96,
+    "e": 13.12,
+    "p": 0.997
+   },
+   {
+    "w": "the",
+    "s": 13.12,
+    "e": 13.28,
+    "p": 0.987
+   },
+   {
+    "w": "O",
+    "s": 13.52,
+    "e": 13.6,
+    "p": 0.895
+   },
+   {
+    "w": "three",
+    "s": 14,
+    "e": 14.08,
+    "p": 0.932
+   },
+   {
+    "w": "Omni,",
+    "s": 14.48,
+    "e": 15.44,
+    "p": 0.886
+   },
+   {
+    "w": "a",
+    "s": 15.52,
+    "e": 15.68,
+    "p": 0.992
+   },
+   {
+    "w": "platform",
+    "s": 15.68,
+    "e": 16.24,
+    "p": 0.969
+   },
+   {
+    "w": "for",
+    "s": 16.32,
+    "e": 16.56,
+    "p": 1
+   },
+   {
+    "w": "intricate",
+    "s": 17.12,
+    "e": 17.6,
+    "p": 0.903
+   },
+   {
+    "w": "derivative",
+    "s": 17.84,
+    "e": 18.32,
+    "p": 0.99
+   },
+   {
+    "w": "trading",
+    "s": 18.56,
+    "e": 18.96,
+    "p": 0.998
+   },
+   {
+    "w": "strategies.",
+    "s": 19.04,
+    "e": 20.08,
+    "p": 0.836
+   },
+   {
+    "w": "Delve",
+    "s": 20.08,
+    "e": 20.48,
+    "p": 0.977
+   },
+   {
+    "w": "into",
+    "s": 20.48,
+    "e": 20.56,
+    "p": 0.785
+   },
+   {
+    "w": "unconventional",
+    "s": 20.8,
+    "e": 21.52,
+    "p": 0.984
+   },
+   {
+    "w": "bond",
+    "s": 21.52,
+    "e": 21.84,
+    "p": 0.994
+   },
+   {
+    "w": "markets",
+    "s": 21.92,
+    "e": 22.16,
+    "p": 0.976
+   },
+   {
+    "w": "with",
+    "s": 22.4,
+    "e": 22.64,
+    "p": 0.999
+   },
+   {
+    "w": "our",
+    "s": 22.72,
+    "e": 22.96,
+    "p": 0.987
+   },
+   {
+    "w": "B",
+    "s": 23.28,
+    "e": 23.44,
+    "p": 0.957
+   },
+   {
+    "w": "three",
+    "s": 23.6,
+    "e": 23.68,
+    "p": 0.975
+   },
+   {
+    "w": "Bond",
+    "s": 24,
+    "e": 24.24,
+    "p": 0.856
+   },
+   {
+    "w": "X",
+    "s": 24.56,
+    "e": 24.72,
+    "p": 0.835
+   },
+   {
+    "w": "and",
+    "s": 25.12,
+    "e": 25.28,
+    "p": 0.925
+   },
+   {
+    "w": "our",
+    "s": 25.28,
+    "e": 25.44,
+    "p": 0.88
+   },
+   {
+    "w": "and",
+    "s": 25.76,
+    "e": 25.92,
+    "p": 0.867
+   },
+   {
+    "w": "experience",
+    "s": 26,
+    "e": 26.4,
+    "p": 0.945
+   },
+   {
+    "w": "non",
+    "s": 26.64,
+    "e": 26.96,
+    "p": 0.988
+   },
+   {
+    "w": "standard",
+    "s": 26.96,
+    "e": 27.12,
+    "p": 0.889
+   },
+   {
+    "w": "equity",
+    "s": 27.36,
+    "e": 27.6,
+    "p": 0.963
+   },
+   {
+    "w": "trading",
+    "s": 27.76,
+    "e": 28.08,
+    "p": 0.998
+   },
+   {
+    "w": "with",
+    "s": 28.08,
+    "e": 28.16,
+    "p": 0.907
+   },
+   {
+    "w": "E",
+    "s": 28.32,
+    "e": 28.4,
+    "p": 0.907
+   },
+   {
+    "w": "three",
+    "s": 28.48,
+    "e": 28.56,
+    "p": 0.944
+   },
+   {
+    "w": "equity.",
+    "s": 28.72,
+    "e": 29.44,
+    "p": 0.839
+   },
+   {
+    "w": "Personalize",
+    "s": 29.52,
+    "e": 30.16,
+    "p": 0.951
+   },
+   {
+    "w": "your",
+    "s": 30.16,
+    "e": 30.32,
+    "p": 0.998
+   },
+   {
+    "w": "wealth",
+    "s": 30.32,
+    "e": 30.56,
+    "p": 0.978
+   },
+   {
+    "w": "management",
+    "s": 30.64,
+    "e": 31.2,
+    "p": 0.929
+   },
+   {
+    "w": "with",
+    "s": 31.2,
+    "e": 31.36,
+    "p": 0.999
+   },
+   {
+    "w": "W",
+    "s": 31.36,
+    "e": 31.52,
+    "p": 0.883
+   },
+   {
+    "w": "three",
+    "s": 31.76,
+    "e": 31.84,
+    "p": 0.982
+   },
+   {
+    "w": "Wrap",
+    "s": 32.4,
+    "e": 32.72,
+    "p": 0.789
+   },
+   {
+    "w": "Z",
+    "s": 32.96,
+    "e": 33.12,
+    "p": 0.874
+   },
+   {
+    "w": "and",
+    "s": 33.52,
+    "e": 33.68,
+    "p": 0.98
+   },
+   {
+    "w": "anticipate",
+    "s": 33.76,
+    "e": 34.24,
+    "p": 0.915
+   },
+   {
+    "w": "market",
+    "s": 34.4,
+    "e": 34.64,
+    "p": 0.994
+   },
+   {
+    "w": "trends",
+    "s": 34.64,
+    "e": 34.96,
+    "p": 0.997
+   },
+   {
+    "w": "with",
+    "s": 34.96,
+    "e": 35.04,
+    "p": 0.937
+   },
+   {
+    "w": "the",
+    "s": 35.12,
+    "e": 35.28,
+    "p": 0.97
+   },
+   {
+    "w": "OE",
+    "s": 35.28,
+    "e": 35.6,
+    "p": 0.775
+   },
+   {
+    "w": "two",
+    "s": 35.68,
+    "e": 35.76,
+    "p": 0.952
+   },
+   {
+    "w": "outlier",
+    "s": 35.92,
+    "e": 36.32,
+    "p": 0.909
+   },
+   {
+    "w": "our",
+    "s": 36.56,
+    "e": 36.72,
+    "p": 0.858
+   },
+   {
+    "w": "forward",
+    "s": 36.72,
+    "e": 36.96,
+    "p": 0.901
+   },
+   {
+    "w": "thinking",
+    "s": 37.12,
+    "e": 37.36,
+    "p": 0.996
+   },
+   {
+    "w": "financial",
+    "s": 37.52,
+    "e": 37.84,
+    "p": 0.979
+   },
+   {
+    "w": "forecasting",
+    "s": 38,
+    "e": 38.72,
+    "p": 0.995
+   },
+   {
+    "w": "tool.",
+    "s": 38.72,
+    "e": 39.44,
+    "p": 0.882
+   },
+   {
+    "w": "Explore",
+    "s": 39.52,
+    "e": 39.84,
+    "p": 0.997
+   },
+   {
+    "w": "venture",
+    "s": 40,
+    "e": 40.32,
+    "p": 0.914
+   },
+   {
+    "w": "capital",
+    "s": 40.4,
+    "e": 40.72,
+    "p": 0.977
+   },
+   {
+    "w": "world",
+    "s": 40.8,
+    "e": 40.88,
+    "p": 0.981
+   },
+   {
+    "w": "with",
+    "s": 41.04,
+    "e": 41.12,
+    "p": 0.995
+   },
+   {
+    "w": "U",
+    "s": 41.2,
+    "e": 41.28,
+    "p": 0.828
+   },
+   {
+    "w": "three",
+    "s": 41.44,
+    "e": 41.52,
+    "p": 0.959
+   },
+   {
+    "w": "Unifund",
+    "s": 41.68,
+    "e": 42.16,
+    "p": 0.848
+   },
+   {
+    "w": "or",
+    "s": 42.32,
+    "e": 42.48,
+    "p": 0.99
+   },
+   {
+    "w": "move",
+    "s": 42.48,
+    "e": 42.56,
+    "p": 0.907
+   },
+   {
+    "w": "your",
+    "s": 42.72,
+    "e": 42.88,
+    "p": 0.993
+   },
+   {
+    "w": "money",
+    "s": 42.88,
+    "e": 43.12,
+    "p": 0.979
+   },
+   {
+    "w": "with",
+    "s": 43.12,
+    "e": 43.28,
+    "p": 0.999
+   },
+   {
+    "w": "the",
+    "s": 43.28,
+    "e": 43.44,
+    "p": 0.961
+   },
+   {
+    "w": "M",
+    "s": 43.44,
+    "e": 43.52,
+    "p": 0.958
+   },
+   {
+    "w": "three",
+    "s": 43.68,
+    "e": 43.76,
+    "p": 0.964
+   },
+   {
+    "w": "Mover",
+    "s": 43.92,
+    "e": 44.16,
+    "p": 0.865
+   },
+   {
+    "w": "or",
+    "s": 44.4,
+    "e": 44.48,
+    "p": 0.709
+   },
+   {
+    "w": "sophisticated",
+    "s": 45.36,
+    "e": 46.08,
+    "p": 0.884
+   },
+   {
+    "w": "monetary",
+    "s": 46.16,
+    "e": 46.64,
+    "p": 0.938
+   },
+   {
+    "w": "transfer",
+    "s": 46.8,
+    "e": 47.2,
+    "p": 0.995
+   },
+   {
+    "w": "module.",
+    "s": 47.28,
+    "e": 48.08,
+    "p": 0.866
+   },
+   {
+    "w": "At",
+    "s": 48.08,
+    "e": 48.24,
+    "p": 0.982
+   },
+   {
+    "w": "CorkidQuill",
+    "s": 48.32,
+    "e": 49.52,
+    "p": 0.745
+   },
+   {
+    "w": "Inc,",
+    "s": 49.6,
+    "e": 50,
+    "p": 0.887
+   },
+   {
+    "w": "we",
+    "s": 50,
+    "e": 50.16,
+    "p": 0.982
+   },
+   {
+    "w": "turn",
+    "s": 50.16,
+    "e": 50.32,
+    "p": 1
+   },
+   {
+    "w": "complex",
+    "s": 50.4,
+    "e": 50.88,
+    "p": 0.995
+   },
+   {
+    "w": "finance",
+    "s": 50.96,
+    "e": 51.28,
+    "p": 0.983
+   },
+   {
+    "w": "into",
+    "s": 51.68,
+    "e": 51.84,
+    "p": 0.974
+   },
+   {
+    "w": "creative",
+    "s": 51.92,
+    "e": 52.24,
+    "p": 0.958
+   },
+   {
+    "w": "solutions.",
+    "s": 52.32,
+    "e": 52.96,
+    "p": 0.87
+   },
+   {
+    "w": "Join",
+    "s": 52.96,
+    "e": 53.36,
+    "p": 0.975
+   },
+   {
+    "w": "us",
+    "s": 53.36,
+    "e": 53.52,
+    "p": 0.999
+   },
+   {
+    "w": "in",
+    "s": 53.84,
+    "e": 54,
+    "p": 0.986
+   },
+   {
+    "w": "redefining",
+    "s": 54.08,
+    "e": 54.8,
+    "p": 0.988
+   },
+   {
+    "w": "financial",
+    "s": 54.88,
+    "e": 55.36,
+    "p": 0.959
+   },
+   {
+    "w": "services.",
+    "s": 55.36,
+    "e": 62,
+    "p": 0.882
+   }
+  ],
+  "ms": 603.5999999046326,
+  "seconds": 62.104
+ },
+ "vsOffline": {
+  "exact": false,
+  "raw": {
+   "differing": 33,
+   "words": 120,
+   "spans": [
+    "trading [strategies. Delve -> strategies, delve]",
+    "three [Bond -> bond]",
+    "W [three Wrap Z -> three, Wrap, Z,]",
+    "the [OE -> O]",
+    "outlier [our -> are]",
+    "Explore [venture capital world -> Venture Capital World]",
+    "three [Unifund -> unifund]",
+    "three [Mover or -> mover]",
+    "transfer [module. At -> module, a quark Quid]"
+   ]
+  },
+  "normalized": {
+   "differing": 9,
+   "words": 120,
+   "spans": [
+    "the [oe -> o]",
+    "outlier [our -> are]",
+    "mover [or -> ]",
+    "module [at -> a quark quid]"
+   ]
+  }
+ },
+ "vsExpected": {
+  "exact": false,
+  "raw": {
+   "differing": 43,
+   "words": 122,
+   "spans": [
+    "Quill [Inc. -> Inc,]",
+    "three [Quatro -> Quatro,]",
+    "trading [strategies. Delve -> strategies, delve]",
+    "three [Bond -> bond]",
+    "three [equity, personalize -> equity. Personalize]",
+    "W [three Wrap Z -> three, Wrap, Z,]",
+    "two [outlier, our -> outlier are]",
+    "Explore [venture capital world -> Venture Capital World]",
+    "three [mover, our -> mover]",
+    "transfer [module. At Cork -> module, a quark]",
+    "Quid [Quill Inc. -> CorkidQuill Inc,]"
+   ]
+  },
+  "normalized": {
+   "differing": 9,
+   "words": 122,
+   "spans": [
+    "outlier [our -> are]",
+    "mover [our -> ]",
+    "module [at cork -> a quark]",
+    "quid [quill -> corkidquill]"
+   ]
+  }
+ },
+ "loadavgEnd": "10.50 8.98 8.81 7/2903 2073335"
+}
