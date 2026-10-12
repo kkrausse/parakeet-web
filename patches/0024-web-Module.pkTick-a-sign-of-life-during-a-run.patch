@@ -1,0 +1,76 @@
+From 7178fa2b6b5a99acfad6c745568fc0755588f10e Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sun, 11 Oct 2026 19:15:40 -0700
+Subject: [PATCH] web: Module.pkTick, a sign of life during a run
+
+pk_run on a long clip is silent for many seconds. The library already polls
+an abort callback twice per encoder window; install one that never aborts
+and calls Module.pkTick(n) with the count since the run began, so a page can
+show which window the encoder is on.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ examples/web/pk_web.cpp | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/examples/web/pk_web.cpp b/examples/web/pk_web.cpp
+index 649673bb..6399892f 100644
+--- a/examples/web/pk_web.cpp
++++ b/examples/web/pk_web.cpp
+@@ -9,6 +9,10 @@
+ //   pk_run(pcm, n)             0 on success; then pk_text() / pk_json()
+ //   pk_json()                  {"text","mel_ms","encode_ms","decode_ms","load_ms","n_tokens","backend"}
+ //   pk_words()                 JSON array of the last run's words: [{"w":text,"s":start s,"e":end s,"p":confidence}, ...]
++//   Module.pkTick(n)           optional JS hook, called from inside pk_run each time the library polls for
++//                              cancellation: twice per encoder window of a long clip (before the window and
++//                              before its encoder graph), so n / 2 is the window being encoded. Not called
++//                              while decoding.
+ //   pk_trim()                  destroy the GPU compute buffers kept between runs
+ //   pk_gpu_stats()             JSON: live GPU buffer bytes by purpose, weight bytes by type, objects created so far
+ //   pk_gpu_errors()            device errors so far (shader compilation, validation, device lost)
+@@ -30,6 +34,7 @@ namespace {
+ transcribe_session * g_session = nullptr;
+ std::string          g_json;
+ std::string          g_words;
++int                  g_ticks = 0;
+ std::string          g_log;
+ int                  g_log_level = 0;  // 0: warnings and errors; 1: everything
+ 
+@@ -43,6 +48,13 @@ void log_cb(transcribe_log_level level, const char * text, void *) {
+     }
+ }
+ 
++// The library's cancellation poll, used as a progress tick (never cancels).
++bool tick_cb(void *) {
++    ++g_ticks;
++    EM_ASM({ if (Module["pkTick"]) Module["pkTick"]($0); }, g_ticks);
++    return false;
++}
++
+ std::string json_escape(const char * s) {
+     std::string out;
+     for (; s != nullptr && *s != '\0'; ++s) {
+@@ -102,7 +114,11 @@ EMSCRIPTEN_KEEPALIVE int pk_load(const char * path, int n_threads) {
+     transcribe_session_params sp;
+     transcribe_session_params_init(&sp);
+     sp.n_threads = n_threads > 0 ? n_threads : 1;
+-    return static_cast<int>(transcribe_open(path, nullptr, &sp, &g_session));
++    const transcribe_status st = transcribe_open(path, nullptr, &sp, &g_session);
++    if (st == TRANSCRIBE_OK && g_session != nullptr) {
++        transcribe_set_abort_callback(g_session, tick_cb, nullptr);
++    }
++    return static_cast<int>(st);
+ }
+ 
+ EMSCRIPTEN_KEEPALIVE const char * pk_backend(void) {
+@@ -113,6 +129,7 @@ EMSCRIPTEN_KEEPALIVE int pk_run(const float * pcm, int n_samples) {
+     if (g_session == nullptr) {
+         return -1;
+     }
++    g_ticks                    = 0;
+     const transcribe_status st = transcribe_run(g_session, pcm, n_samples, nullptr);
+     if (st != TRANSCRIBE_OK) {
+         g_json = std::string("{\"error\":\"") + json_escape(transcribe_status_string(st)) + "\"}";
+-- 
+2.53.0
+

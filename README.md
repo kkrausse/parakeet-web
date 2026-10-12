@@ -1069,7 +1069,19 @@ reason, text), pass times, lag, and `offline(url)` for a whole-file pass.
   session; the OPFS-missing fallback (private window).
 - Recordings longer than 4.8 min; the audio-skipping path (needs a device slower than real time);
   the cap cut on speech with no gap at all; 0.6b Q8_0 / F16 and 110m Q4_0 live.
-- Word timestamps, punctuation repair across cap cuts, a real VAD, carrying decoder state across
+- Word timestamps for a whole file: done (patches 0023, 0024). `pk_words()` returns the last run's
+  words as `[{"w","s","e","p"}]` (seconds; `p` is the lowest token probability in the word), from
+  the table the library already builds: a word starts on the frame its first token was emitted and
+  ends where its last token's duration ends, on the encoder's 80 ms grid. `Module.pkTick(n)` is
+  called twice per encoder window during a run, the only sign of life a long clip gives. Measured
+  on a 15 min interview (909 s, 31 windows of 30 s + 4 s halo, decoded once over the stitched
+  frames) against an MMS forced alignment of a careful transcript, in stock Linux Chrome on an RTX
+  2080 Ti, f32-only shaders: 0.6b Q4_0 in 19.8 s, start times off by 40 ms median / 180
+  ms at the 95th percentile / 660 ms at worst, 5.4% of words differing; 110m Q8_0 in 8.9 s, 80 / 200
+  / 860 ms, 9.7%. No word out of order or overlapping, and nothing worse within 1 s of a window
+  join than elsewhere. The page that uses this is in another repo (autoanimate,
+  `browser-animate/`); the live-dictation pages here do not show word times.
+- Punctuation repair across cap cuts, a real VAD, carrying decoder state across
   cuts: none attempted. The lag on slow devices could be cut by transcribing only the tail of a long
   utterance for the provisional text; not done.
 

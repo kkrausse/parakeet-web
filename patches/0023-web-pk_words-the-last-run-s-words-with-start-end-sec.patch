@@ -1,0 +1,106 @@
+From a58cbdd77575385b8b4eaae8b1e61d2d6c43eba0 Mon Sep 17 00:00:00 2001
+From: "kevin.krausse" <kkrausse97@gmail.com>
+Date: Sun, 11 Oct 2026 19:01:57 -0700
+Subject: [PATCH] web: pk_words (the last run's words with start/end seconds
+ and a confidence, as JSON)
+
+The library already builds a word table for Parakeet: each TDT token carries the
+encoder frame it was emitted on and its predicted duration, and words are split on
+the SentencePiece marker. A long clip is encoded in windows but decoded once over
+the stitched frames, so word times run straight through the window joins. pk-web
+only never exposed them. pk_words() returns them on demand as
+[{"w","s","e","p"}], p being the lowest token probability in the word.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ examples/web/pk_web.cpp | 53 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+
+diff --git a/examples/web/pk_web.cpp b/examples/web/pk_web.cpp
+index 375ec29c..649673bb 100644
+--- a/examples/web/pk_web.cpp
++++ b/examples/web/pk_web.cpp
+@@ -8,6 +8,7 @@
+ //   pk_load(path, n_threads)   0 on success; model read from the Emscripten FS
+ //   pk_run(pcm, n)             0 on success; then pk_text() / pk_json()
+ //   pk_json()                  {"text","mel_ms","encode_ms","decode_ms","load_ms","n_tokens","backend"}
++//   pk_words()                 JSON array of the last run's words: [{"w":text,"s":start s,"e":end s,"p":confidence}, ...]
+ //   pk_trim()                  destroy the GPU compute buffers kept between runs
+ //   pk_gpu_stats()             JSON: live GPU buffer bytes by purpose, weight bytes by type, objects created so far
+ //   pk_gpu_errors()            device errors so far (shader compilation, validation, device lost)
+@@ -19,6 +20,8 @@
+ 
+ #include <malloc.h>
+ 
++#include <algorithm>
++#include <cmath>
+ #include <cstdio>
+ #include <cstdlib>
+ #include <string>
+@@ -26,6 +29,7 @@
+ namespace {
+ transcribe_session * g_session = nullptr;
+ std::string          g_json;
++std::string          g_words;
+ std::string          g_log;
+ int                  g_log_level = 0;  // 0: warnings and errors; 1: everything
+ 
+@@ -156,6 +160,55 @@ EMSCRIPTEN_KEEPALIVE const char * pk_json(void) {
+     return g_json.c_str();
+ }
+ 
++// The last run's words with their times, as JSON:
++//   [{"w":"Hello","s":0.56,"e":0.8,"p":0.97}, ...]
++// s / e are seconds from the start of the PCM given to pk_run. A word starts at
++// the encoder frame its first token was emitted on and ends where the TDT
++// duration of its last token ends, so both sit on the encoder's frame grid
++// (80 ms for these models). A long clip is encoded in windows but decoded in one
++// pass over the stitched frames, so the times run straight through the window
++// joins. p is the lowest joint probability among the word's tokens (omitted when
++// the model reports none). Built on demand: the live page never pays for it.
++EMSCRIPTEN_KEEPALIVE const char * pk_words(void) {
++    g_words = "[";
++    if (g_session != nullptr) {
++        const int n = transcribe_n_words(g_session);
++        g_words.reserve(static_cast<size_t>(n) * 48 + 2);
++        bool first = true;
++        for (int i = 0; i < n; ++i) {
++            transcribe_word w;
++            transcribe_word_init(&w);
++            if (transcribe_get_word(g_session, i, &w) != TRANSCRIBE_OK || w.text == nullptr || *w.text == '\0') {
++                continue;
++            }
++            float p = NAN;
++            for (int k = 0; k < w.n_tokens; ++k) {
++                transcribe_token tk;
++                transcribe_token_init(&tk);
++                if (transcribe_get_token(g_session, w.first_token + k, &tk) == TRANSCRIBE_OK && tk.text != nullptr &&
++                    !std::isnan(tk.p)) {
++                    p = std::isnan(p) ? tk.p : std::min(p, tk.p);
++                }
++            }
++            char nums[96];
++            if (std::isnan(p)) {
++                std::snprintf(nums, sizeof nums, "\",\"s\":%.3f,\"e\":%.3f}", static_cast<double>(w.t0_ms) / 1000.0,
++                              static_cast<double>(w.t1_ms) / 1000.0);
++            } else {
++                std::snprintf(nums, sizeof nums, "\",\"s\":%.3f,\"e\":%.3f,\"p\":%.3f}",
++                              static_cast<double>(w.t0_ms) / 1000.0, static_cast<double>(w.t1_ms) / 1000.0,
++                              static_cast<double>(p));
++            }
++            g_words += first ? "{\"w\":\"" : ",{\"w\":\"";
++            g_words += json_escape(w.text);
++            g_words += nums;
++            first = false;
++        }
++    }
++    g_words += "]";
++    return g_words.c_str();
++}
++
+ EMSCRIPTEN_KEEPALIVE void pk_free(void) {
+     if (g_session != nullptr) {
+         transcribe_close(g_session);
+-- 
+2.53.0
+
