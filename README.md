@@ -7,13 +7,15 @@ file system).
 
 - **Manual: [`lib/README.md`](lib/README.md)** (install, the model file, every option, browser support as measured,
   limits, what was not tested).
-- Demo (the live dictation page, public): <https://kkrausse.github.io/parakeet-web/>
+- Demo (the live dictation page): built and pushed as the `gh-pages` branch, **not served yet**. GitHub refused to
+  enable Pages on 2026-10-12 ("Your current plan does not support GitHub Pages for this repository": Pages on a
+  private repository needs a paid plan). Once enabled it will be at <https://kkrausse.github.io/parakeet-web/>.
 - This repository is private. The package is not on a registry.
 
 ## Install
 
 ```sh
-bun add git+ssh://git@github.com/kkrausse/parakeet-web.git#v0.1.0   # needs read access to this repository over ssh
+bun add git+ssh://git@github.com/kkrausse/parakeet-web.git#v0.1.0   # needs read access to this repository over ssh; `github:kkrausse/parakeet-web#v0.1.0` does not work (bun asks the API for a tarball without credentials: 404)
 bunx parakeet-web-assets public/parakeet-web                         # copies the runtime files into a folder your app serves
 ```
 
@@ -127,6 +129,7 @@ bun web/replay/gate.ts [--clip iv90|ivgap] [--verbose]             # the engine 
 scripts/lv.sh NAME t56 "phone=1&model=s4&diag=0"                   # one fake-microphone run of the demo page in Chrome -> results/live/NAME.json
 python3 scripts/lsum.py NAME [NAME ...]                            # one line per run
 URL=https://kkrausse.github.io/parakeet-web/ STOCK=1 scripts/lv.sh NAME t56 "phone=1"   # the same against a published copy
+bun web/drive-ready.ts URL [--browser webkit|chrome]               # does a copy of the live page reach "ready", on which backend, fetching the model from where
 bun web/drive-replay.ts NAME [--clip iv90] [--conditions clean,phone] [--engines old,new] [--browser webkit]   # real model on recordings -> results/replay/NAME.json
 bun web/drive-lib.ts lifecycle NAME | webkit NAME                  # the API: model switch, dispose and recreate; transcriber + stream in WebKit -> results/lib/
 bun web/drive-consumer.ts NAME --wav $PK_CACHE/audio/live/t56.wav --expect $PK_CACHE/audio/live/t56.txt --url http://127.0.0.1:8795/   # an app built on the package, from outside -> results/consumer/
@@ -160,7 +163,12 @@ bun scripts/pages.ts publish      # dist-pages/ becomes the single commit of gh-
 
 The public build posts nothing anywhere (the demo's diagnostics collector is compiled out) and `build` refuses to
 finish if a private host name or a machine path is in any shipped file. A Pages site is public although this
-repository is private.
+repository is private. The model ships inside the branch (81 MB, under GitHub's 100 MB file limit) because no
+Q4_0 file is published on Hugging Face (`handy-computer/parakeet-tdt_ctc-110m-gguf` has F32, F16, Q8_0, Q4_K_M,
+Q5_K_M and Q6_K; Q4_K has no direct kernel in this runtime), and same-origin needs no CORS. Checked from a local
+server under `/parakeet-web/`: Chrome with the fake microphone, and Linux WebKit to "ready" on the CPU backend.
+To serve it, enable Pages for the `gh-pages` branch (repository Settings, Pages), which needs a plan that allows
+Pages on a private repository.
 
 ## Credits and licences
 
