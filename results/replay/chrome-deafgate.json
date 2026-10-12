@@ -1,0 +1,292 @@
+{
+ "name": "chrome-deafgate",
+ "clip": "ivgap",
+ "clipSeconds": 121,
+ "model": "s4",
+ "capS": 12,
+ "params": {
+  "gateAbsRms": 1
+ },
+ "latency": "80",
+ "browser": "chrome",
+ "browserVersion": "154.0.8037.97",
+ "runs": [
+  {
+   "condition": "phone",
+   "engine": "new",
+   "refWords": 242,
+   "committedWords": 236,
+   "wer": 7.02,
+   "errors": 17,
+   "contradicted": 7,
+   "missed": 10,
+   "longestUnshownS": 0.48,
+   "longestUnshownWords": 3,
+   "unshownWords": 5,
+   "longestUncommittedS": 1.12,
+   "commitLatency": {
+    "median": 1.36,
+    "p95": 2.04,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.12,
+    "p95": 1.32,
+    "max": null
+   },
+   "spans": [
+    " [ -> in]",
+    "no [available -> abandon]",
+    "veterans [ -> veterans']",
+    "covid [the -> ]",
+    "hundred [ -> and]",
+    "interest [you remember like six hundred billion dollars -> ]",
+    "in [qe -> kiwi]",
+    "point [the -> ]",
+    "hundred [and -> ]",
+    "eighty [percent -> five]",
+    "it [ -> simple]"
+   ],
+   "coverage": {
+    "speechS": 67.06,
+    "lostS": 0,
+    "lostPct": 0,
+    "longestLostS": 0,
+    "longestLostAtS": 0,
+    "segments": 7,
+    "dropped": 0,
+    "droppedWithText": 0
+   },
+   "stats": {
+    "capturedS": 121,
+    "open": false,
+    "busy": false,
+    "failed": false,
+    "skipping": false,
+    "bufferS": 3.04,
+    "maxBufferS": 7.24,
+    "lagS": 0,
+    "maxLagS": 0.36,
+    "noiseFloor": 0.0005467694136314094,
+    "threshold": 1,
+    "lastRms": 0.0006320549761936256,
+    "speech": false,
+    "gateOpens": 0,
+    "gateMisses": 7,
+    "modelHolds": 7,
+    "probes": 18,
+    "probesSilent": 0,
+    "passes": 318,
+    "livePasses": 300,
+    "finalPasses": 0,
+    "stale": 1,
+    "reusedFinals": 7,
+    "utterances": 7,
+    "commits": 163,
+    "wordsCommitted": 236,
+    "byReason": {
+     "agree": 236,
+     "idle": 0,
+     "stop": 0,
+     "cap": 0,
+     "lag": 0,
+     "skip": 0
+    },
+    "skippedS": 0,
+    "trims": 72,
+    "anchorShifts": 77
+   },
+   "wallS": 17.3,
+   "passes": 318,
+   "passMsMedian": 80,
+   "maxBufferS": 7.24,
+   "maxPassAudioS": 7.2,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 19.2,
+     "last": 20.2,
+     "min": 19.2,
+     "max": 20.2
+    },
+    "wasmHeapMb": {
+     "first": 46,
+     "last": 46,
+     "min": 46,
+     "max": 46
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 215,
+     "gpuProcRssMib": 307
+    },
+    "rssAfter": {
+     "rendererRssMib": 261,
+     "gpuProcRssMib": 320
+    }
+   },
+   "refText": "off balance sheet liabilities, social security payments annually, Medicare payments annually, Medicaid payments annually, as well as veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years fighting to little and no available When you add in interest, plus entitlements, plus veterans affairs and compare it to receipts, you can see that in twenty twenty due to COVID the receipt fall off, true, that's what we call true interest expense. True interest expense went to about one hundred ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. You remember like six hundred billion dollars a month in QE? Yeah, that's what they were doing. They didn't call it that. They'll never call it that. That's what they were doing. Here's the point. The US debt to GDP in COVID in twenty twenty was peaked at one hundred and thirty percent. Less than eighteen months later, it was down to about one hundred and fifteen percent. How did they do it? And true interest expense went from one hundred and ten percent down to about eighty percent ninety percent of receipts. How did they do it? Simple, simple. Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent. Voila. They know it works. They absolutely want a hundred percent know that inflation is one of the ways out. Okay.",
+   "committed": "in off balance sheet liabilities, social security payments annually, Medicare payments annually, Medicaid payments annually, as well as veterans benefits, which are just the interest on the dumb wars that we spent the last twenty five years fighting to little and no abandon. When you add in interest plus entitlements, plus veterans Veterans' affairs and compare it to receipts, you can see that in twenty twenty due to COVID receipt fall off true that's what we call true interest expense, true interest expense went to about one hundred and ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. a month in Kiwi. yeah, that's what they were doing. They didn't call it that, they'll never call it that. That's what they were doing. Here's the point. US debt to GDP in COVID in twenty twenty was peaked at one hundred and thirty percent. Less than eighteen months later it was down to about one hundred and fifteen percent. How did they do it? And true interest expense went from one hundred ten percent down to about eighty five ninety percent. Of receipts, how did they do it? Simple Simple, simple Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent. Voila. They know it works. They absolutely want a hundred percent know that inflation is one of the ways out. Okay."
+  },
+  {
+   "condition": "noisy",
+   "engine": "new",
+   "refWords": 236,
+   "committedWords": 235,
+   "wer": 4.66,
+   "errors": 11,
+   "contradicted": 8,
+   "missed": 3,
+   "longestUnshownS": 0.24,
+   "longestUnshownWords": 1,
+   "unshownWords": 2,
+   "longestUncommittedS": 0.24,
+   "commitLatency": {
+    "median": 1.4,
+    "p95": 2.04,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.12,
+    "p95": 0.84,
+    "max": null
+   },
+   "spans": [
+    "last [year -> time]",
+    "little [and -> than]",
+    "no [available -> awareness]",
+    "add [in -> an]",
+    "covid [the -> ]",
+    "hundred [ -> and]",
+    "interest [you -> ]",
+    "point [the -> ]",
+    "hundred [ -> and]",
+    "five [ninety -> nine]",
+    "want [one -> a]"
+   ],
+   "coverage": {
+    "speechS": 67.06,
+    "lostS": 0,
+    "lostPct": 0,
+    "longestLostS": 0,
+    "longestLostAtS": 0,
+    "segments": 6,
+    "dropped": 0,
+    "droppedWithText": 0
+   },
+   "stats": {
+    "capturedS": 121,
+    "open": false,
+    "busy": false,
+    "failed": false,
+    "skipping": false,
+    "bufferS": 3.24,
+    "maxBufferS": 7.36,
+    "lagS": 0,
+    "maxLagS": 0.36,
+    "noiseFloor": 0.0013734226813539863,
+    "threshold": 1,
+    "lastRms": 0.0015876503165731428,
+    "speech": false,
+    "gateOpens": 0,
+    "gateMisses": 6,
+    "modelHolds": 6,
+    "probes": 17,
+    "probesSilent": 0,
+    "passes": 324,
+    "livePasses": 307,
+    "finalPasses": 0,
+    "stale": 0,
+    "reusedFinals": 6,
+    "utterances": 6,
+    "commits": 162,
+    "wordsCommitted": 235,
+    "byReason": {
+     "agree": 235,
+     "idle": 0,
+     "stop": 0,
+     "cap": 0,
+     "lag": 0,
+     "skip": 0
+    },
+    "skippedS": 0,
+    "trims": 77,
+    "anchorShifts": 85
+   },
+   "wallS": 21.5,
+   "passes": 324,
+   "passMsMedian": 80,
+   "maxBufferS": 7.36,
+   "maxPassAudioS": 7.32,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 54.2,
+     "last": 19,
+     "min": 18.6,
+     "max": 54.5
+    },
+    "wasmHeapMb": {
+     "first": 80,
+     "last": 80,
+     "min": 80,
+     "max": 80
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 316,
+     "gpuProcRssMib": 320
+    },
+    "rssAfter": {
+     "rendererRssMib": 302,
+     "gpuProcRssMib": 331
+    }
+   },
+   "refText": "off balance sheet liabilities, social security payments annually, Medicare payments annually, Medicaid payments annually, as well as Veterans benefits, which are just the interest on the dumb wars that we spent last year fighting to little and no available When you add in interest, plus entitlements, plus veterans affairs and compare it to receipts, you can see that in twenty twenty due to COVID, the receipt fall off true, that's what we call true interest expense. True interest expense went to about one hundred ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. You remember like six hundred billion dollars a month in QE? Yeah, that's what they were doing. They didn't call it that. They'll never call it. That's what they were doing. Here's the point. The US debt to GDP in COVID in twenty twenty was peaked at one hundred and thirty percent. Less than eighteen months later, it was down to about one hundred and fifteen percent. How did they do it? And true interest expense went from one hundred ten percent down to about eighty five ninety. Of receipts. How did they do it? Simple, simple. Fed does a bunch of QE, they pin rates at zero and inflation runs eight to twelve percent. Voila. They know it works. They absolutely want one hundred percent know that inflation is one of the ways out. Okay.",
+   "committed": "off balance sheet liabilities, social security payments annually, Medicare payments annually, Medicaid payments annually, as well as Veterans Benefits, which are just the interest on the dumb wars that we spent last time fighting to little than no awareness. When you add an interest plus entitlements, plus Veterans affairs and compare it to receipts, you can see that in twenty twenty due to COVID receipt fall off true that's what we call true interest expense, true interest expense went to about one hundred and ten percent of receipts. Uh oh, they need to print the interest. They printed the interest. Remember like six hundred billion dollars a month in QE? Yeah, that's what they were doing. They didn't call it that, they'll never call it. That's what they were doing. Here's the point. US debt to GDP in COVID in twenty twenty was peaked at one hundred and thirty percent. Less than eighteen months later it was down to about one hundred and fifteen percent. How did they do it? And true interest expense went from one hundred and ten percent down to about eighty five nine. Of receipts. How did they do it? Simple, simple Fed does a bunch of QE, They pin rates at zero and inflation runs eight to twelve percent. Voila. They know it works. They absolutely want a hundred percent know that inflation is one of the ways out. Okay."
+  }
+ ],
+ "backend": "WebGPU: WebGPU",
+ "webgpu": true,
+ "shaderF16": true,
+ "adapter": "nvidia turing NVIDIA GeForce RTX 2080 Ti",
+ "variant": "jspi",
+ "jspi": true,
+ "adapterReason": null,
+ "loadLines": "model file: 85260576 bytes on the server, 0 bytes stored in this browser (OPFS)\ndownload: 16777216 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload: 33554432 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload: 50331648 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload: 67108864 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload: 83886080 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload complete: 85260576 bytes in OPFS (sync access handle)\nstorage path: OPFS sync access handle (the file stays on disk; tensors are read one at a time)\nloading the model into the backend: WASM heap 32 MB before\npass over 1.5 s of noise: 258 ms\npass over 13 s of noise: 98 ms\nready: 110M, Q4_0 (4-bit weights) on WebGPU: WebGPU, cap 12 s\n",
+ "console": []
+}

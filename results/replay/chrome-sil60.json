@@ -1,0 +1,266 @@
+{
+ "name": "chrome-sil60",
+ "clip": "sil60",
+ "clipSeconds": 60,
+ "model": "s4",
+ "capS": 12,
+ "params": {},
+ "latency": "80",
+ "browser": "chrome",
+ "browserVersion": "154.0.8037.97",
+ "runs": [
+  {
+   "condition": "phone",
+   "engine": "new",
+   "refWords": 0,
+   "committedWords": 0,
+   "wer": 0,
+   "errors": 0,
+   "contradicted": 0,
+   "missed": 0,
+   "longestUnshownS": 0,
+   "longestUnshownWords": 0,
+   "unshownWords": 0,
+   "longestUncommittedS": 0,
+   "commitLatency": {
+    "median": null,
+    "p95": null,
+    "max": null
+   },
+   "showLatency": {
+    "median": null,
+    "p95": null,
+    "max": null
+   },
+   "spans": [],
+   "coverage": {
+    "speechS": 0,
+    "lostS": 0,
+    "lostPct": 0,
+    "longestLostS": 0,
+    "longestLostAtS": 0,
+    "segments": 12,
+    "dropped": 0,
+    "droppedWithText": 0
+   },
+   "stats": {
+    "capturedS": 60,
+    "open": false,
+    "busy": false,
+    "failed": false,
+    "skipping": false,
+    "bufferS": 0,
+    "maxBufferS": 5.52,
+    "lagS": 0,
+    "maxLagS": 0.56,
+    "noiseFloor": 0.00040410514338873327,
+    "threshold": 0.0010102628584718332,
+    "lastRms": 0.000693222348309548,
+    "speech": false,
+    "gateOpens": 12,
+    "gateMisses": 0,
+    "modelHolds": 0,
+    "probes": 7,
+    "probesSilent": 0,
+    "passes": 140,
+    "livePasses": 132,
+    "finalPasses": 1,
+    "stale": 0,
+    "reusedFinals": 11,
+    "utterances": 12,
+    "commits": 0,
+    "wordsCommitted": 0,
+    "byReason": {
+     "agree": 0,
+     "idle": 0,
+     "stop": 0,
+     "cap": 0,
+     "lag": 0,
+     "skip": 0
+    },
+    "skippedS": 0,
+    "trims": 0,
+    "anchorShifts": 0
+   },
+   "wallS": 3.8,
+   "passes": 140,
+   "passMsMedian": 80,
+   "maxBufferS": 5.52,
+   "maxPassAudioS": 5.48,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 12,
+     "last": 11.8,
+     "min": 11.6,
+     "max": 12.3
+    },
+    "wasmHeapMb": {
+     "first": 46,
+     "last": 46,
+     "min": 46,
+     "max": 46
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 213,
+     "gpuProcRssMib": 307
+    },
+    "rssAfter": {
+     "rendererRssMib": 240,
+     "gpuProcRssMib": 324
+    }
+   },
+   "refText": "",
+   "committed": ""
+  },
+  {
+   "condition": "noisy",
+   "engine": "new",
+   "refWords": 0,
+   "committedWords": 0,
+   "wer": 0,
+   "errors": 0,
+   "contradicted": 0,
+   "missed": 0,
+   "longestUnshownS": 0,
+   "longestUnshownWords": 0,
+   "unshownWords": 0,
+   "longestUncommittedS": 0,
+   "commitLatency": {
+    "median": null,
+    "p95": null,
+    "max": null
+   },
+   "showLatency": {
+    "median": null,
+    "p95": null,
+    "max": null
+   },
+   "spans": [],
+   "coverage": {
+    "speechS": 0,
+    "lostS": 0,
+    "lostPct": 0,
+    "longestLostS": 0,
+    "longestLostAtS": 0,
+    "segments": 12,
+    "dropped": 0,
+    "droppedWithText": 0
+   },
+   "stats": {
+    "capturedS": 60,
+    "open": false,
+    "busy": false,
+    "failed": false,
+    "skipping": false,
+    "bufferS": 0,
+    "maxBufferS": 5.52,
+    "lagS": 0,
+    "maxLagS": 0.56,
+    "noiseFloor": 0.0010150661692023277,
+    "threshold": 0.0025376654230058193,
+    "lastRms": 0.0017412958079871263,
+    "speech": false,
+    "gateOpens": 12,
+    "gateMisses": 0,
+    "modelHolds": 0,
+    "probes": 7,
+    "probesSilent": 0,
+    "passes": 140,
+    "livePasses": 132,
+    "finalPasses": 1,
+    "stale": 0,
+    "reusedFinals": 11,
+    "utterances": 12,
+    "commits": 0,
+    "wordsCommitted": 0,
+    "byReason": {
+     "agree": 0,
+     "idle": 0,
+     "stop": 0,
+     "cap": 0,
+     "lag": 0,
+     "skip": 0
+    },
+    "skippedS": 0,
+    "trims": 0,
+    "anchorShifts": 0
+   },
+   "wallS": 6.4,
+   "passes": 140,
+   "passMsMedian": 80,
+   "maxBufferS": 5.52,
+   "maxPassAudioS": 5.48,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 29.9,
+     "last": 29.8,
+     "min": 29.2,
+     "max": 29.9
+    },
+    "wasmHeapMb": {
+     "first": 67,
+     "last": 67,
+     "min": 67,
+     "max": 67
+    },
+    "gpuWorkMb": {
+     "first": 82,
+     "last": 82,
+     "min": 82,
+     "max": 82
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 10,
+     "last": 10,
+     "min": 10,
+     "max": 10
+    },
+    "rssBefore": {
+     "rendererRssMib": 264,
+     "gpuProcRssMib": 327
+    },
+    "rssAfter": {
+     "rendererRssMib": 276,
+     "gpuProcRssMib": 331
+    }
+   },
+   "refText": "",
+   "committed": ""
+  }
+ ],
+ "backend": "WebGPU: WebGPU",
+ "webgpu": true,
+ "shaderF16": true,
+ "adapter": "nvidia turing NVIDIA GeForce RTX 2080 Ti",
+ "variant": "jspi",
+ "jspi": true,
+ "adapterReason": null,
+ "loadLines": "model file: 85260576 bytes on the server, 0 bytes stored in this browser (OPFS)\ndownload: 16777216 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload: 33554432 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload: 50331648 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload: 67108864 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload: 83886080 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload complete: 85260576 bytes in OPFS (sync access handle)\nstorage path: OPFS sync access handle (the file stays on disk; tensors are read one at a time)\nloading the model into the backend: WASM heap 32 MB before\npass over 1.5 s of noise: 189 ms\npass over 13 s of noise: 58 ms\nready: 110M, Q4_0 (4-bit weights) on WebGPU: WebGPU, cap 12 s\n",
+ "console": []
+}

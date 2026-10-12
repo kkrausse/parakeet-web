@@ -1,0 +1,467 @@
+{
+ "name": "chrome-death",
+ "clip": "death",
+ "clipSeconds": 233.26325,
+ "model": "s4",
+ "capS": 12,
+ "params": {},
+ "latency": "80",
+ "browser": "chrome",
+ "browserVersion": "154.0.8037.97",
+ "runs": [
+  {
+   "condition": "clean",
+   "engine": "old",
+   "refWords": 638,
+   "committedWords": 636,
+   "wer": 1.25,
+   "errors": 8,
+   "contradicted": 4,
+   "missed": 4,
+   "longestUnshownS": 1.04,
+   "longestUnshownWords": 4,
+   "unshownWords": 4,
+   "longestUncommittedS": 1.04,
+   "commitLatency": {
+    "median": 2.86,
+    "p95": 7.94,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.16,
+    "p95": 0.2,
+    "max": null
+   },
+   "spans": [
+    "years [i've -> i have]",
+    "heart [about a year ago -> ]",
+    "but [someday -> some day]"
+   ],
+   "coverage": {
+    "speechS": 232.08,
+    "lostS": 29.64,
+    "lostPct": 12.77,
+    "longestLostS": 8.24,
+    "longestLostAtS": 147.3,
+    "segments": 42,
+    "dropped": 1,
+    "droppedWithText": 0
+   },
+   "stats": {
+    "passes": 754,
+    "commits": 42,
+    "dropped": 1,
+    "droppedWithText": 0,
+    "stale": 6,
+    "maxNoiseFloor": 0.03915407416782871,
+    "noiseFloor": 0.002364382740661549
+   },
+   "wallS": 50.3,
+   "passes": 754,
+   "passMsMedian": 80,
+   "maxBufferS": 0,
+   "maxPassAudioS": 0,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 31.1,
+     "last": 31.8,
+     "min": 30.7,
+     "max": 32.2
+    },
+    "wasmHeapMb": {
+     "first": 46,
+     "last": 46,
+     "min": 46,
+     "max": 46
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 209,
+     "gpuProcRssMib": 305
+    },
+    "rssAfter": {
+     "rendererRssMib": 283,
+     "gpuProcRssMib": 335
+    }
+   },
+   "refText": "My third story is about death. When I was seventeen, I read a quote that went something like, If you live each day as if it was your last, someday you'll most certainly be right. It made an impression on me, and since then for the past thirty three years, I've looked in the mirror every morning and asked myself, if today were the last day of my life, would I want to do what I am about to do today? And whenever the answer has been no for too many days in a row, I know I need to change something. Remembering that I'll be dead soon is the most important tool I've ever encountered to help me make the big choices in life, because almost everything, all external expectations, all pride, all fear of embarrassment or failure, these things just fall away in the face of death, leaving only what is truly important. Remembering that you are going to die is the best way I know to avoid the trap of thinking you have something to lose. You are already naked. There is no reason not to follow your heart. About a year ago I was diagnosed with cancer. I had a scan at seven thirty in the morning and it clearly showed a tumor on my pancreas. I didn't even know what a pancreas was. The doctors told me this was almost certainly a type of cancer that is incurable and that I should expect to live no longer than three to six months. My doctor advised me to go home and get my affairs in order, which is doctor's code for prepare to die. It means to try and tell your kids everything you thought you'd have the next ten years to tell them in just a few months. It means to make sure everything is buttoned up so that it will be as easy as possible for your family. It means to say your goodbyes. I live with that diagnosis all day. Later that evening, I had a biopsy where they stuck an endoscope down my throat, through my stomach and into my intestines, put a needle into my pancreas and got a few cells from the tumor. I was sedated, but my wife who was there told me that when they viewed the cells under a microscope, the doctors started crying because it turned out to be a very rare form of pancreatic cancer that is curable with surgery. I had the surgery, and thankfully I'm fine now. This was the closest I've been to facing death, and I hope it's the closest I get for a few more decades. Having lived through it, I can now say this to you with a bit more certainty than when death was a useful but purely intellectual concept. No one wants to die. Even people who want to go to heaven don't want to die to get there. And yet, death is the destination we all share. No one has ever escaped it, and that is as it should be, because death is very likely the single best invention of life. It's life's change agent. It clears out the old to make way for the new. Right now, the new is you, but someday not too long from now, you will gradually become the old and be cleared away. Sorry to be so dramatic, but it's quite true. Your time is limited, so don't waste it living someone else's life. Don't be trapped by dogma which is living with the results of other people's thinking, don't let the noise of others' opinions drown out your own inner voice. And most important, have the courage to follow your heart and intuition. They somehow already know what you truly want to become. Everything else is secondary.",
+   "committed": "My third story is about death. When I was seventeen, I read a quote that went something like If you live each day as if it was your last, someday you'll most certainly be right. It made an impression on me, and since then, for the past thirty three years, I have looked in the mirror every morning and asked myself, if today were the last day of my life, would I want to do what I am about to do today? And whenever the answer has been no for too many days in a row, I know I need to change something. Remembering that I'll be dead soon is the most important tool I've ever encountered to help me make the big choices in life. Because almost everything, all external expectations, all pride, all fear of embarrassment or failure, these things just fall away in the face of death. leaving only what is truly important, Remembering that you are going to die is the best way I know to avoid the trap of thinking you have something to lose. You are already naked, there is no reason not to follow your heart. I was diagnosed with cancer. I had a scan at seven thirty in the morning. And it clearly showed a tumor on my pancreas. I didn't even know what a pancreas was. The doctors told me this was almost certainly a type of cancer that is incurable and that I should expect to live no longer than three to six months. My doctor advised me to go home and get my affairs in order, which is doctor's code for Prepare to Die. It means to try and tell your kids everything. You thought you'd have the next ten years to tell them in just a few months. It means to make sure everything is buttoned up so that it will be as easy as possible for your family. It means to say your goodbyes. I live with that diagnosis all day. Later that evening, I had a biopsy, where they stuck an endoscope down my throat, through my stomach and into my intestines, put a needle into my pancreas and got a few cells from the tumor. I was sedated, but my wife who was there told me that when they viewed the cells under a microscope, the doctors started crying. because it turned out to be a very rare form of pancreatic cancer that is curable with surgery. I had the surgery, and thankfully I'm fine now. This was the closest I've been to facing death, and I hope it's the closest I get for a few more decades. Having lived through it, I can now say this to you with a bit more certainty than when death was a useful but purely intellectual concept. No one wants to die. Even people who want to go to heaven don't want to die to get there. And yet, Death is the destination we all share. No one has ever escaped it. And that is, as it should be, because death is very likely the single best invention of life. It's life's change agent. It clears out the old to make way for the new. Right now, the new is you. But some day, not too long from now you will gradually become the old, and be cleared away, Sorry to be so dramatic. But it's quite true. Your time is limited, so don't waste it living someone else's life. Don't be trapped by dogma, which is living with the results of other people's thinking. Don't let the noise of others' opinions drown out your own inner voice. and most important, have the courage to follow your heart and intuition, they somehow already know what you truly want to become. Everything else is secondary."
+  },
+  {
+   "condition": "clean",
+   "engine": "new",
+   "refWords": 638,
+   "committedWords": 640,
+   "wer": 0.47,
+   "errors": 3,
+   "contradicted": 3,
+   "missed": 0,
+   "longestUnshownS": 0,
+   "longestUnshownWords": 0,
+   "unshownWords": 0,
+   "longestUncommittedS": 0,
+   "commitLatency": {
+    "median": 1.36,
+    "p95": 1.52,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.08,
+    "p95": 0.32,
+    "max": null
+   },
+   "spans": [
+    "something [ -> like]",
+    "life [would -> what]",
+    "all [ -> share]"
+   ],
+   "coverage": {
+    "speechS": 232.08,
+    "lostS": 1.78,
+    "lostPct": 0.77,
+    "longestLostS": 1.76,
+    "longestLostAtS": 153.64,
+    "segments": 2,
+    "dropped": 0,
+    "droppedWithText": 0
+   },
+   "stats": {
+    "capturedS": 233.24,
+    "open": false,
+    "busy": false,
+    "failed": false,
+    "skipping": false,
+    "bufferS": 0,
+    "maxBufferS": 7.2,
+    "lagS": 0,
+    "maxLagS": 0.52,
+    "noiseFloor": 0.0019021310145035386,
+    "threshold": 0.0047553275362588465,
+    "lastRms": 0.002331695127265591,
+    "speech": false,
+    "gateOpens": 2,
+    "gateMisses": 0,
+    "modelHolds": 0,
+    "probes": 0,
+    "probesSilent": 0,
+    "passes": 826,
+    "livePasses": 825,
+    "finalPasses": 1,
+    "stale": 0,
+    "reusedFinals": 1,
+    "utterances": 2,
+    "commits": 499,
+    "wordsCommitted": 640,
+    "byReason": {
+     "agree": 638,
+     "idle": 0,
+     "stop": 2,
+     "cap": 0,
+     "lag": 0,
+     "skip": 0
+    },
+    "skippedS": 0,
+    "trims": 273,
+    "anchorShifts": 287
+   },
+   "wallS": 48.1,
+   "passes": 826,
+   "passMsMedian": 80,
+   "maxBufferS": 7.2,
+   "maxPassAudioS": 7.16,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 32.9,
+     "last": 34.8,
+     "min": 32.9,
+     "max": 35.5
+    },
+    "wasmHeapMb": {
+     "first": 46,
+     "last": 46,
+     "min": 46,
+     "max": 46
+    },
+    "gpuWorkMb": {
+     "first": 41,
+     "last": 41,
+     "min": 41,
+     "max": 41
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 8,
+     "last": 8,
+     "min": 8,
+     "max": 8
+    },
+    "rssBefore": {
+     "rendererRssMib": 283,
+     "gpuProcRssMib": 335
+    },
+    "rssAfter": {
+     "rendererRssMib": 268,
+     "gpuProcRssMib": 321
+    }
+   },
+   "refText": "My third story is about death. When I was seventeen, I read a quote that went something like, If you live each day as if it was your last, someday you'll most certainly be right. It made an impression on me, and since then for the past thirty three years, I've looked in the mirror every morning and asked myself, if today were the last day of my life, would I want to do what I am about to do today? And whenever the answer has been no for too many days in a row, I know I need to change something. Remembering that I'll be dead soon is the most important tool I've ever encountered to help me make the big choices in life, because almost everything, all external expectations, all pride, all fear of embarrassment or failure, these things just fall away in the face of death, leaving only what is truly important. Remembering that you are going to die is the best way I know to avoid the trap of thinking you have something to lose. You are already naked. There is no reason not to follow your heart. About a year ago I was diagnosed with cancer. I had a scan at seven thirty in the morning and it clearly showed a tumor on my pancreas. I didn't even know what a pancreas was. The doctors told me this was almost certainly a type of cancer that is incurable and that I should expect to live no longer than three to six months. My doctor advised me to go home and get my affairs in order, which is doctor's code for prepare to die. It means to try and tell your kids everything you thought you'd have the next ten years to tell them in just a few months. It means to make sure everything is buttoned up so that it will be as easy as possible for your family. It means to say your goodbyes. I live with that diagnosis all day. Later that evening, I had a biopsy where they stuck an endoscope down my throat, through my stomach and into my intestines, put a needle into my pancreas and got a few cells from the tumor. I was sedated, but my wife who was there told me that when they viewed the cells under a microscope, the doctors started crying because it turned out to be a very rare form of pancreatic cancer that is curable with surgery. I had the surgery, and thankfully I'm fine now. This was the closest I've been to facing death, and I hope it's the closest I get for a few more decades. Having lived through it, I can now say this to you with a bit more certainty than when death was a useful but purely intellectual concept. No one wants to die. Even people who want to go to heaven don't want to die to get there. And yet, death is the destination we all share. No one has ever escaped it, and that is as it should be, because death is very likely the single best invention of life. It's life's change agent. It clears out the old to make way for the new. Right now, the new is you, but someday not too long from now, you will gradually become the old and be cleared away. Sorry to be so dramatic, but it's quite true. Your time is limited, so don't waste it living someone else's life. Don't be trapped by dogma which is living with the results of other people's thinking, don't let the noise of others' opinions drown out your own inner voice. And most important, have the courage to follow your heart and intuition. They somehow already know what you truly want to become. Everything else is secondary.",
+   "committed": "My third story is about death. When I was seventeen, I read a quote that went something like like, if you live each day as if it was your last, someday you'll most certainly be right. It made an impression on me and since then for the past thirty three years I've looked in the mirror every morning and asked myself if today were the last day of my life, what I want to do what I am about to do today? And whenever the answer has been no for too many days in a row, I know I need to change something. Remembering that I'll be dead soon is the most important tool I've ever encountered to help me make the big choices in life, because almost everything, all external expectations, all pride, all fear of embarrassment or failure, these things just fall away in the face of death, leaving only what is truly important. Remembering that you are going to die is the best way I know to avoid the trap of thinking you have something to lose. You are already naked, There is no reason not to follow your heart. About a year ago, I was diagnosed with cancer. I had a scan at seven thirty in the morning and it clearly showed a tumor on my pancreas. I didn't even know what a pancreas was. The doctors told me this was almost certainly a type of cancer that is incurable and that I should expect to live no longer than three to six months. My doctor advised me to go home and get my affairs in order, which is doctor's code for Prepare to Die. It means to try and tell your kids everything. you thought you'd have the next ten years to tell them in just a few months. It means to make sure everything is buttoned up so that it will be as easy as possible for your family. It means to say your goodbyes. I live with that diagnosis all day. Later that evening, I had a biopsy where they stuck an endoscope down my throat through my stomach and into my intestines, put a needle into my pancreas and got a few cells from the tumor. I was sedated, but my wife who was there told me that when they viewed the cells under a microscope, the doctors started crying because it turned out to be a very rare form of pancreatic cancer that is curable with surgery. I had the surgery and thankfully I'm fine now. This was the closest I've been to facing death and I hope it's the closest I get for a few more decades. Having lived through it, I can now say this to you with a bit more certainty than when death was a useful but purely intellectual concept. No one wants to die, even people who want to go to heaven don't want to die to get there. And yet death is the destination we all share share. No one has ever escaped it, and that is as it should be, because death is very likely the single best invention of life. It's life's change agent. It clears out the old to make way for the new. Right now, the new is you, but someday not too long from now, you will gradually become the old and be cleared away. Sorry to be so dramatic, but it's quite true Your time is limited, so don't waste it living someone else's life. Don't be trapped by dogma, which is living with the results of other people's thinking. Don't let the noise of others' opinions drown out your own inner voice. and most important, have the courage to follow your heart and intuition. They somehow already know what you truly want to become, everything else is secondary."
+  },
+  {
+   "condition": "low",
+   "engine": "old",
+   "refWords": 638,
+   "committedWords": 0,
+   "wer": 100,
+   "errors": 638,
+   "contradicted": 0,
+   "missed": 638,
+   "longestUnshownS": 23.84,
+   "longestUnshownWords": 66,
+   "unshownWords": 506,
+   "longestUncommittedS": 232.48,
+   "commitLatency": {
+    "median": null,
+    "p95": null,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.08,
+    "p95": 0.48,
+    "max": null
+   },
+   "spans": [
+    " [my third story is about death when i was seventeen i read a quote that went something like if you live each day as if it was your last someday you'll most certainly be right it made an impression on me and since then for the past thirty three years i've looked in the mirror every morning and asked myself if today were the last day of my life would i want to do what i am about to do today and whenever the answer has been no for too many days in a row i know i need to change something remembering that i'll be dead soon is the most important tool i've ever encountered to help me make the big choices in life because almost everything all external expectations all pride all fear of embarrassment or failure these things just fall away in the face of death leaving only what is truly important remembering that you are going to die is the best way i know to avoid the trap of thinking you have something to lose you are already naked there is no reason not to follow your heart about a year ago i was diagnosed with cancer i had a scan at seven thirty in the morning and it clearly showed a tumor on my pancreas i didn't even know what a pancreas was the doctors told me this was almost certainly a type of cancer that is incurable and that i should expect to live no longer than three to six months my doctor advised me to go home and get my affairs in order which is doctor's code for prepare to die it means to try and tell your kids everything you thought you'd have the next ten years to tell them in just a few months it means to make sure everything is buttoned up so that it will be as easy as possible for your family it means to say your goodbyes i lived with that diagnosis all day later that evening i had a biopsy where they stuck an endoscope down my throat through my stomach and into my intestines put a needle into my pancreas and got a few cells from the tumor i was sedated but my wife who was there told me that when they viewed the cells under a microscope the doctors started crying because it turned out to be a very rare form of pancreatic cancer that is curable with surgery i had the surgery and thankfully i'm fine now this was the closest i've been to facing death and i hope it's the closest i get for a few more decades having lived through it i can now say this to you with a bit more certainty than when death was a useful but purely intellectual concept no one wants to die even people who want to go to heaven don't want to die to get there and yet death is the destination we all share no one has ever escaped it and that is as it should be because death is very likely the single best invention of life it's life's change agent it clears out the old to make way for the new right now the new is you but someday not too long from now you will gradually become the old and be cleared away sorry to be so dramatic but it's quite true your time is limited so don't waste it living someone else's life don't be trapped by dogma which is living with the results of other people's thinking don't let the noise of others' opinions drown out your own inner voice and most important have the courage to follow your heart and intuition they somehow already know what you truly want to become everything else is secondary -> ]"
+   ],
+   "coverage": {
+    "speechS": 232.08,
+    "lostS": 232.08,
+    "lostPct": 100,
+    "longestLostS": 233.26,
+    "longestLostAtS": 0,
+    "segments": 0,
+    "dropped": 29,
+    "droppedWithText": 29
+   },
+   "stats": {
+    "passes": 97,
+    "commits": 0,
+    "dropped": 29,
+    "droppedWithText": 29,
+    "stale": 2,
+    "maxNoiseFloor": 0.002061612968860757,
+    "noiseFloor": 0.0001200513919662434
+   },
+   "wallS": 3.5,
+   "passes": 97,
+   "passMsMedian": 80,
+   "maxBufferS": 0,
+   "maxPassAudioS": 0,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 31.3,
+     "last": 31.2,
+     "min": 31,
+     "max": 34.1
+    },
+    "wasmHeapMb": {
+     "first": 115,
+     "last": 115,
+     "min": 115,
+     "max": 115
+    },
+    "gpuWorkMb": {
+     "first": 50,
+     "last": 50,
+     "min": 50,
+     "max": 50
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 10,
+     "last": 10,
+     "min": 10,
+     "max": 10
+    },
+    "rssBefore": {
+     "rendererRssMib": 340,
+     "gpuProcRssMib": 325
+    },
+    "rssAfter": {
+     "rendererRssMib": 346,
+     "gpuProcRssMib": 342
+    }
+   },
+   "refText": "My third story is about death. When I was seventeen, I read a quote that went something like, If you live each day as if it was your last, someday you'll most certainly be right. It made an impression on me and since then for the past thirty three years, I've looked in the mirror every morning and asked myself, if today were the last day of my life, would I want to do what I am about to do today? And whenever the answer has been no for too many days in a row, I know I need to change something. Remembering that I'll be dead soon is the most important tool I've ever encountered to help me make the big choices in life, because almost everything, all external expectations, all pride, all fear of embarrassment or failure, these things just fall away in the face of death, leaving only what is truly important. Remembering that you are going to die is the best way I know to avoid the trap of thinking you have something to lose. You are already naked. There is no reason not to follow your heart. About a year ago I was diagnosed with cancer. I had a scan at seven thirty in the morning and it clearly showed a tumor on my pancreas. I didn't even know what a pancreas was. The doctors told me this was almost certainly a type of cancer that is incurable and that I should expect to live no longer than three to six months. My doctor advised me to go home and get my affairs in order, which is doctor's code for prepare to die. It means to try and tell your kids everything you thought you'd have the next ten years to tell them in just a few months. It means to make sure everything is buttoned up so that it will be as easy as possible for your family. It means to say your goodbyes. I lived with that diagnosis all day. Later that evening, I had a biopsy where they stuck an endoscope down my throat, through my stomach and into my intestines, put a needle into my pancreas and got a few cells from the tumor. I was sedated, but my wife who was there told me that when they viewed the cells under a microscope, the doctors started crying because it turned out to be a very rare form of pancreatic cancer that is curable with surgery. I had the surgery, and thankfully I'm fine now. This was the closest I've been to facing death, and I hope it's the closest I get for a few more decades. Having lived through it, I can now say this to you with a bit more certainty than when death was a useful but purely intellectual concept. No one wants to die. Even people who want to go to heaven don't want to die to get there. And yet, death is the destination we all share. No one has ever escaped it, and that is as it should be, because death is very likely the single best invention of life. It's life's change agent. It clears out the old to make way for the new. Right now, the new is you, but someday not too long from now, you will gradually become the old and be cleared away. Sorry to be so dramatic, but it's quite true. Your time is limited, so don't waste it living someone else's life. Don't be trapped by dogma which is living with the results of other people's thinking, don't let the noise of others' opinions drown out your own inner voice. And most important, have the courage to follow your heart and intuition. They somehow already know what you truly want to become. Everything else is secondary.",
+   "committed": ""
+  },
+  {
+   "condition": "low",
+   "engine": "new",
+   "refWords": 638,
+   "committedWords": 641,
+   "wer": 0.94,
+   "errors": 6,
+   "contradicted": 6,
+   "missed": 0,
+   "longestUnshownS": 0,
+   "longestUnshownWords": 0,
+   "unshownWords": 0,
+   "longestUncommittedS": 0,
+   "commitLatency": {
+    "median": 1.36,
+    "p95": 1.56,
+    "max": null
+   },
+   "showLatency": {
+    "median": -0.08,
+    "p95": 0.32,
+    "max": null
+   },
+   "spans": [
+    "life [would -> what]",
+    "almost [ -> everything]",
+    "i [lived -> live]",
+    "i [had -> have]",
+    "all [ -> share]",
+    "the [ -> new]"
+   ],
+   "coverage": {
+    "speechS": 232.08,
+    "lostS": 1.62,
+    "lostPct": 0.7,
+    "longestLostS": 1.6,
+    "longestLostAtS": 153.8,
+    "segments": 3,
+    "dropped": 0,
+    "droppedWithText": 0
+   },
+   "stats": {
+    "capturedS": 233.24,
+    "open": false,
+    "busy": false,
+    "failed": false,
+    "skipping": false,
+    "bufferS": 0,
+    "maxBufferS": 7.2,
+    "lagS": 0,
+    "maxLagS": 0.52,
+    "noiseFloor": 0.00009533237607683986,
+    "threshold": 0.0004,
+    "lastRms": 0.00011686158337311845,
+    "speech": false,
+    "gateOpens": 3,
+    "gateMisses": 0,
+    "modelHolds": 2,
+    "probes": 0,
+    "probesSilent": 0,
+    "passes": 826,
+    "livePasses": 825,
+    "finalPasses": 1,
+    "stale": 0,
+    "reusedFinals": 2,
+    "utterances": 3,
+    "commits": 490,
+    "wordsCommitted": 641,
+    "byReason": {
+     "agree": 639,
+     "idle": 0,
+     "stop": 2,
+     "cap": 0,
+     "lag": 0,
+     "skip": 0
+    },
+    "skippedS": 0,
+    "trims": 257,
+    "anchorShifts": 297
+   },
+   "wallS": 46.7,
+   "passes": 826,
+   "passMsMedian": 80,
+   "maxBufferS": 7.2,
+   "maxPassAudioS": 7.16,
+   "skipped": [],
+   "memory": {
+    "jsHeapMb": {
+     "first": 34.2,
+     "last": 34.3,
+     "min": 32.3,
+     "max": 34.6
+    },
+    "wasmHeapMb": {
+     "first": 115,
+     "last": 115,
+     "min": 115,
+     "max": 115
+    },
+    "gpuWorkMb": {
+     "first": 50,
+     "last": 50,
+     "min": 50,
+     "max": 50
+    },
+    "gpuBuffers": {
+     "first": 7,
+     "last": 7,
+     "min": 7,
+     "max": 7
+    },
+    "gpuMade": {
+     "first": 10,
+     "last": 10,
+     "min": 10,
+     "max": 10
+    },
+    "rssBefore": {
+     "rendererRssMib": 346,
+     "gpuProcRssMib": 342
+    },
+    "rssAfter": {
+     "rendererRssMib": 333,
+     "gpuProcRssMib": 342
+    }
+   },
+   "refText": "My third story is about death. When I was seventeen, I read a quote that went something like, If you live each day as if it was your last, someday you'll most certainly be right. It made an impression on me and since then for the past thirty three years, I've looked in the mirror every morning and asked myself, if today were the last day of my life, would I want to do what I am about to do today? And whenever the answer has been no for too many days in a row, I know I need to change something. Remembering that I'll be dead soon is the most important tool I've ever encountered to help me make the big choices in life, because almost everything, all external expectations, all pride, all fear of embarrassment or failure, these things just fall away in the face of death, leaving only what is truly important. Remembering that you are going to die is the best way I know to avoid the trap of thinking you have something to lose. You are already naked. There is no reason not to follow your heart. About a year ago I was diagnosed with cancer. I had a scan at seven thirty in the morning and it clearly showed a tumor on my pancreas. I didn't even know what a pancreas was. The doctors told me this was almost certainly a type of cancer that is incurable and that I should expect to live no longer than three to six months. My doctor advised me to go home and get my affairs in order, which is doctor's code for prepare to die. It means to try and tell your kids everything you thought you'd have the next ten years to tell them in just a few months. It means to make sure everything is buttoned up so that it will be as easy as possible for your family. It means to say your goodbyes. I lived with that diagnosis all day. Later that evening, I had a biopsy where they stuck an endoscope down my throat, through my stomach and into my intestines, put a needle into my pancreas and got a few cells from the tumor. I was sedated, but my wife who was there told me that when they viewed the cells under a microscope, the doctors started crying because it turned out to be a very rare form of pancreatic cancer that is curable with surgery. I had the surgery, and thankfully I'm fine now. This was the closest I've been to facing death, and I hope it's the closest I get for a few more decades. Having lived through it, I can now say this to you with a bit more certainty than when death was a useful but purely intellectual concept. No one wants to die. Even people who want to go to heaven don't want to die to get there. And yet, death is the destination we all share. No one has ever escaped it, and that is as it should be, because death is very likely the single best invention of life. It's life's change agent. It clears out the old to make way for the new. Right now, the new is you, but someday not too long from now, you will gradually become the old and be cleared away. Sorry to be so dramatic, but it's quite true. Your time is limited, so don't waste it living someone else's life. Don't be trapped by dogma which is living with the results of other people's thinking, don't let the noise of others' opinions drown out your own inner voice. And most important, have the courage to follow your heart and intuition. They somehow already know what you truly want to become. Everything else is secondary.",
+   "committed": "My third story is about death. When I was seventeen, I read a quote that went something like, if you live each day as if it was your last, someday you'll most certainly be right. It made an impression on me, and since then for the past thirty three years I've looked in the mirror every morning and asked myself if today were the last day of my life what I want to do what I am about to do today? And whenever the answer has been no for too many days in a row, I know I need to change something. Remembering that I'll be dead soon is the most important tool I've ever encountered to help me make the big choices in life, because almost everything everything, all external expectations, all pride, all fear of embarrassment or failure, these things just fall away in the face of death, leaving only what is truly important, Remembering that you are going to die is the best way I know to avoid the trap of thinking you have something to lose. You are already naked. There is no reason not to follow your heart. About a year ago, I was diagnosed with cancer. I had a scan at seven thirty in the morning and it clearly showed a tumor on my pancreas. I didn't even know what a pancreas was. The doctors told me this was almost certainly a type of cancer that is incurable and that I should expect to live no longer than three to six months. My doctor advised me to go home and get my affairs in order, which is doctor's code for Prepare to Die. It means to try and tell your kids everything you thought you'd have the next ten years to tell them in just a few months. It means to make sure everything is buttoned up so that it will be as easy as possible for your family. It means to say your goodbyes. I live with that diagnosis all day. Later that evening, I had a biopsy where they stuck an endoscope down my throat through my stomach and into my intestines, put a needle into my pancreas and got a few cells from the tumor. I was sedated, but my wife who was there told me that when they viewed the cells under a microscope, the doctors started crying because it turned out to be a very rare form of pancreatic cancer that is curable with surgery. I have the surgery and thankfully I'm fine now. This was the closest I've been to facing death and I hope it's the closest I get for a few more decades. Having lived through it, I can now say this to you with a bit more certainty than when death was a useful but purely intellectual concept. No one wants to die, even people who want to go to heaven don't want to die to get there. And yet death is the destination we all share share. No one has ever escaped it, and that is as it should be because death is very likely the single best invention of life. It's life's change agent. It clears out the old to make way for the new new. Right now, the new is you, but someday not too long from now you will gradually become the old and be cleared away. Sorry to be so dramatic, but it's quite true. Your time is limited, so don't waste it living someone else's life. Don't be trapped by dogma, which is living with the results of other people's thinking. don't let the noise of others' opinions drown out your own inner voice. And most important, have the courage to follow your heart and intuition. They somehow already know what you truly want to become, everything else is secondary."
+  }
+ ],
+ "backend": "WebGPU: WebGPU",
+ "webgpu": true,
+ "shaderF16": true,
+ "adapter": "nvidia turing NVIDIA GeForce RTX 2080 Ti",
+ "variant": "jspi",
+ "jspi": true,
+ "adapterReason": null,
+ "loadLines": "model file: 85260576 bytes on the server, 0 bytes stored in this browser (OPFS)\ndownload: 16777216 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload: 33554432 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload: 50331648 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload: 67108864 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload: 83886080 of 85260576 bytes written to OPFS (sync access handle), WASM heap 32 MB\ndownload complete: 85260576 bytes in OPFS (sync access handle)\nstorage path: OPFS sync access handle (the file stays on disk; tensors are read one at a time)\nloading the model into the backend: WASM heap 32 MB before\npass over 1.5 s of noise: 388 ms\npass over 13 s of noise: 127 ms\nready: 110M, Q4_0 (4-bit weights) on WebGPU: WebGPU, cap 12 s\n",
+ "console": []
+}
