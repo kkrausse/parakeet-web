@@ -1,0 +1,18 @@
+{
+  "name": "parakeet-web",
+  "version": "0.1.0",
+  "description": "Speech to text in the browser: Parakeet on transcribe.cpp + ggml WebGPU (WASM), with a streaming engine and microphone capture.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./assets/*": "./dist/assets/*",
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "parakeet-web-assets": "./bin/copy-assets.js"
+  }
+}
