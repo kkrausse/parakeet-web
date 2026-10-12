@@ -1,7 +1,7 @@
 # Streaming engine: the rule and its measurements
 
-Moved here unchanged from the work log this library came out of (`kkrausse/random`, branch `parakeet-live-lib`,
-`parakeet-ggml-web/README.md`, section "Streaming engine"). Written 11 Oct 2026, before the engine moved into
+Moved here unchanged from the work log this library came out of (`git show dbd44c0:README.md` in this repository,
+section "Streaming engine"; the branch it was written on in `kkrausse/random` has been deleted). Written 11 Oct 2026, before the engine moved into
 `lib/src/stream.ts`; "the page" is the demo page in `web/`. Result files named here are in `results/`.
 
 ## Streaming engine (11 Oct): commit by agreement, the gate only saves work
