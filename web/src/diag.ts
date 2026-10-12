@@ -3,6 +3,7 @@
 // browser kills still leaves its last step somewhere. Never audio, never transcript text. Sending fails
 // silently. Also here: telling the page's own errors from ones thrown by scripts it did not load
 // (wallet / extension / in-app-browser injections), and the per-page "how did the last visit end" record.
+import { detectDevice as detectDeviceUa, type Device } from "../../lib/src/index";
 declare const DIAG_URL: string; // build.ts (PK_DIAG_URL); "" = no collector
 
 export interface Diag {
@@ -108,14 +109,12 @@ export function watchErrors(diag: Diag, onOwn: (label: string, text: string) => 
 }
 
 // ---------- environment and page lifecycle ----------
-export interface Device { ios: boolean; phone: boolean; why: string }
-/** iOS / iPadOS (every browser there is WebKit) and phones in general. `phone=1|0` forces both, for testing. */
+export type { Device } from "../../lib/src/index";
+/** The library's guess from the user agent; `phone=1|0` forces both, for testing. */
 export function detectDevice(params: URLSearchParams): Device {
-  const ua = navigator.userAgent, forced = params.get("phone");
+  const forced = params.get("phone");
   if (forced === "1" || forced === "0") return { ios: forced === "1", phone: forced === "1", why: `phone=${forced}` };
-  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-  const phone = ios || /Android/.test(ua);
-  return { ios, phone, why: ios ? "iOS/iPadOS user agent" : phone ? "Android user agent" : "desktop user agent" };
+  return detectDeviceUa();
 }
 
 export function sendEnvironment(diag: Diag, extra: Record<string, unknown>) {

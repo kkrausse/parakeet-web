@@ -1,8 +1,9 @@
 // Parakeet (TDT 0.6b v2 and tdt_ctc-110m) in the browser on transcribe.cpp + ggml's WebGPU backend (WASM). One page,
-// no framework. Everything heavy happens in src/worker.ts; this file is configuration, the step
+// no framework. Everything heavy happens in the library's worker (../../lib, createTranscriber); this file is configuration, the step
 // trail (screen + localStorage, so a killed tab leaves one) and the benchmark loop.
-import { adapterSteps, backendEnv, createRpc, esc, fmtMs, gpuDiag, gpuLine, historyStore, r1, stepLine, wordDiff, type Rpc, type RunLog as RunLogOf, type Step } from "./common";
+import { esc, fmtMs, gpuDiag, gpuLine, historyStore, r1, stepLine, wordDiff, type RunLog as RunLogOf, type Step } from "./common";
 import { createDiag, detectDevice, lifeStore, sendEnvironment, watchErrors } from "./diag";
+import { createTranscriber, type GpuStats, type TranscriberInfo, type Variant } from "../../lib/src/index";
 // Reference text per model family: 0.6b = native transcribe.cpp F16; 110m = onnx-asr / ONNX Runtime fp32
 // (../parakeet-webgpu-bench/results/110m/reference-ort-cpu-fp32.jsonl).
 const EXPECTED_06B: Record<string, string> = {
@@ -81,20 +82,6 @@ function stats(xs: number[]) {
   return { median: r1(s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2), worst: r1(s[s.length - 1]), best: r1(s[0]) };
 }
 
-// ---------- worker RPC ----------
-let rpc: Rpc | null = null;
-const call = <T = any>(type: string, body: Record<string, unknown> = {}, transfer: Transferable[] = []) => rpc!.call<T>(type, body, transfer);
-function startWorker() {
-  rpc = createRpc((m) => {
-    if (m.type === "progress") return status(`downloading model: ${Math.round(m.got / 2 ** 20)} / ${Math.round(m.total / 2 ** 20)} MB`);
-    if (m.type === "stage") return step(m.name, undefined, m.detail);
-    if (m.type === "diag") return diag.send(m.kind, m.data);
-    if (m.type === "stdout") { if (cfg.verbose) step("wasm stdout", undefined, String(m.line).slice(0, 400), true); return; }
-    if (m.type === "stderr") { if (cfg.verbose || /error|abort|fail/i.test(m.line)) step(`wasm: ${String(m.line).slice(0, 400)}`); return; }
-    if (m.type === "stack" && cfg.verbose) step(`stack: ${String(m.stack).slice(0, 2500)}`);
-  });
-}
-
 // ---------- the run ----------
 async function run() {
   const w = window as any;
@@ -110,41 +97,40 @@ async function run() {
   step(`start: ${model.label}, flash=${cfg.flash ? "on" : "off"}, store=${cfg.store}, ${cfg.variant}`, undefined, `session ${diag.sid}; ${device.why}; limits ${cfg.limits || "raised"}; clip ${cfg.clip}`);
 
   w.__pkb.phase = "init";
-  startWorker();
-  // gpuwatch=0: no JS-side counting of WebGPU objects; gc=<MiB>: nudge the JS collector after each pass (src/worker.ts)
-  const init = await call("init", { base: location.href, variant: cfg.variant, wantF16: cfg.f16, limits: cfg.limits, gpuwatch: params.get("gpuwatch") !== "0", gcMb: Number(params.get("gc") ?? 0) || 0 });
-  let gpuNow: any = null, gpuPrev: any = null;
-  result.adapter = init.adapter; result.jspi = init.jspi;
-  const a = init.adapter;
-  diag.send("adapter", { adapter: a, jspi: init.jspi, heapMb: init.heapMb });
-  step("WASM module ready", init.ms, `heap ${init.heapMb} MB; JSPI ${init.jspi ? "available" : "absent"}`);
-  $("env").textContent = envLine(a);
-  adapterSteps(a, step);
-
-  w.__pkb.phase = "sessions";
-  status("fetching and loading the model");
-  const { useF16, flash, pathLine, env } = backendEnv(a, { f16: cfg.f16, flash: cfg.flash, extra: cfg.env });
-  result.shaderF16Used = useF16;
-  if (cfg.flash && !flash) step("flash attention needs shader-f16: using matmul + softmax attention instead");
-  step(pathLine);
-  if (a.available) step(a.plan?.limits === "default" ? `WebGPU limits: spec defaults, nothing raised${cfg.limits === "default" ? "" : " (the raised request was refused)"}` : `WebGPU limits: the two byte limits raised to ${JSON.stringify(a.requested?.requiredLimits)} (limits=default requests none)`);
-  life.phase("loading");
-  const ld = await call("load", { url: new URL(cfg.base + model.file, location.href).href, name: model.file, store: cfg.store, env, threads: cfg.threads, verbose: cfg.verbose });
-  result.load = { fetchMs: Math.round(ld.fetchMs), loadMs: Math.round(ld.loadMs), from: ld.from, fileMb: r1(ld.mb), wasmHeapMb: ld.heapMb, wasmHeapUsedMb: ld.heapUsedMb, backend: ld.backend };
-  result.session = { totalMs: Math.round(ld.loadMs) };
-  step(`model file ready (${ld.from})`, ld.fetchMs, `${ld.mb.toFixed(0)} MB; storage path ${ld.storagePath}`);
-  diag.send("chosen", { model: cfg.model, file: model.file, build: cfg.variant, backend: ld.backend, webgpu: /webgpu/i.test(ld.backend), shaderPath: useF16 ? "f16" : "f32-only", limits: a.plan?.limits ?? null,
-    storagePath: ld.storagePath, from: ld.from, fileBytes: Math.round(ld.mb * 2 ** 20), fetchMs: Math.round(ld.fetchMs), loadMs: Math.round(ld.loadMs), heapMb: ld.heapMb, heapUsedMb: ld.heapUsedMb, phone: device.phone, ios: device.ios });
-  step(`model loaded on ${ld.backend}`, ld.loadMs, `WASM heap ${ld.heapMb} MB, ${ld.heapUsedMb} MB in use`);
-  if (ld.gpu) { step(`after load: ${gpuLine(ld.gpu)}`); result.gpuAtLoad = ld.gpu; }
-  if (!/webgpu/i.test(ld.backend)) step(`WARNING: not on WebGPU (backend "${ld.backend}"). Everything runs on one WASM thread and the weights sit in the WASM heap.`);
-  if (ld.log) step(`library log: ${ld.log.trim().slice(0, 600)}`);
-  const gpuFail = (where: string, errs: string[] | undefined) => {
-    if (!errs?.length) return;
-    for (const e of errs.slice(0, 12)) step(`GPU ERROR (${where}): ${e.slice(0, 700)}`);
-    result.gpuErrors = [...(result.gpuErrors ?? []), ...errs];
-  };
-  gpuFail("load", ld.gpuErrors);
+  let gpuNow: GpuStats | null = null, gpuPrev: GpuStats | null = null;
+  // The library loads the module, probes the adapter, picks the shader path and loads the model; its step trail is this page's.
+  // gpuwatch=0: no JS-side counting of WebGPU objects; gc=<MiB>: nudge the JS collector after each pass
+  const t = await createTranscriber({
+    assetsUrl: "pk/", modelUrl: cfg.base + model.file,
+    onProgress(p) {
+      if (p.phase !== "model") return;
+      if (p.totalBytes) return status(`downloading model: ${Math.round(p.loadedBytes! / 2 ** 20)} / ${Math.round(p.totalBytes / 2 ** 20)} MB`);
+      w.__pkb.phase = "sessions"; status("fetching and loading the model"); life.phase("loading");
+    },
+    advanced: {
+      variant: cfg.variant as Variant, warmup: false, f16: cfg.f16, flashAttention: cfg.flash, gpuLimits: cfg.limits === "default" ? "default" : "raised", storage: cfg.store, env: cfg.env, threads: cfg.threads, verbose: cfg.verbose,
+      gpuWatch: params.get("gpuwatch") !== "0", gcMb: Number(params.get("gc") ?? 0) || 0,
+      onStep: (s) => (s.sensitive ? step("wasm stdout", undefined, s.name.replace(/^wasm: /, ""), true) : step(s.name, s.ms, s.detail)),
+      onDiagnostic(kind, data) {
+        if (kind === "load-heap") return diag.send(kind, data);
+        if (kind === "adapter") {
+          result.adapter = data.adapter; result.jspi = data.jspi;
+          diag.send("adapter", { adapter: data.adapter, jspi: data.jspi, heapMb: data.heapMb });
+          $("env").textContent = envLine(data.adapter);
+        }
+        if (kind === "loaded") {
+          const i: TranscriberInfo = data.info;
+          diag.send("chosen", { model: cfg.model, file: model.file, build: cfg.variant, backend: i.backend, webgpu: i.webgpu, shaderPath: i.shaderF16 ? "f16" : "f32-only", limits: i.adapter.plan?.limits ?? null,
+            storagePath: i.storagePath, from: i.modelFrom, fileBytes: i.modelBytes, fetchMs: Math.round(i.fetchMs), loadMs: Math.round(i.loadMs), heapMb: i.heapMb, heapUsedMb: i.heapUsedMb, phone: device.phone, ios: device.ios });
+        }
+      },
+    },
+  });
+  const info = t.info;
+  result.shaderF16Used = info.shaderF16;
+  result.load = { fetchMs: Math.round(info.fetchMs), loadMs: Math.round(info.loadMs), from: info.modelFrom, fileMb: r1(info.modelBytes / 2 ** 20), wasmHeapMb: info.heapMb, wasmHeapUsedMb: info.heapUsedMb, backend: info.backend };
+  result.session = { totalMs: Math.round(info.loadMs) };
+  if (info.gpuAtLoad) result.gpuAtLoad = info.gpuAtLoad;
   result.startToLoadedMs = Math.round(performance.now() - runStart);
   await new Promise((r) => setTimeout(r, 700)); // let the driver sample memory in a settled state
   w.__pkb.phase = "loaded";
@@ -157,13 +143,12 @@ async function run() {
     const seconds = audio.length / 16000;
     let nRun = 0;
     const once = async () => {
-      const r = await call("run", { pcm: audio });
-      diag.send("pass", { clip, n: ++nRun, ms: r1(r.wallMs), audioS: r1(seconds), melMs: r1(r.mel_ms), decodeMs: r1(r.decode_ms), heapMb: r.heapMb, heapUsedMb: r.heapUsedMb, gpu: gpuDiag(r.gpu) }, false);
-      gpuPrev = gpuNow; gpuNow = r.gpu ?? null;
-      gpuFail(clip, r.gpuErrors);
+      const r = await t.transcribe(audio); // rejects on a GPU error (the library has written the GPU ERROR steps): nothing after one is trustworthy
+      diag.send("pass", { clip, n: ++nRun, ms: r1(r.ms), audioS: r1(seconds), melMs: r1(r.melMs), decodeMs: r1(r.decodeMs), heapMb: r.heapMb, heapUsedMb: r.heapUsedMb, gpu: gpuDiag(r.gpu) }, false);
+      gpuPrev = gpuNow; gpuNow = r.gpu;
       if (cfg.verbose && r.log) for (const l of String(r.log).split("\n")) if (/decoder:|mel:/.test(l)) step(`library: ${l.trim().slice(0, 300)}`);
       // encoder = until its output is on the CPU: with lazy synchronize the library's own encode_ms stops at submit
-      return { pre: r.mel_ms as number, enc: (r.wallMs - r.mel_ms - r.decode_ms) as number, encSubmit: r.encode_ms as number, dec: r.decode_ms as number, total: r.wallMs as number, text: r.text as string, tokens: r.n_tokens as number, heapMb: r.heapMb as number, heapUsedMb: r.heapUsedMb as number };
+      return { pre: r.melMs, enc: r.ms - r.melMs - r.decodeMs, encSubmit: r.encodeMs, dec: r.decodeMs, total: r.ms, text: r.text, tokens: r.tokens, heapMb: r.heapMb, heapUsedMb: r.heapUsedMb };
     };
     status(`${clip}: first run`);
     life.phase("first-pass");
@@ -197,9 +182,8 @@ async function run() {
     if (gpuNow) { rec.gpu = gpuNow; step(`${clip}: ${gpuLine(gpuNow, gpuPrev)}`); }
     render(result);
   }
-  if (params.get("trim") === "1") { const t = await call("trim"); step("released the GPU compute buffers kept between runs (trim=1)", undefined, t ? gpuLine(t) : undefined); result.gpuAfterTrim = t; await new Promise((r) => setTimeout(r, 1500)); w.__pkb.phase = "trimmed"; await new Promise((r) => setTimeout(r, 600)); }
-  if (cfg.verbose) await call("free"); // a profiling build prints its summary when the backend is freed
-  if (result.gpuErrors?.length) throw new Error(`the GPU device reported ${result.gpuErrors.length} error line(s) (see the GPU ERROR steps); results above are not trustworthy`);
+  if (params.get("trim") === "1") { const g = await t.releaseWorkingMemory(); step("released the GPU compute buffers kept between runs (trim=1)", undefined, g ? gpuLine(g) : undefined); result.gpuAfterTrim = g; await new Promise((r) => setTimeout(r, 1500)); w.__pkb.phase = "trimmed"; await new Promise((r) => setTimeout(r, 600)); }
+  if (cfg.verbose) await t.dispose(); // a profiling build prints its summary when the backend is freed
   step("done", performance.now() - runStart);
   current.done = true, persist();
   life.phase("done");

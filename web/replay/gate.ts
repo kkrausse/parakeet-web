@@ -9,7 +9,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { applyCondition, CONDITIONS, coverage, frameRms, measure, replay, speechFrames, type Model, type ReplayOptions } from "./lib";
-import type { Transcription, Word } from "../src/stream";
+import type { Transcription, Word } from "../../lib/src/stream";
 
 const args = Bun.argv.slice(2);
 const flag = (k: string) => { const i = args.indexOf(k); return i < 0 ? undefined : args.splice(i, 2)[1]; };

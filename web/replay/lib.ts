@@ -1,7 +1,7 @@
 // Replay harness, shared by the bun script (replay/gate.ts, no model) and the Chrome page (src/replay-page.ts,
 // the real model): phone-like conditions made from a clean recording, a runner that feeds an engine on a virtual
 // clock, and the measurements. Nothing here touches the DOM.
-import { createStream, type StreamParams, type StreamStats, type Transcribe, type Transcription, type Word } from "../src/stream";
+import { createStream, type StreamParams, type StreamStats, type Transcribe, type Transcription, type Word } from "../../lib/src/stream";
 import { createOldLive } from "./old";
 
 export const SR = 16000;

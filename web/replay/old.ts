@@ -1,7 +1,7 @@
 // The live page's endpointer and pass scheduling as they were before src/stream.ts (commit 8c7907c,
 // src/live.ts lines 259-430), lifted out of the page so a replay can run them: same arithmetic, same
 // constants, the DOM and the diagnostics removed. Kept only to reproduce what the phone showed.
-import type { Transcribe, Word } from "../src/stream";
+import type { Transcribe, Word } from "../../lib/src/stream";
 
 const SR = 16000, FRAME = 320;
 export interface OldEvents {
