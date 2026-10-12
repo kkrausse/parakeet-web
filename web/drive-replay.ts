@@ -3,16 +3,17 @@
 // page (replay/lib.ts CONDITIONS). Writes ../results/replay/<name>.json (measurements) and ../cache/replay/<name>/
 // (full logs, not in git); prints one line per run.
 // usage: bun drive-replay.ts <name> [--clip iv90] [--conditions clean,low,phone,noisy,far] [--engines old,new] [--model s4] [--cap 12]
-//        [--params '{"holdS":0.8}'] [--seconds N] [--latency measured|<ms>] [--slow <x real time>] [--url http://127.0.0.1:8793/replay.html] [--stock]
+//        [--params '{"holdS":0.8}'] [--seconds N] [--latency measured|<ms>] [--slow <x real time>] [--url http://127.0.0.1:8796/replay.html] [--stock]
 import { chromium, webkit } from "playwright-core";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { BASE, CACHE, DISPLAY } from "./env";
 import { CONDITIONS, coverage, measure, type Condition } from "./replay/lib";
 
 const args = Bun.argv.slice(2);
 const flag = (k: string) => { const i = args.indexOf(k); return i < 0 ? undefined : args.splice(i, 2)[1]; };
 const bool = (k: string) => { const i = args.indexOf(k); if (i < 0) return false; args.splice(i, 1); return true; };
-const url0 = flag("--url") ?? "http://127.0.0.1:8793/replay.html";
+const url0 = flag("--url") ?? BASE + "replay.html";
 const clipName = flag("--clip") ?? "iv90", model = flag("--model") ?? "s4", cap = Number(flag("--cap") ?? 12);
 const conds = (flag("--conditions") ?? "clean,low,phone,noisy,far").split(","), engines = (flag("--engines") ?? "old,new").split(",") as ("old" | "new")[];
 const paramsJson = flag("--params"), seconds = Number(flag("--seconds") ?? 0) || undefined, lat = flag("--latency"), slow = Number(flag("--slow") ?? 0) || undefined;
@@ -21,14 +22,14 @@ const browser = flag("--browser") ?? "chrome"; // chrome | webkit (Playwright's 
 const query = flag("--query") ?? "";
 const [name] = args;
 if (!name) throw new Error("usage: bun drive-replay.ts <name> [--clip iv90] ...");
-const R = process.env.PK_CACHE ?? join(process.env.HOME!, "devfs/cache/parakeet-ggml-webgpu");
+const R = CACHE;
 const clipFile = [join(R, "audio/replay", clipName + ".f32"), join(R, "audio/live", clipName + ".f32"), join(R, "audio", clipName + ".f32")].find(existsSync);
 if (!clipFile) throw new Error(`no ${clipName}.f32 under ${R}/audio (scripts/replay-clips.sh makes them)`);
 const here = import.meta.dir, outDir = join(here, "..", "results", "replay"), rawDir = join(here, "..", "cache", "replay", name);
 mkdirSync(outDir, { recursive: true }); mkdirSync(rawDir, { recursive: true });
 const profile = join(here, "..", "cache", "chrome-profiles", `replay-${name}`);
 rmSync(profile, { recursive: true, force: true });
-const display = process.env.PK_DISPLAY ?? ":197";
+const display = DISPLAY;
 const xvfb = Bun.spawn(["Xvfb", display, "-screen", "0", "1280x900x24", "-nolisten", "tcp", "-ac"], { stderr: "ignore" });
 await Bun.sleep(700);
 const procMib = (pid: number) => { try { return Math.round(Number(readFileSync(`/proc/${pid}/status`, "utf8").match(/VmRSS:\s+(\d+)/)![1]) / 1024); } catch { return 0; } };

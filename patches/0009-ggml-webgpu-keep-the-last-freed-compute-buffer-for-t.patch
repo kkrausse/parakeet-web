@@ -1,7 +1,7 @@
-From f9608c798a7db888bcba7179a5a4b44e4927b1b1 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 03:54:20 -0700
-Subject: [PATCH 09/14] ggml-webgpu: keep the last freed compute buffer for the
+Subject: [PATCH 09/24] ggml-webgpu: keep the last freed compute buffer for the
  next allocation; pk_trim
 
 transcribe.cpp frees its graph allocator after every run. Dawn releases a
@@ -180,6 +180,3 @@ index 7662a902..12ed1f52 100644
  ggml_backend_t ggml_backend_webgpu_init(void) {
      ggml_backend_reg_t reg = ggml_backend_webgpu_reg();
      if (ggml_backend_reg_dev_count(reg) == 0) {
--- 
-2.53.0
-

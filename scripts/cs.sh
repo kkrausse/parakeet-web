@@ -1,6 +1,6 @@
 #!/bin/bash
 # One Chrome run, compact summary (clips, memory, error, interesting steps).  usage: [STOCK=1] [STEPS=regex] cs.sh NAME "query" [drive args]
-W=~/devfs/repos/kkrausse/random/.claude/worktrees/parakeet-ggml-web/parakeet-ggml-web; n=$1
+W=$(cd "$(dirname "$0")/.." && pwd); n=$1
 $W/scripts/cr.sh "$@" > /dev/null
 python3 - $W/results/browser/$n.json "${STEPS:-ERROR|FAILED|BELOW|WARNING|note:}" <<'PY'
 import json,sys,re

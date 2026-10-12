@@ -1,6 +1,6 @@
 #!/bin/bash
 # Per-shader GPU ms per run (browser-like native, timestamp queries). usage: prof.sh QUANT [env...]
-R=~/devfs/cache/parakeet-ggml-webgpu; cd $R; q=$1; shift
+R=${PK_CACHE:-~/devfs/cache/parakeet-ggml-webgpu}; cd $R; q=$1; shift
 cmake -S transcribe.cpp -B build-webgpu-prof > /dev/null 2>&1
 nice make -C build-webgpu-prof -j6 transcribe-bench > out/build-prof.log 2>&1 || { grep error -A4 out/build-prof.log | head; exit 1; }
 env GGML_WEBGPU_BROWSER=1 TRANSCRIBE_NO_FLASH=1 "$@" build-webgpu-prof/bin/transcribe-bench --model gguf/parakeet-tdt-0.6b-v2-$q.gguf --sample audio/${CLIP:-a07}.wav --iters 10 --warmup 2 --quiet --threads 4 > out/prof-$q.txt 2>&1

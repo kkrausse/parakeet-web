@@ -1,7 +1,7 @@
-From 8a137d0f359fbf9de1ebc51fc4fb8a2cbbfa368e Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 06:20:52 -0700
-Subject: [PATCH] ggml-cpu wasm: vec_dot_q8_0_q8_0 with extmul + pairwise
+Subject: [PATCH 18/24] ggml-cpu wasm: vec_dot_q8_0_q8_0 with extmul + pairwise
  widening
 
 Per 32-byte block: 4 i16x8.extmul, 2 i16 adds (two products of values in
@@ -58,6 +58,3 @@ index ef19a1ef..60f54d6f 100644
  
          // Convert to float and accumulate
          const float scale = GGML_CPU_FP16_TO_FP32(x0->d) * GGML_CPU_FP16_TO_FP32(y0->d);
--- 
-2.53.0
-

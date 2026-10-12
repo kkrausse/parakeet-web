@@ -4,6 +4,8 @@
 import { esc, fmtMs, gpuDiag, gpuLine, historyStore, r1, stepLine, type RunLog, type Step } from "./common";
 import { createDiag, detectDevice, lifeStore, sendEnvironment, watchErrors } from "./diag";
 import { createDictation, createStream, DEFAULT_PARAMS, isMicrophoneError, isTranscriberError, type Dictation, type DictationError, type DictationState, type GpuStats, type StreamParams, type StreamStats, type TranscriberInfo } from "../../lib/src/index";
+declare const SHARED: string; // build.ts: a sibling deployment holding models/ and audio/ ("" = none, everything is beside the page)
+const sharedBase = typeof SHARED === "string" ? SHARED : "";
 declare const MODELS: Record<string, { label: string; file: string; mb: number; family: "0.6b" | "110m" }>; // build.ts; smallest verified first
 
 const params = new URLSearchParams(location.search);
@@ -125,8 +127,8 @@ const live = () => dictGen === loadGen; // callbacks of a load that has been rep
 async function modelBase(file: string) {
   if (cfg.base) return cfg.base;
   // Next to the page when built locally; the published live page reuses the benchmark deployment's files.
-  const local = "models/", shared = "../parakeet-ggml-browser/models/";
-  for (const base of /live\.html$/.test(location.pathname) ? [local, shared] : [shared, local]) {
+  const local = "models/", shared = sharedBase + "models/";
+  for (const base of !sharedBase ? [local] : /live\.html$/.test(location.pathname) ? [local, shared] : [shared, local]) {
     try { const r = await fetch(base + file, { method: "HEAD" }); if (r.ok && Number(r.headers.get("content-length") ?? 0) > 1e6) return base; } catch { /* next */ }
   }
   return "models/";
@@ -388,7 +390,7 @@ const stopRecording = () => { if (recording) void dict?.stop(); };
 // is ready; soakgap=<ms> waits between passes (0); the visit is marked so that a tab killed in a soak says so next time.
 let soaking = false, soakStop = false;
 async function soakAudio(): Promise<{ pcm: Float32Array; from: string }> {
-  for (const u of /live\.html$/.test(location.pathname) ? ["audio/a56.f32", "../parakeet-ggml-browser/audio/a56.f32"] : ["../parakeet-ggml-browser/audio/a56.f32", "audio/a56.f32"]) {
+  for (const u of !sharedBase ? ["audio/a56.f32"] : /live\.html$/.test(location.pathname) ? ["audio/a56.f32", sharedBase + "audio/a56.f32"] : [sharedBase + "audio/a56.f32", "audio/a56.f32"]) {
     try { const r = await fetch(u); if (r.ok) { const b = await r.arrayBuffer(); if (b.byteLength > SR * 4 * 20) return { pcm: new Float32Array(b, 0, b.byteLength >> 2), from: u }; } } catch { /* next */ }
   }
   // No fixture reachable: tones under noise. The text is nonsense, the graph and its sizes are the same.
@@ -464,7 +466,9 @@ function init() {
   const sel = $("model") as HTMLSelectElement;
   sel.innerHTML = Object.entries(MODELS).map(([k, v]) => `<option value="${k}"${k === cfg.model ? " selected" : ""}>${esc(v.label)}, ${v.mb} MB</option>`).join("");
   sel.addEventListener("change", () => { lsSet(MODEL_KEY, sel.value); void loadModel(sel.value); });
-  ($("bench") as HTMLAnchorElement).href = /live\.html$/.test(location.pathname) ? "./" : "../parakeet-ggml-browser/";
+  if (/live\.html$/.test(location.pathname)) ($("bench") as HTMLAnchorElement).href = "./";
+  else if (sharedBase) ($("bench") as HTMLAnchorElement).href = sharedBase;
+  else $("bench").hidden = true; // the live page alone (GitHub Pages): no benchmark page beside it
   const proc = $("proc") as HTMLInputElement;
   proc.checked = lsGet(PROC_KEY) === "1";
   proc.addEventListener("change", () => lsSet(PROC_KEY, proc.checked ? "1" : "0"));

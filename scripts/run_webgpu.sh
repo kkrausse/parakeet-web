@@ -1,6 +1,6 @@
 #!/bin/bash
 # usage: run_webgpu.sh GGUF TAG [env assignments...]   -> bench json + peak GPU MiB + op placement
-R=~/devfs/cache/parakeet-ggml-webgpu; M=$1; TAG=$2; shift 2
+R=${PK_CACHE:-~/devfs/cache/parakeet-ggml-webgpu}; M=$1; TAG=$2; shift 2
 env "$@" $R/build-webgpu/bin/transcribe-bench --model $M --sample $R/audio/a07.wav --iters 8 --warmup 2 --quiet > $R/out/bench-$TAG.json 2> $R/out/bench-$TAG.err &
 PID=$!; PEAK=0
 while kill -0 $PID 2>/dev/null; do

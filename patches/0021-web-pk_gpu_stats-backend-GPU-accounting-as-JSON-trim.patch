@@ -1,7 +1,7 @@
-From 5645b3bd4dcd8786334d2c3cb77752179b7bfeca Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 09:12:01 -0700
-Subject: [PATCH 21/21] web: pk_gpu_stats (backend GPU accounting as JSON),
+Subject: [PATCH 21/24] web: pk_gpu_stats (backend GPU accounting as JSON),
  trim before loading another model
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
@@ -56,6 +56,3 @@ index 4b3d658f..375ec29c 100644
  EMSCRIPTEN_KEEPALIVE const char * pk_json(void) {
      return g_json.c_str();
  }
--- 
-2.53.0
-

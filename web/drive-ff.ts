@@ -1,15 +1,16 @@
 // Second WebGPU implementation: Playwright's Firefox (wgpu + naga instead of Dawn + Tint) on Xvfb.
-// usage: PLAYWRIGHT_BROWSERS_PATH=~/devfs/cache/parakeet-ggml-webgpu/pw-browsers bun drive-ff.ts <name> "<query>" [--url http://127.0.0.1:8791/]
+// usage: PLAYWRIGHT_BROWSERS_PATH=$PK_CACHE/pw-browsers bun drive-ff.ts <name> "<query>" [--url http://127.0.0.1:8796/]
 // Prints the page's step trail; writes ../results/browser/<name>.json. WebGPU in Firefox on Linux is behind prefs.
 import { firefox } from "playwright-core";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { BASE, CACHE, DISPLAY } from "./env";
 
 const args = process.argv.slice(2);
 const urlAt = args.indexOf("--url");
-const base = urlAt >= 0 ? args.splice(urlAt, 2)[1] : "http://127.0.0.1:8791/";
+const base = urlAt >= 0 ? args.splice(urlAt, 2)[1] : BASE;
 const [name, query = ""] = args;
-const display = process.env.PK_DISPLAY ?? ":195";
+const display = DISPLAY;
 const xvfb = Bun.spawn(["Xvfb", display, "-screen", "0", "1280x900x24", "-nolisten", "tcp", "-ac"], { stderr: "ignore" });
 await Bun.sleep(700);
 const browser = await firefox.launch({

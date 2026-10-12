@@ -3,9 +3,9 @@
 The app the library's README describes, complete. It is not part of the package; copy it somewhere and:
 
 ```sh
-bun add /path/to/parakeet-web-0.1.0.tgz
+bun add git+ssh://git@github.com/kkrausse/parakeet-web.git#v0.1.0
 bunx parakeet-web-assets public/parakeet-web
-mkdir -p public/models && cp ~/devfs/cache/parakeet-ggml-webgpu/gguf/parakeet-tdt_ctc-110m-Q4_0.gguf public/models/
+mkdir -p public/models && cp /path/to/parakeet-tdt_ctc-110m-Q4_0.gguf public/models/
 bun run build && bun run serve        # http://127.0.0.1:8795/
 ```
 

@@ -2,14 +2,15 @@
 // clip cut to a different length each time, and writes ../results/soak/<name>.json with the page's own
 // counters per pass (GPU buffers live / made, bind groups, JS objects made / collected) next to what the
 // machine saw (GPU process memory from nvidia-smi, renderer and GPU process RSS).
-// usage: bun drive-soak.ts <name> "<query>" [--passes 300] [--url http://127.0.0.1:8793/live.html] [--chrome-arg ARG]...
+// usage: bun drive-soak.ts <name> "<query>" [--passes 300] [--url http://127.0.0.1:8796/live.html] [--chrome-arg ARG]...
 import { chromium } from "playwright-core";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { BASE, CACHE, DISPLAY } from "./env";
 
 const args = Bun.argv.slice(2);
 const flag = (k: string) => { const i = args.indexOf(k); return i < 0 ? undefined : args.splice(i, 2)[1]; };
-const url0 = flag("--url") ?? "http://127.0.0.1:8793/live.html";
+const url0 = flag("--url") ?? BASE + "live.html";
 const passes = Number(flag("--passes") ?? 300);
 const chromeArgs: string[] = [];
 for (let a = flag("--chrome-arg"); a; a = flag("--chrome-arg")) chromeArgs.push(a);
@@ -21,7 +22,7 @@ const outDir = join(here, "..", "results", "soak");
 const profile = join(here, "..", "cache", "chrome-profiles", `soak-${name}`);
 mkdirSync(outDir, { recursive: true });
 rmSync(profile, { recursive: true, force: true });
-const display = process.env.PK_DISPLAY ?? ":197";
+const display = DISPLAY;
 const xvfb = Bun.spawn(["Xvfb", display, "-screen", "0", "1280x900x24", "-nolisten", "tcp", "-ac"], { stderr: "ignore" });
 await Bun.sleep(700);
 

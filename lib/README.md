@@ -5,20 +5,24 @@ to WASM. Dictation with text appearing as you speak, or offline transcription of
 takes part; the library sends nothing anywhere and stores only the model file (in the browser's origin-private
 file system).
 
-How the runtime was built and measured is in [`../README.md`](../README.md). This file is how to use it.
+This file is how to use it. Building it, the runtime it is compiled from and the demo pages are in the repository's
+README (`kkrausse/parakeet-web`, private).
 
 ## Install
 
-The package is a tarball built from this directory (see "Build" below); it is not on a registry.
+The package is not on a registry. It is installed from the private repository by tag (the tag points at the
+`release` branch, which holds the built package and nothing else); this needs read access to the repository over ssh:
 
 ```sh
-bun add /path/to/parakeet-web-0.1.0.tgz          # or a URL to the same file
+bun add git+ssh://git@github.com/kkrausse/parakeet-web.git#v0.1.0
 bunx parakeet-web-assets public/parakeet-web     # copies the runtime files into a folder your app serves
 ```
 
-The second line copies `node_modules/parakeet-web/dist/assets/` (12 MB: `worker.js`, `worklet.js`, and two builds
+(`bun add /path/to/parakeet-web-0.1.0.tgz`, the tarball `lib/build.ts` leaves beside it, installs the same files.)
+
+The second line copies `node_modules/parakeet-web/dist/assets/` (12 MB: `worker.js`, `worklet.js`, two builds
 of the WASM module, `pk-web.js` + `pk-web.wasm` with JSPI and `pk-web-asyncify.js` + `pk-web-asyncify.wasm`
-without). They are loaded by URL at run time; a browser fetches one of the two builds (4.9 or 7.0 MB), never both.
+without, and `LICENSES.txt`, the licence texts of what the WASM is compiled from). They are loaded by URL at run time; a browser fetches one of the two builds (4.9 or 7.0 MB), never both.
 Copy them again after upgrading the package. Nothing depends on how your bundler treats workers or WASM: the
 library only ever does `new Worker(assetsUrl + "worker.js")`.
 
@@ -38,8 +42,9 @@ Not in the package. Host one GGUF file as a static file and pass its URL as `mod
 
 Where they come from: the 110m F32 and Q8_0 files are from the Hugging Face repo
 `handy-computer/parakeet-tdt_ctc-110m-gguf`; Q4_0 is made from the F32 one with transcribe.cpp's quantizer
-(`transcribe-quantize parakeet-tdt_ctc-110m-F32.gguf parakeet-tdt_ctc-110m-Q4_0.gguf --quant Q4_0`). On diesel2
-they are in `~/devfs/cache/parakeet-ggml-webgpu/gguf/`.
+(`transcribe-quantize parakeet-tdt_ctc-110m-F32.gguf parakeet-tdt_ctc-110m-Q4_0.gguf --quant Q4_0`). The models are
+NVIDIA's, licensed CC BY 4.0: wherever you host a model file, credit NVIDIA Parakeet and say the file was converted
+and quantized.
 
 - The file is downloaded once per browser and kept in OPFS (directory `pk-models`, under the file's name). A later
   visit asks the server for the size only (`HEAD`) and reads the stored copy if it matches, so the server must
@@ -65,7 +70,7 @@ const dictation = createDictation({
 button.onclick = () => (dictation.state.recording ? dictation.stop() : dictation.start());
 ```
 
-`example/` in this directory (not in the tarball) holds this as a complete small app, bundled with `bun build`.
+`lib/example/` in the repository (not in the package) holds this as a complete small app, bundled with `bun build`.
 
 What to know:
 
@@ -142,8 +147,8 @@ await stream.stop();     // no more audio for now: the rest is committed
 Pure: no DOM, worker, microphone or timer. It keeps recent audio in one buffer, transcribes it again and again,
 and commits a word once successive passes agree on it and enough audio follows it; an energy gate only decides
 when passes are worth running. Feed it from a file, a WebRTC track, or anything else that yields 16 kHz PCM; give
-it any `transcribe` function (the stand-in model in `../web/replay/gate.ts` is one). The rule and its numbers are
-in the main README, "Streaming engine". The numbers (`StreamParams`) were tuned against recordings; change them
+it any `transcribe` function (the stand-in model in `web/replay/gate.ts` in the repository is one). The rule and
+its numbers are in `docs/streaming-engine.md` there. The numbers (`StreamParams`) were tuned against recordings; change them
 with a measurement in hand.
 
 ### 3. Microphone: 16 kHz blocks
@@ -183,7 +188,7 @@ no network other than `assetsUrl` and `modelUrl`.
 - `dictation.stats()` (lag, buffer, gate, commit reasons), `dictation.transcriber` (the loaded transcriber, for
   offline passes on the same model and `gpuStats()`), `formatGpuStats(stats)` for one line of text.
 
-`../web/src/live.ts` uses all of these: it is the reference for a page with a collector, a soak test and a
+`web/src/live.ts` in the repository (the demo page) uses all of these: it is the reference for a page with a collector, a soak test and a
 crash guard built on the callbacks.
 
 ## Browser support, as measured
@@ -193,7 +198,7 @@ crash guard built on the callbacks.
 | Chrome 154, Linux, RTX 2080 Ti (`shader-f16` through a Dawn flag, and stock f32-only before the refactor) | **Measured with this package.** WebGPU, JSPI build. Fake microphone, 110m Q4_0, 12 s cap: a pass every 250 ms takes 80-84 ms median (105-160 at the 95th percentile) on a 5.9 s buffer, text trails speech by 0.1 s median and 0.4-0.7 s at worst, GPU process 194-201 MiB, WASM heap 46 MB. An app built from the tarball with `bun build` gave the same. |
 | Chrome, same box, ASYNCIFY build (`advanced.transcriber.variant`) | **Measured with this package** on the same 60 s clip: 79 / 102 ms median / p95 per pass, the same lag and memory. This is the build a browser without JSPI gets. |
 | Playwright's Linux WebKit 27.2 | **Measured with this package**: `createTranscriber` + `createStream` fed from a file. No WebGPU there (`navigator.gpu` is undefined in workers), so the CPU backend, one WASM thread, JSPI build: 1.1 s per pass on a 6-7 s buffer (about 6x real time), so live text would trail by seconds. Same text as an offline pass. `getUserMedia` never answers in that build: `createMicrophone().start()` rejects with `timeout`. |
-| iPhone 16 Pro Max, Safari and Brave | **Not run with this package.** The page this library was lifted out of ran there on WebGPU with the ASYNCIFY build (no JSPI in Safari before 27), passes of 30-80 ms on 110m Q4_0, as reported by its owner and its diagnostics log. The code paths are the same ones, moved, not rewritten; that is an argument, not a measurement. |
+| iPhone | **Ran with this package on 2026-10-12, on WebGPU, as reported by the owner** (the demo page built on the library). No numbers from that run are recorded here. Before the library existed, the page it was lifted out of ran on an iPhone 16 Pro Max in Safari and Brave on WebGPU with the ASYNCIFY build (no JSPI in Safari before 27), passes of 30-80 ms on 110m Q4_0, as reported by its owner and its diagnostics log. |
 | iOS 18.3 simulator Safari | Not run with this package. Before: no WebGPU adapter in the simulator, CPU path with the ASYNCIFY build worked. |
 | Firefox | Not working when last tried (Playwright Firefox 157 exposes an adapter and refuses every device). The CPU fallback there was not tried. |
 | Android | Never run. |
@@ -206,7 +211,7 @@ past 30 s of backlog audio is skipped (`advanced.streamEvents.onSkip`).
 
 - Demo page, fake microphone, 60 s clip, `phone=1`, 110m Q4_0, before and after the move onto the library:
   same pass counts and times, same kind of text (the committed text of this clip is not byte-stable between runs
-  either way). Numbers in the main README, "Library".
+  either way): 207-210 passes, 79-83 ms median, 8-15 of 120 committed words differing from an offline pass.
 - An app outside this repository, installed from the tarball, assets copied with `parakeet-web-assets`, bundled
   with `bun build`, dictating into a textarea: 120-121 words for the 122-word reference clip, 12-14 differing
   (case and punctuation ignored), no page error.
@@ -234,9 +239,10 @@ past 30 s of backlog audio is skipped (`advanced.streamEvents.onSkip`).
 
 ## Not tested
 
-- This package on any phone, in Safari, Firefox or on Android; a real microphone (every microphone run used
-  Chrome's fake device at 44.1 kHz, so the 48 kHz resampler path, Bluetooth input and real room noise were not
-  exercised through the library); the wake lock; a tab going to the background while recording; track `ended`
+- This package on a phone beyond the one iPhone run reported above (nothing was measured there); desktop Safari,
+  Firefox, Android; a real microphone under measurement (every measured microphone run used Chrome's fake device
+  at 44.1 kHz, so the 48 kHz resampler path, Bluetooth input and real room noise were not measured through the
+  library); the wake lock; a tab going to the background while recording; track `ended`
   and `mute` events; `voiceProcessing: true`.
 - Vite, webpack or any bundler other than `bun build`; a page served from a sub-path with a relative `assetsUrl`
   other than the demo's `pk/`; a cross-origin `modelUrl`.
@@ -250,14 +256,17 @@ past 30 s of backlog audio is skipped (`advanced.streamEvents.onSkip`).
 
 ## Build
 
+In the repository (its README has the whole of it, including how the WASM is built from upstream transcribe.cpp
+plus the patches in `patches/`):
+
 ```sh
+bun scripts/runtime.ts source && bun scripts/runtime.ts build   # the patched runtime and its two WASM builds, into vendor/
 cd lib && bun install && bun build.ts     # dist/ (index.js, .d.ts, assets/) and parakeet-web-0.1.0.tgz beside this file
-cd web && bun install && bun build.ts     # the same, then the demo pages into web/dist (they import ../lib/src)
+bun scripts/release.ts --push             # the built package onto the `release` branch, tagged v<version>
 ```
 
-`build.ts` copies the two Emscripten builds from `~/devfs/cache/parakeet-ggml-webgpu/build-web*/bin/` (`PK_CACHE`
-overrides the directory); prebuilt WASM is not in git. Building those is in the main README ("Build, run,
-deploy"). The tarball is `bun pm pack`; ESM only, types included.
+`build.ts` copies the two Emscripten builds from `vendor/build-web*/bin/` (`PK_WASM_BUILDS` overrides the
+directory); prebuilt WASM is not in git on source branches. The tarball is `bun pm pack`; ESM only, types included.
 
 Layout: `src/index.ts` (exports), `src/dictation.ts`, `src/transcriber.ts`, `src/stream.ts`, `src/microphone.ts`,
 `src/runtime.ts` (worker RPC, shared types), `src/worker.ts` and `src/worklet.ts` (built into `dist/assets/`),

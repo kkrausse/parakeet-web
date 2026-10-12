@@ -1,6 +1,6 @@
 #!/bin/bash
 # Rebuild the site, publish it in place (private shelf) and verify the published link from stock Chrome.  usage: pub.sh [query]
-W=~/devfs/repos/kkrausse/random/.claude/worktrees/parakeet-ggml-web/parakeet-ggml-web; cd $W/web && bun build.ts | tail -1
+W=$(cd "$(dirname "$0")/.." && pwd); cd $W/web && bun build.ts | tail -1
 ~/devfs/repos/kkrausse/random/scripts/deploy-artifact.sh "$W/web/dist" parakeet-ggml-browser 2>&1 | tail -2
 U=https://raspberrypi.guineafowl-truck.ts.net/artifacts/parakeet-ggml-browser/
 timeout 900 bun drive.ts published-default-stock "${1:-clip=all&runs=5}" --url $U --timeout-min 12 > /dev/null 2>&1

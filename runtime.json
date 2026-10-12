@@ -1,0 +1,6 @@
+{
+  "upstream": "https://github.com/handy-computer/transcribe.cpp",
+  "base": "c63b18e2b4292760f71721ad86778e721c92ebeb",
+  "tree": "f83c5fd5fbff74a4f22e0ca3ff45166c720c91e8",
+  "patches": 24
+}

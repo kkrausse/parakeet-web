@@ -1,7 +1,7 @@
-From 8fd0ad0e143ce3c008099864c1357fd020f3e977 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 05:59:23 -0700
-Subject: [PATCH 17/17] mel: no whole-clip fp64 copies and a blocked power
+Subject: [PATCH 17/24] mel: no whole-clip fp64 copies and a blocked power
  spectrogram off Apple (bit-identical)
 
 The radix-2 path built emph[] and padded[] (16 bytes per sample) and a
@@ -188,6 +188,3 @@ index 3c799f1e..1180eabb 100644
      std::vector<double>().swap(padded);
      std::vector<float>().swap(padded_f32);
      std::vector<float>().swap(window_f32);
--- 
-2.53.0
-

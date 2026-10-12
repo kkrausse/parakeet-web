@@ -10,7 +10,7 @@
 #   iv6.wav  iv6 + 4 s of silence as a wav for Chrome's fake microphone (web/drive-live.ts)
 # usage: python3 scripts/replay-clips.py
 import array, os, subprocess, wave
-R = os.path.expanduser('~/devfs/cache/parakeet-ggml-webgpu/')
+R = os.environ.get('PK_CACHE', os.path.expanduser('~/devfs/cache/parakeet-ggml-webgpu')) + '/'
 out = R + 'audio/replay/'
 os.makedirs(out, exist_ok=True)
 src = os.path.expanduser('~/devfs/repos/kkrausse/autoanimate/scenes/gromen-live/work/dl/src.m4a')

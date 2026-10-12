@@ -1,7 +1,7 @@
-From b695cfe98dc3467c814fff403382eac3f7cc0652 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 05:08:06 -0700
-Subject: [PATCH 12/14] mel: tabulated radix-2 twiddles (bit-identical),
+Subject: [PATCH 12/24] mel: tabulated radix-2 twiddles (bit-identical),
  SIMD128 for the mel source in WASM, timing line
 
 The butterflies recomputed each twiddle with a loop-carried complex multiply.
@@ -186,6 +186,3 @@ index af4e23ca..3c799f1e 100644
      std::vector<double>().swap(padded);
      std::vector<float>().swap(padded_f32);
      std::vector<float>().swap(window_f32);
--- 
-2.53.0
-

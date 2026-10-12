@@ -6,6 +6,7 @@
 import { chromium } from "playwright-core";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { DISPLAY } from "./env";
 
 const args = Bun.argv.slice(2);
 const flag = (k: string) => { const i = args.indexOf(k); return i < 0 ? undefined : args.splice(i, 2)[1]; };
@@ -21,7 +22,7 @@ if (!name) throw new Error("usage: bun drive-consumer.ts <name> --wav FILE");
 const here = import.meta.dir, outDir = join(here, "..", "results", "consumer"), profile = join(here, "..", "cache", "chrome-profiles", `consumer-${name}`);
 mkdirSync(outDir, { recursive: true });
 rmSync(profile, { recursive: true, force: true });
-const display = process.env.PK_DISPLAY ?? ":198";
+const display = DISPLAY;
 const xvfb = Bun.spawn(["Xvfb", display, "-screen", "0", "1280x900x24", "-nolisten", "tcp", "-ac"], { stderr: "ignore" });
 await Bun.sleep(700);
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9' ]+/g, " ").split(/\s+/).filter(Boolean);

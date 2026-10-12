@@ -1,7 +1,7 @@
-From 9b360e15ba2cf35a94856e7a53a7864ba65638fe Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 05:10:55 -0700
-Subject: [PATCH 13/14] parakeet decoder: per-token memo of layer-0 Wx @
+Subject: [PATCH 13/24] parakeet decoder: per-token memo of layer-0 Wx @
  embedding, joint prediction half cached across blank steps
 
 Wx @ embed(token) of the first LSTM layer depends on the token only: it is
@@ -226,6 +226,3 @@ index 322c4b0e..b081c9de 100644
      ggml_context *        lstm_w_ctx     = nullptr;
      ggml_backend_t        lstm_w_backend = nullptr;  // alloc-only; never compute'd
      ggml_backend_buffer_t lstm_w_buf     = nullptr;
--- 
-2.53.0
-

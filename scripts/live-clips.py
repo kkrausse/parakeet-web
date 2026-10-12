@@ -3,7 +3,7 @@
 # for Chrome's fake microphone, the same samples as .f32 for the offline pass, and the 110m reference
 # text of the parts joined (.txt).   usage: python3 scripts/live-clips.py
 import array, os, re, wave
-A = os.path.expanduser('~/devfs/cache/parakeet-ggml-webgpu/audio/')
+A = os.environ.get('PK_CACHE', os.path.expanduser('~/devfs/cache/parakeet-ggml-webgpu')) + '/audio/'
 src = open(os.path.join(os.path.dirname(__file__), '../web/src/main.ts')).read()
 ref = dict(re.findall(r'"(a\d\d)": "([^"]+)"', src[src.index('EXPECTED_110M'):src.index('const CLIPS')]))
 def rd(n):

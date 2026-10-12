@@ -1,7 +1,7 @@
-From 7178fa2b6b5a99acfad6c745568fc0755588f10e Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sun, 11 Oct 2026 19:15:40 -0700
-Subject: [PATCH] web: Module.pkTick, a sign of life during a run
+Subject: [PATCH 24/24] web: Module.pkTick, a sign of life during a run
 
 pk_run on a long clip is silent for many seconds. The library already polls
 an abort callback twice per encoder window; install one that never aborts
@@ -71,6 +71,3 @@ index 649673bb..6399892f 100644
      const transcribe_status st = transcribe_run(g_session, pcm, n_samples, nullptr);
      if (st != TRANSCRIBE_OK) {
          g_json = std::string("{\"error\":\"") + json_escape(transcribe_status_string(st)) + "\"}";
--- 
-2.53.0
-

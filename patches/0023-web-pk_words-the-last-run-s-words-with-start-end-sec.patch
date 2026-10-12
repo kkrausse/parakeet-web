@@ -1,8 +1,8 @@
-From a58cbdd77575385b8b4eaae8b1e61d2d6c43eba0 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sun, 11 Oct 2026 19:01:57 -0700
-Subject: [PATCH] web: pk_words (the last run's words with start/end seconds
- and a confidence, as JSON)
+Subject: [PATCH 23/24] web: pk_words (the last run's words with start/end
+ seconds and a confidence, as JSON)
 
 The library already builds a word table for Parakeet: each TDT token carries the
 encoder frame it was emitted on and its predicted duration, and words are split on
@@ -101,6 +101,3 @@ index 375ec29c..649673bb 100644
  EMSCRIPTEN_KEEPALIVE void pk_free(void) {
      if (g_session != nullptr) {
          transcribe_close(g_session);
--- 
-2.53.0
-

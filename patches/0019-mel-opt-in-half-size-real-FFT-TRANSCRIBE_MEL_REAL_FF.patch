@@ -1,8 +1,8 @@
-From 237d972550a36eb51dc5a954014bdf5433a34094 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 06:27:38 -0700
-Subject: [PATCH] mel: opt-in half-size real FFT (TRANSCRIBE_MEL_REAL_FFT=1),
- mel checksum line
+Subject: [PATCH 19/24] mel: opt-in half-size real FFT
+ (TRANSCRIBE_MEL_REAL_FFT=1), mel checksum line
 
 The windowed frame is real, so its n_fft-point spectrum comes from one complex
 FFT of n_fft/2 points (even samples as real parts, odd as imaginary) plus one
@@ -97,6 +97,3 @@ index 1180eabb..82b1477b 100644
                  for (int k = 0; k < n_freq; ++k) {
                      const double re = frame[2 * static_cast<size_t>(k)];
                      const double im = frame[2 * static_cast<size_t>(k) + 1];
--- 
-2.53.0
-

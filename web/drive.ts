@@ -1,14 +1,15 @@
 // Runs one configuration of the page in real Chrome (headed, on its own Xvfb display, WebGPU on
 // Vulkan) and writes ../results/browser/<name>.json: the page's result plus what only the outside
 // can see (GPU memory of Chrome's GPU process from nvidia-smi, renderer RSS, chrome://gpu facts).
-// usage: bun drive.ts <name> "<query string>" [--url http://127.0.0.1:8787/] [--keep-profile] [--timeout-min 30] [--chrome-arg ARG]...
+// usage: bun drive.ts <name> "<query string>" [--url http://127.0.0.1:8796/] [--keep-profile] [--timeout-min 30] [--chrome-arg ARG]...
 import { chromium } from "playwright-core";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { BASE, CACHE, DISPLAY } from "./env";
 
 const args = Bun.argv.slice(2);
 const flag = (k: string) => { const i = args.indexOf(k); return i < 0 ? undefined : args.splice(i, 2)[1]; };
-const base = flag("--url") ?? "http://127.0.0.1:8787/";
+const base = flag("--url") ?? BASE;
 const timeoutMin = Number(flag("--timeout-min") ?? 30);
 const chromeArgs: string[] = [];
 for (let a = flag("--chrome-arg"); a; a = flag("--chrome-arg")) chromeArgs.push(a);
@@ -22,7 +23,7 @@ const profile = join(here, "..", "cache", "chrome-profiles", keep ? "kept" : nam
 mkdirSync(outDir, { recursive: true });
 if (!keep) rmSync(profile, { recursive: true, force: true });
 
-const display = process.env.PK_DISPLAY ?? ":196"; // our own; :197 is the ORT bench, :97-:99 belong to other things
+const display = DISPLAY;
 const xvfb = Bun.spawn(["Xvfb", display, "-screen", "0", "1280x900x24", "-nolisten", "tcp", "-ac"], { stderr: "ignore" });
 await Bun.sleep(700);
 

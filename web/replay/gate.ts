@@ -10,15 +10,16 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { applyCondition, CONDITIONS, coverage, frameRms, measure, replay, speechFrames, type Model, type ReplayOptions } from "./lib";
 import type { Transcription, Word } from "../../lib/src/stream";
+import { CACHE } from "../env";
 
 const args = Bun.argv.slice(2);
 const flag = (k: string) => { const i = args.indexOf(k); return i < 0 ? undefined : args.splice(i, 2)[1]; };
 const verbose = args.includes("--verbose");
 const clipName = flag("--clip") ?? "iv90", model = flag("--model") ?? "s4", cap = Number(flag("--cap") ?? 12);
 const conds = (flag("--conditions") ?? Object.keys(CONDITIONS).join(",")).split(",");
-const R = process.env.PK_CACHE ?? join(process.env.HOME!, "devfs/cache/parakeet-ggml-webgpu");
+const R = CACHE;
 const clipFile = join(R, "audio/replay", clipName + ".f32"), refFile = join(import.meta.dir, "..", "..", "results", "replay", `ref-${clipName}-${model}.json`);
-if (!existsSync(clipFile)) { console.error(`missing ${clipFile}: run scripts/replay-clips.sh`); process.exit(2); }
+if (!existsSync(clipFile)) { console.error(`missing ${clipFile}: run python3 scripts/replay-clips.py`); process.exit(2); }
 if (!existsSync(refFile)) { console.error(`missing ${refFile}: run bun drive-replay.ts NAME --clip ${clipName} --conditions clean --save-ref`); process.exit(2); }
 const clean = new Float32Array(readFileSync(clipFile).buffer.slice(0));
 const ref: Transcription = JSON.parse(readFileSync(refFile, "utf8"));

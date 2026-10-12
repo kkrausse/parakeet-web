@@ -1,7 +1,7 @@
-From f391fa8256f78e4a31a0db952d0c75abd0c8f46e Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 09:12:01 -0700
-Subject: [PATCH 20/21] ggml-webgpu: exact buffer accounting, grow-only pooled
+Subject: [PATCH 20/24] ggml-webgpu: exact buffer accounting, grow-only pooled
  compute buffer in size classes, one param write per batch
 
 Accounting (ggml_backend_webgpu_stats_json): every buffer goes through
@@ -821,6 +821,3 @@ index 0204e782..10b78b34 100644
  void ggml_backend_webgpu_trim(void) {
      ggml_backend_reg_t reg = ggml_backend_webgpu_reg();
      auto *             ctx = static_cast<ggml_backend_webgpu_reg_context *>(reg->context);
--- 
-2.53.0
-

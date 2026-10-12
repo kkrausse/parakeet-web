@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Rewrite mul_mat_direct.wgsl's quantized block for a (RV, NV) tile. usage: apply_direct.py RV NV"""
 import subprocess, sys, os
-R = os.path.expanduser('~/devfs/cache/parakeet-ggml-webgpu')
+R = os.environ.get('PK_CACHE', os.path.expanduser('~/devfs/cache/parakeet-ggml-webgpu')) + '/'
 p = R + '/transcribe.cpp/ggml/src/ggml-webgpu/wgsl-shaders/mul_mat_direct.wgsl'
 base = subprocess.check_output(['git', '-C', R + '/transcribe.cpp', 'show', 'c5a43d4f:ggml/src/ggml-webgpu/wgsl-shaders/mul_mat_direct.wgsl'], text=True)
 RV, NV = sys.argv[1], sys.argv[2]

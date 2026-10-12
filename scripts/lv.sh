@@ -3,7 +3,7 @@
 # everything in results/live/NAME.json.   usage: lv.sh NAME CLIP ["query"] [drive-live.ts args ...]
 # CLIP is a name in $R/audio/live (t14 t56 g2 g5: fixtures with silences, made by scripts/live-clips.py).
 # STOCK=1 drops the Dawn f16 flag (f32-only shaders); URL=... runs against another copy of the page.
-R=~/devfs/cache/parakeet-ggml-webgpu
+R=${PK_CACHE:-~/devfs/cache/parakeet-ggml-webgpu}
 W=$(cd "$(dirname "$0")/.." && pwd)
 name=$1; clip=$2; q=${3:-}; shift; shift; shift
 F16="--chrome-arg --enable-dawn-features=vulkan_enable_f16_on_nvidia"; [ -n "$STOCK" ] && F16=""

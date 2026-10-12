@@ -1,6 +1,6 @@
 #!/bin/bash
 # Native rebuild + browser-like bench of the three weight types.  usage: nb.sh [extra env...]   (prints encoder min/mean and text check)
-R=~/devfs/cache/parakeet-ggml-webgpu; cd $R
+R=${PK_CACHE:-~/devfs/cache/parakeet-ggml-webgpu}; cd $R
 cmake -S transcribe.cpp -B build-webgpu > /dev/null 2>&1
 nice make -C build-webgpu -j6 transcribe-bench transcribe-cli > out/build-native.log 2>&1 || { grep -E "error" -A4 out/build-native.log | head -30; exit 1; }
 EXP="going along slushy country roads and speaking to damp audiences in drafty schoolrooms day after day for a fortnight."

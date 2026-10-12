@@ -1,7 +1,7 @@
-From 2b922883694976aa80974749fae874e9c7a2dacf Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 05:59:23 -0700
-Subject: [PATCH 15/17] parakeet: chunked long-audio encoding
+Subject: [PATCH 15/24] parakeet: chunked long-audio encoding
  (TRANSCRIBE_PARAKEET_CHUNK_S)
 
 Full-attention checkpoints without a VAD head keep every attention score
@@ -270,6 +270,3 @@ index 5a552d4c..5cbd3920 100644
      std::vector<TdtToken> raw_tokens;
  
      // Multitalker bundle scratch: streaming-diarizer AOSC/FIFO state for
--- 
-2.53.0
-

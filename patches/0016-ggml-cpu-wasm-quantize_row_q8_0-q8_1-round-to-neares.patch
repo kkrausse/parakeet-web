@@ -1,7 +1,7 @@
-From 71c29dedc9015bc227a900f296f1c8dc5905337f Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 05:59:23 -0700
-Subject: [PATCH 16/17] ggml-cpu wasm: quantize_row_q8_0 / q8_1 round to
+Subject: [PATCH 16/24] ggml-cpu wasm: quantize_row_q8_0 / q8_1 round to
  nearest instead of truncating
 
 The WASM SIMD path converted with i32x4.trunc_sat_f32x4 directly, so every
@@ -45,6 +45,3 @@ index 0a7119b4..ef19a1ef 100644
  
              y[i].qs[4*j + 0] = wasm_i32x4_extract_lane(vi, 0);
              y[i].qs[4*j + 1] = wasm_i32x4_extract_lane(vi, 1);
--- 
-2.53.0
-

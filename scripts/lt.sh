@@ -1,7 +1,7 @@
 #!/bin/bash
 # Long-audio native run: text saved to out/lt/NAME.txt, timings, GPU peak (nvidia-smi, this process), word diff against REF.
 # usage: [ITERS=3] [REF=name] lt.sh NAME MODEL(s8|s4|q4|q8|f16) CLIP [ENV=1 ...]
-R=~/devfs/cache/parakeet-ggml-webgpu; cd $R; mkdir -p out/lt; N=$1; M=$2; C=$3; shift 3
+R=${PK_CACHE:-~/devfs/cache/parakeet-ggml-webgpu}; cd $R; mkdir -p out/lt; N=$1; M=$2; C=$3; shift 3
 declare -A G=([s8]=parakeet-tdt_ctc-110m-Q8_0 [s4]=parakeet-tdt_ctc-110m-Q4_0 [q4]=parakeet-tdt-0.6b-v2-Q4_0 [q8]=parakeet-tdt-0.6b-v2-Q8_0 [f16]=parakeet-tdt-0.6b-v2-F16)
 env GGML_WEBGPU_BROWSER=1 TRANSCRIBE_NO_FLASH=1 TRANSCRIBE_PRE_ENCODE_TILE=128 TRANSCRIBE_ENC_PROJ_GPU=1 "$@" build-webgpu/bin/transcribe-bench --model gguf/${G[$M]}.gguf --sample audio/$C.wav --iters ${ITERS:-3} --warmup 0 --quiet --threads ${THREADS:-1} > out/lt/$N.json 2> out/lt/$N.err < /dev/null &
 PID=$!; PEAK=0

@@ -3,7 +3,8 @@
 // utterances dropped with text on screen, highest noise floor.   usage: bun replay/sweep.ts
 import { readFileSync } from "node:fs";
 import { applyCondition, coverage, measure, replay, type Model } from "./lib";
-const clean = new Float32Array(readFileSync(process.env.HOME + "/devfs/cache/parakeet-ggml-webgpu/audio/replay/iv90.f32").buffer.slice(0));
+import { CACHE } from "../env";
+const clean = new Float32Array(readFileSync(CACHE + "/audio/replay/iv90.f32").buffer.slice(0));
 const ref = JSON.parse(readFileSync(import.meta.dir + "/../../results/replay/ref-iv90-s4.json", "utf8"));
 const SR = 16000;
 const oracle: Model = async (_p, req) => { const a = req.startSample / SR, b = req.endSample / SR; const words = ref.words.filter((w: any) => (w.s + w.e) / 2 >= a && w.e <= b).map((w: any) => ({ ...w, s: w.s - a, e: w.e - a })); return { text: words.map((w: any) => w.w).join(" "), words, ms: 60 }; };

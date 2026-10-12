@@ -1,6 +1,6 @@
 #!/bin/bash
 # Decoder A/B: text and decode ms with the fp32 decoder mirrors vs packed weights. usage: deccmp.sh [MODEL_PREFIX] [THREADS]
-R=~/devfs/cache/parakeet-ggml-webgpu; cd $R
+R=${PK_CACHE:-~/devfs/cache/parakeet-ggml-webgpu}; cd $R
 P=${1:-parakeet-tdt-0.6b-v2}; T=${2:-1}
 for q in ${QUANTS:-Q4_0 Q8_0}; do for c in a07 a14 a56; do
   for m in TRANSCRIBE_DECODER_F32=1 X=1; do

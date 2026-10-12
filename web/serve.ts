@@ -1,8 +1,9 @@
 // Local static server for dist/. Sends COOP/COEP so WASM threads work; --no-coi leaves them off,
 // which is what the published copy (tailscale serve, no custom headers) looks like.
-// usage: bun serve.ts [port] [--no-coi]
+// usage: bun serve.ts [port, default PK_PORT or 8796] [--no-coi]
 import { join, normalize } from "node:path";
-const port = Number(Bun.argv.find((a) => /^\d+$/.test(a)) ?? 8787);
+import { PORT } from "./env";
+const port = Number(Bun.argv.find((a) => /^\d+$/.test(a)) ?? PORT);
 const coi = !Bun.argv.includes("--no-coi");
 const root = join(import.meta.dir, "dist");
 Bun.serve({

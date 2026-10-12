@@ -1,7 +1,7 @@
-From ed7460f5d13bafc43b7efb707ea27225853d8cad Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "kevin.krausse" <kkrausse97@gmail.com>
 Date: Sat, 10 Oct 2026 05:21:28 -0700
-Subject: [PATCH 14/14] parakeet: joint encoder projection as the last encoder
+Subject: [PATCH 14/24] parakeet: joint encoder projection as the last encoder
  node (TRANSCRIBE_ENC_PROJ_GPU=1)
 
 The greedy transducer decoders only use the encoder output through
@@ -199,6 +199,3 @@ index 387138a1..5a552d4c 100644
      std::vector<TdtToken> raw_tokens;
  
      // Multitalker bundle scratch: streaming-diarizer AOSC/FIFO state for
--- 
-2.53.0
-

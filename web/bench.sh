@@ -1,8 +1,8 @@
 #!/bin/sh
 # Browser rows on diesel2: real Chrome on Xvfb, WebGPU on the NVIDIA card, one fresh Chrome and
-# profile per row, in the same high-weight systemd slice as ../../parakeet-webgpu-bench/bench.sh.
+# profile per row, in a high-weight systemd slice.
 # Results: ../results/browser/<name>.json, load at the start of each row in machine-load.txt.
-# usage: ./bench.sh [name ...]      (server: tmux new -d -s pkg-serve 'bun serve.ts 8791')
+# usage: ./bench.sh [name ...]      (server: bun serve.ts, port PK_PORT, default 8796)
 cd "$(dirname "$0")"
 F16="--chrome-arg --enable-dawn-features=vulkan_enable_f16_on_nvidia"
 Q="clip=all&runs=${RUNS:-10}"
@@ -21,7 +21,7 @@ row() {
   echo "== $name" >&2
   echo "$(date +%F\ %T) $name $(cat /proc/loadavg) | $(head -1 /proc/pressure/cpu)" >> ../results/browser/machine-load.txt
   systemd-run --user --wait --pipe --collect --quiet --slice=parakeetbench.slice -p CPUWeight=10000 -p Nice=0 \
-    -E PATH="$PATH" -E HOME="$HOME" --working-directory="$PWD" bun drive.ts "$name" "$@" --url http://127.0.0.1:8791/ 2>&1 | grep -E '"a[0-9]+:|error|RssMibPeak|GpuMibPeak'
+    -E PATH="$PATH" -E HOME="$HOME" --working-directory="$PWD" bun drive.ts "$name" "$@" 2>&1 | grep -E '"a[0-9]+:|error|RssMibPeak|GpuMibPeak'
 }
 ONLY="$*"
 mkdir -p ../results/browser

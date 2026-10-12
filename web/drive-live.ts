@@ -3,15 +3,16 @@
 // lag, memory over time (GPU process from nvidia-smi, renderer RSS, WASM heap), and word diffs against
 // an offline pass over the same audio (through the same worker) and against a reference text.
 // usage: bun drive-live.ts <name> "<query>" --wav FILE.wav [--f32 FILE.f32] [--expect FILE.txt] [--seconds N]
-//        [--url http://127.0.0.1:8793/live.html] [--viewport 390x844] [--shot SECONDS] [--no-webgpu] [--chrome-arg ARG]...
+//        [--url http://127.0.0.1:8796/live.html] [--viewport 390x844] [--shot SECONDS] [--no-webgpu] [--chrome-arg ARG]...
 import { chromium } from "playwright-core";
 import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { BASE, CACHE, DISPLAY } from "./env";
 
 const args = Bun.argv.slice(2);
 const flag = (k: string) => { const i = args.indexOf(k); return i < 0 ? undefined : args.splice(i, 2)[1]; };
 const bool = (k: string) => { const i = args.indexOf(k); if (i < 0) return false; args.splice(i, 1); return true; };
-const url0 = flag("--url") ?? "http://127.0.0.1:8793/live.html";
+const url0 = flag("--url") ?? BASE + "live.html";
 const wav = flag("--wav"), f32 = flag("--f32"), expectFile = flag("--expect");
 const viewport = flag("--viewport"), shotAt = Number(flag("--shot") ?? 0), tail = Number(flag("--tail") ?? 2);
 const noWebgpu = bool("--no-webgpu");
@@ -30,7 +31,7 @@ const outDir = join(here, "..", "results", "live");
 const profile = join(here, "..", "cache", "chrome-profiles", `live-${name}`);
 mkdirSync(outDir, { recursive: true });
 rmSync(profile, { recursive: true, force: true });
-const display = process.env.PK_DISPLAY ?? ":196";
+const display = DISPLAY;
 const xvfb = Bun.spawn(["Xvfb", display, "-screen", "0", "1280x900x24", "-nolisten", "tcp", "-ac"], { stderr: "ignore" });
 await Bun.sleep(700);
 

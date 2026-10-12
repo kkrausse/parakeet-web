@@ -87,6 +87,7 @@
   <p id="env"></p>
   <p>Offline model, re-run on the current utterance several times a second (grey text); an utterance is committed on a pause or when it reaches the length cap, and its audio is dropped. The model file is fetched once and kept in this browser.</p>
   <p id="diagnote"></p>
+  <p id="credits">Models: NVIDIA Parakeet (<a href="https://huggingface.co/nvidia/parakeet-tdt_ctc-110m">parakeet-tdt_ctc-110m</a>, <a href="https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2">parakeet-tdt-0.6b-v2</a>), licensed <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, converted to GGUF by <a href="https://huggingface.co/handy-computer">handy-computer</a>; the 4-bit (Q4_0) files were quantized from those conversions. Runtime: <a href="https://github.com/handy-computer/transcribe.cpp">transcribe.cpp</a> and ggml (MIT), modified and compiled to WebAssembly; <a href="pk/LICENSES.txt">licence texts</a>.</p>
   <h2>Soak test</h2>
   <p>Runs the model back to back over a test clip cut to a different length each time (0.3 s up to the utterance cap), without the microphone, and shows what the GPU backend holds after every pass. Buffers made and working memory should stop changing after the first few passes.</p>
   <p><input id="soakn" type="number" min="1" max="100000" value="300" style="width:6em;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card)"> passes <button id="soakgo">Run soak test</button> <button id="soakstop" hidden>Stop</button></p>
