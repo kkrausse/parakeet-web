@@ -1,33 +1,24 @@
-// Live page: microphone -> 16 kHz PCM (src/live-worklet.ts) -> the same worker and WASM runtime as the
-// benchmark page. The models are offline ones, so "live" is pseudo-streaming: the current utterance
-// buffer is re-transcribed as soon as the previous pass is done (never faster than P.gapMs) and shown
-// as provisional text; on a pause, or when the buffer reaches the cap, the utterance is transcribed one
-// last time, its text is appended to the committed transcript and its audio is dropped. Committed
-// text is append-only. Passes never queue: a provisional pass always takes the newest whole buffer.
+// Live page: microphone -> 16 kHz PCM (src/live-worklet.ts) -> the streaming engine (src/stream.ts) -> the same
+// worker and WASM runtime as the benchmark page. The engine owns the audio buffer, the gate and the commit rule;
+// this file is the page around it: model loading, the microphone, the transcript, statistics, diagnostics, soak test.
 import { adapterSteps, backendEnv, createRpc, esc, fmtMs, gpuDiag, gpuLine, historyStore, r1, stepLine, type Rpc, type RunLog, type Step } from "./common";
 import { createDiag, detectDevice, lifeStore, sendEnvironment, watchErrors } from "./diag";
+import { createStream, type StreamParams, type StreamStats, type Transcribe } from "./stream";
 declare const MODELS: Record<string, { label: string; file: string; mb: number; family: "0.6b" | "110m" }>; // build.ts; smallest verified first
 
 const params = new URLSearchParams(location.search);
 const num = (k: string, d: number) => { const v = Number(params.get(k)); return params.has(k) && Number.isFinite(v) ? v : d; };
-const SR = 16000, FRAME = 320; // endpointing works on 20 ms frames
+const SR = 16000;
 const device = detectDevice(params); // phone=1|0 forces it
 const diag = createDiag("live", params);
-// Decisions (all overridable from the query string for tuning: gap, hang, cap, thr, ratio).
-const P = {
-  gapMs: num("gap", 250), // floor between the starts of two passes
-  hangMs: num("hang", 700), // silence after speech that ends an utterance
-  preRollMs: 300, // audio kept before the first speech frame
-  tailMs: 300, // silence kept after the last speech frame
-  capS: num("cap", device.phone ? 12 : 24), // an utterance longer than this is cut ... (phones: half, so one pass needs less GPU memory)
-  cutLookbackS: 10, // ... in the longest gap (or failing that the quietest 200 ms) of its last 10 s
-  minSpeechMs: 120, // shorter bursts are dropped without a pass (clicks)
-  onsetFrames: 2, // consecutive frames over the threshold that start an utterance
-  absRms: num("thr", 0.004), // about -48 dBFS; the threshold is max(this, noise floor * ratio)
-  noiseRatio: num("ratio", 3),
-  lagWarnS: 2, // "lagging" is shown above this
-  backlogS: 120, // audio waiting for its final pass; above this new audio is skipped until half is cleared
-};
+// The engine's numbers that can be set from the query string (tuning): gap, hang, cap, hold, stable, keep, ratio, thr, probe.
+const opt = (k: string): number | undefined => (params.has(k) && Number.isFinite(Number(params.get(k))) ? Number(params.get(k)) : undefined);
+const engineOptions: Partial<StreamParams> = Object.fromEntries(Object.entries({
+  capS: num("cap", device.phone ? 12 : 24), // longest audio in one pass (phones: half, so a pass needs less GPU memory)
+  gapMs: opt("gap"), hangS: opt("hang") === undefined ? undefined : opt("hang")! / 1000, holdS: opt("hold"), stableS: opt("stable"), keepS: opt("keep"),
+  gateRatio: opt("ratio"), gateAbsRms: opt("thr"), probeEveryS: opt("probe"),
+}).filter(([, v]) => v !== undefined));
+const LAG_WARN_S = 2; // "lagging" is shown above this
 
 interface LiveConfig { model: string; variant: "jspi" | "asyncify"; f16: boolean; cpu: boolean; store: string; verbose: boolean; base: string | null; limits: string; env: Record<string, string>; gpuwatch: boolean; gcMb: number }
 const MODEL_KEY = "pkggml:live-model", PROC_KEY = "pkggml:live-proc";
@@ -39,7 +30,7 @@ function readConfig(): LiveConfig {
   const env: Record<string, string> = {};
   for (const kv of params.getAll("env")) { const i = kv.indexOf("="); if (i > 0) env[kv.slice(0, i)] = kv.slice(i + 1); }
   return {
-    model: pick(params.get("model") ?? lsGet(MODEL_KEY), names, names[0]),
+    model: pick(params.get("model") ?? lsGet(MODEL_KEY), names, names.includes("s4") ? "s4" : names[0]), // 110M Q4_0 unless chosen otherwise
     variant: pick(params.get("variant"), ["jspi", "asyncify"], "Suspending" in WebAssembly ? "jspi" : "asyncify"),
     f16: params.get("f16") !== "0",
     cpu: params.get("cpu") === "1", // run on the CPU backend even where WebGPU works
@@ -90,11 +81,12 @@ function renderHistory() {
 }
 
 // ---------- what the driver (and a curious person in the console) can read ----------
-interface Segment { startS: number; endS: number; reason: string; ms: number; reused: boolean; text: string }
+interface Segment { startS: number; endS: number; reason: string; opened: string; words: number } // one utterance: gate open to utterance end
 const pk: any = ((window as any).__pkl = {
   phase: "loading", recording: false, idle: true, committed: "", provisional: "", backend: "", webgpu: false, shaderF16: false, variant: cfg.variant,
-  segments: [] as Segment[], passes: [] as number[][], // [ms, audio seconds, 1 = final]
-  passCount: 0, finalCount: 0, reusedCount: 0, staleCount: 0, maxLagS: 0, lagS: 0, bufferS: 0, droppedS: 0, inputRate: 0, heapMb: 0, errors: [] as string[], steps: [] as Step[], params: P, load: null,
+  segments: [] as Segment[], passes: [] as number[][], // [ms, audio seconds, 1 = final / 2 = probe, mel ms, decode ms]
+  passCount: 0, finalCount: 0, reusedCount: 0, staleCount: 0, maxLagS: 0, lagS: 0, bufferS: 0, droppedS: 0, inputRate: 0, heapMb: 0, errors: [] as string[], steps: [] as Step[], params: null as StreamParams | null, load: null,
+  engine: null as StreamStats | null, gateEvents: [] as any[],
   gpu: null as any, gpuAtLoad: null as any, gpuAfterWarmup: null as any, soak: null as any,
 });
 let gpuPrev: any = null; // the GPU numbers one pass earlier
@@ -143,6 +135,7 @@ function modelFailed(msg: string) {
   if (current) current.error = msg, store.save(runs);
   step(`ERROR: ${msg.slice(0, 1500)}`);
   loadStatus("model not running", 0);
+  for (const w of readyWaiters.splice(0)) w(); // a pass waiting for the model fails now instead of waiting for ever
   showError(msg, true);
   setStats();
 }
@@ -159,6 +152,7 @@ async function loadModel(key: string) {
   const gen = ++loadGen;
   rpc?.terminate();
   modelState = "loading"; pk.phase = "loading"; busy = false; realPasses = 0; maxPassSamples = 0;
+  if (!recording || engine.stats().failed) engine.reset(); // a pass of the old worker never comes back; while recording, audio keeps arriving and waits for this load
   cfg.model = key;
   life.phase("loading", { model: key, cpu: cfg.cpu });
   const model = MODELS[key];
@@ -166,7 +160,7 @@ async function loadModel(key: string) {
   warn(null);
   backendLabel = "backend: loading"; setStats();
   loadStatus(`${model.label}: starting`, 0.02);
-  step(`start: ${model.label}, ${cfg.variant}${cfg.cpu ? ", cpu=1" : ""}`, undefined, `session ${diag.sid}; ${device.why}; cap ${P.capS} s; limits ${cfg.limits || "raised"}; store ${cfg.store}`);
+  step(`start: ${model.label}, ${cfg.variant}${cfg.cpu ? ", cpu=1" : ""}`, undefined, `session ${diag.sid}; ${device.why}; cap ${engine.params.capS} s; limits ${cfg.limits || "raised"}; store ${cfg.store}`);
   try {
     const mine = (rpc = createRpc((m) => {
       if (gen !== loadGen) return;
@@ -211,7 +205,7 @@ async function loadModel(key: string) {
       step(`WARNING: not on WebGPU (backend "${ld.backend}"): ${why}`);
     }
     diag.send("chosen", { model: key, file: model.file, build: cfg.variant, backend: ld.backend, webgpu, shaderPath: webgpu ? (useF16 ? "f16" : "f32-only") : null, limits: a.plan?.limits ?? null, cpuRequested: cfg.cpu,
-      storagePath: ld.storagePath, from: ld.from, fileBytes: Math.round(ld.mb * 2 ** 20), fetchMs: Math.round(ld.fetchMs), loadMs: Math.round(ld.loadMs), heapMb: ld.heapMb, heapUsedMb: ld.heapUsedMb, capS: P.capS, phone: device.phone, ios: device.ios,
+      storagePath: ld.storagePath, from: ld.from, fileBytes: Math.round(ld.mb * 2 ** 20), fetchMs: Math.round(ld.fetchMs), loadMs: Math.round(ld.loadMs), heapMb: ld.heapMb, heapUsedMb: ld.heapUsedMb, capS: engine.params.capS, phone: device.phone, ios: device.ios,
       gpu: ld.gpu ?? null, gpuwatch: init.gpuwatch, gcMb: init.gcMb });
     gpuErrors("load", ld.gpuErrors);
     if (pk.phase === "failed") return;
@@ -231,7 +225,7 @@ async function loadModel(key: string) {
     if (webgpu && params.get("sizing") !== "0") {
       // A second pass as long as the longest utterance can get: the backend sizes its working buffer for it once,
       // and no later pass has to make a larger one. (sizing=0 skips it.)
-      const longS = P.capS + 1;
+      const longS = engine.params.capS + 1;
       step(`sizing pass starting (${longS} s of noise: the working buffer is made for the longest utterance)`);
       const long = new Float32Array(SR * longS);
       for (let i = 0; i < long.length; i++) { seed = (seed * 1664525 + 1013904223) >>> 0; long[i] = (seed / 2 ** 32 - 0.5) * 2e-3; }
@@ -247,216 +241,132 @@ async function loadModel(key: string) {
     modelState = "ready"; pk.phase = "ready"; life.phase("ready");
     loadStatus(`${model.label} ready`, 1, true);
     setStats();
+    for (const w of readyWaiters.splice(0)) w();
     // soak=N: once per page load, and not after a visit that died (the guard's "Try again" loads without it)
     if (params.has("soak") && !soakAuto && !guarded) { soakAuto = true; void runSoak(Math.max(1, num("soak", 300) | 0 || 300)); return; }
-    pump();
   } catch (e: any) {
     if (gen !== loadGen) return;
     modelFailed(`${e?.name ?? "Error"}: ${e?.message ?? e}`);
   }
 }
 
-// ---------- utterance buffer and endpointing ----------
-const MAX_FRAMES = Math.ceil(((P.capS + 2) * SR) / FRAME);
-let buf = new Float32Array(MAX_FRAMES * FRAME); // the current utterance, from absolute sample bufAbs
-let rms = new Float32Array(MAX_FRAMES), flag = new Uint8Array(MAX_FRAMES);
-let nFrames = 0, bufAbs = 0, captured = 0; // captured: 16 kHz samples received since Record
-let hasSpeech = false, lastSpeech = -1, onsetRun = 0, noiseFloor = 0.001;
-let epoch = 0; // bumped whenever the buffer's start moves past speech, so a provisional result for the old buffer is dropped
-let provText = "", provTextEnd = 0, provEndAbs = 0, coveredAbs = 0, lastPassStart = 0; // provTextEnd: how far the pass behind provText reached
-// A cut utterance waiting for its text. `text` is already there when no pass is needed; `wait` holds a skip marker until its length is known.
-interface Final { pcm: Float32Array | null; startAbs: number; endAbs: number; reason: string; placeholder: string; text?: string; wait?: boolean }
-const finals: Final[] = [];
-let dropping = false, droppedFrom = 0;
-const backlogS = () => finals.reduce((s, f) => s + (f.endAbs - f.startAbs), 0) / SR;
-
-function shiftFrames(n: number) {
-  buf.copyWithin(0, n * FRAME, nFrames * FRAME); rms.copyWithin(0, n, nFrames); flag.copyWithin(0, n, nFrames);
-  nFrames -= n; bufAbs += n * FRAME; lastSpeech -= n;
-}
-function resetUtterance() { hasSpeech = false; lastSpeech = -1; onsetRun = 0; provText = ""; provTextEnd = 0; epoch++; }
-/** Hand the first `n` frames over for a final pass (or drop them when they hold no real speech). */
-function cut(n: number, reason: string) {
-  let speech = 0;
-  for (let i = 0; i < n; i++) speech += flag[i];
-  if (speech * 20 >= P.minSpeechMs) {
-    // After a pause the newest provisional pass has usually seen this whole utterance already (and a little more
-    // silence): then its text, the one on screen, is the final text and no further pass is run.
-    const seen = !reason.startsWith("cap") && provText !== "" && provTextEnd >= bufAbs + n * FRAME;
-    finals.push({ pcm: seen ? null : buf.slice(0, n * FRAME), startAbs: bufAbs, endAbs: bufAbs + n * FRAME, reason, placeholder: provText, text: seen ? provText : undefined });
-  }
-  shiftFrames(n);
-  provText = ""; provTextEnd = 0; epoch++;
-  let left = 0; lastSpeech = -1;
-  for (let i = 0; i < nFrames; i++) if (flag[i]) left++, lastSpeech = i;
-  hasSpeech = reason.startsWith("cap") && left > 0; // after a pause or Stop what is left is silence by construction
-  if (!hasSpeech) { lastSpeech = -1; onsetRun = 0; }
-  render();
-}
-function capCut() {
-  // Where to cut an utterance that has no pause long enough to end it: the middle of the longest run of
-  // non-speech frames in the last cutLookbackS (a breath between sentences), not closer than 0.5 s to the end ...
-  const lo = Math.max(10, nFrames - Math.round(P.cutLookbackS * 50)), hi = nFrames - 25;
-  let runStart = -1, bestStart = -1, bestLen = 0;
-  for (let i = lo; i <= hi; i++) {
-    if (i < hi && !flag[i]) { if (runStart < 0) runStart = i; continue; }
-    if (runStart >= 0 && i - runStart >= bestLen) bestLen = i - runStart, bestStart = runStart; // ties: the later one
-    runStart = -1;
-  }
-  if (bestLen >= 8) return cut(bestStart + (bestLen >> 1), "cap");
-  // ... and without one of at least 160 ms, the quietest 200 ms (10 frames) there.
-  let best = lo, bestE = Infinity, e = 0;
-  for (let i = lo; i < lo + 10; i++) e += rms[i] * rms[i];
-  for (let i = lo; ; i++) {
-    if (e < bestE) bestE = e, best = i;
-    if (i + 10 >= hi) break;
-    e += rms[i + 10] * rms[i + 10] - rms[i] * rms[i];
-  }
-  // Even the quietest stretch of a whole cap of audio counts as speech: the room got louder. Take that as the floor.
-  const q = Math.sqrt(bestE / 10);
-  if (q > Math.max(P.absRms, noiseFloor * P.noiseRatio)) noiseFloor = q / 2;
-  cut(best + 5, "cap-quiet");
-}
-function endDrop(at: number) {
-  dropping = false; bufAbs = at; nFrames = 0; resetUtterance();
-  const m = finals.find((f) => f.wait);
-  if (m) m.wait = false, m.text = `[${Math.round((at - droppedFrom) / SR)} s of audio skipped: transcription is slower than real time here]`;
-  pk.droppedS += (at - droppedFrom) / SR;
-}
+// ---------- the engine and its passes ----------
+let captured = 0; // 16 kHz samples received since Record
+let provText = "";
+let realPasses = 0, maxPassSamples = 0; // since the model was loaded
+let last: { ms: number; audioS: number } | null = null;
+const readyWaiters: (() => void)[] = [];
 // Microphone only (infer=0 or the checkbox): capture, resampling and the level meter run, nothing is buffered or transcribed.
 let micOnly = false;
-function onPcm(pcm: Float32Array) {
-  captured += pcm.length;
-  if (micOnly) { speechNow = false; return; }
-  if (dropping) {
-    if (backlogS() > P.backlogS / 2) return;
-    endDrop(captured - pcm.length);
-  }
-  buf.set(pcm, nFrames * FRAME);
-  for (let o = 0; o + FRAME <= pcm.length; o += FRAME) {
-    let s = 0;
-    for (let i = o; i < o + FRAME; i++) s += pcm[i] * pcm[i];
-    const r = Math.sqrt(s / FRAME), sp = r > Math.max(P.absRms, noiseFloor * P.noiseRatio);
-    if (!sp || r < noiseFloor) noiseFloor += (r - noiseFloor) * (r < noiseFloor ? 0.3 : 0.05); // tracks non-speech frames only: falls fast, rises slowly
-    rms[nFrames] = r; flag[nFrames] = sp ? 1 : 0;
-    onsetRun = sp ? onsetRun + 1 : 0;
-    if (sp && (hasSpeech || onsetRun >= P.onsetFrames)) hasSpeech = true, lastSpeech = nFrames;
-    nFrames++;
-  }
-  speechNow = flag[nFrames - 1] === 1;
-  if (!hasSpeech) {
-    const keep = Math.round(P.preRollMs / 20);
-    if (nFrames > keep) shiftFrames(nFrames - keep); // silence is not kept and not transcribed
-  } else if ((nFrames - 1 - lastSpeech) * 20 >= P.hangMs) {
-    cut(Math.min(nFrames, lastSpeech + 1 + Math.round(P.tailMs / 20)), "pause");
-    const keep = Math.round(P.preRollMs / 20);
-    if (nFrames > keep) shiftFrames(nFrames - keep);
-  } else if (nFrames * FRAME >= P.capS * SR) capCut();
-  if (!dropping && backlogS() + (nFrames * FRAME) / SR > P.backlogS) { // far slower than real time: stop taking audio rather than grow without bound
-    if (hasSpeech) cut(nFrames, "overflow");
-    finals.push({ pcm: null, startAbs: captured, endAbs: captured, reason: "skip", placeholder: "", text: "", wait: true });
-    dropping = true; droppedFrom = captured;
-    step(`audio is being skipped: ${Math.round(backlogS())} s waits for transcription`);
-  }
-  pump();
-}
 
-// ---------- passes ----------
-function commit(text: string, seg: Final, ms: number) {
-  const t = text.trim();
-  if (t) {
-    const add = (pk.committed ? " " : "") + t;
-    pk.committed += add;
-    $("committed").append(add); // append-only: earlier text nodes are never touched
-  }
-  if (pk.segments.length < 1000) pk.segments.push({ startS: r1(seg.startAbs / SR), endS: r1(seg.endAbs / SR), reason: seg.reason, ms: r1(ms), reused: seg.text !== undefined, text: t });
-  if (seg.reason !== "skip") {
-    pk.finalCount++; if (seg.text !== undefined) pk.reusedCount++;
-    if (pk.finalCount <= 150) step(`commit ${pk.finalCount}: ${((seg.endAbs - seg.startAbs) / SR).toFixed(1)} s of audio, ${seg.reason}`, seg.text !== undefined ? undefined : ms, `${t.split(/\s+/).filter(Boolean).length} words${seg.text !== undefined ? "; text of the last provisional pass" : ""}`);
-  }
-}
-let realPasses = 0, maxPassSamples = 0; // since the model was loaded
-function notePass(ms: number, audioS: number, final: boolean, r: any) {
-  pk.passCount++;
-  if (++realPasses === 1) { life.phase("running"); step("first pass done", ms, `${audioS.toFixed(1)} s of audio, WASM heap ${r.heapMb} MB`); }
-  noteGpu(r.gpu);
-  diag.send("pass", { n: pk.passCount, ms: r1(ms), audioS: r1(audioS), final, melMs: r1(r.mel_ms), decodeMs: r1(r.decode_ms), heapMb: r.heapMb, heapUsedMb: r.heapUsedMb, lagS: pk.lagS, gpu: gpuDiag(r.gpu) }, false);
-  if (pk.passes.length >= 4000) pk.passes.splice(0, 2000);
-  pk.passes.push([r1(ms), r1(audioS), final ? 1 : 0, r1(r.mel_ms), r1(r.decode_ms)]);
-  pk.heapMb = r.heapMb;
-  last = { ms, audioS };
-  gpuErrors("pass", r.gpuErrors);
-}
-let last: { ms: number; audioS: number } | null = null;
-async function pump() {
-  if (busy || soaking || modelState !== "ready" || !rpc) return;
-  const seg = finals[0];
-  if (seg?.text !== undefined) { // text already known: an utterance its last provisional pass covered, or a skip marker
-    if (seg.wait) return;
-    finals.shift(); commit(seg.text, seg, 0); coveredAbs = Math.max(coveredAbs, seg.endAbs); render(); return pump();
-  }
-  let pcm: Float32Array, jobEpoch = epoch, endAbs: number;
-  if (seg) pcm = seg.pcm!, endAbs = seg.endAbs;
-  else {
-    endAbs = bufAbs + nFrames * FRAME;
-    if (!hasSpeech || endAbs - provEndAbs < SR / 10) return; // nothing new to look at
-    if (performance.now() - lastPassStart < P.gapMs) return; // the next audio block calls again
-    pcm = buf.slice(0, nFrames * FRAME);
-    provEndAbs = endAbs;
-  }
-  busy = true; lastPassStart = performance.now();
+/** One pass for the engine: through the worker, with the page's bookkeeping around it. Rejects when the model is gone. */
+const transcribe: Transcribe = async (pcm, req) => {
+  while (modelState === "loading" || soaking || busy) await new Promise<void>((res) => readyWaiters.push(res)); // audio recorded before the model is ready waits in the engine
+  if (modelState !== "ready" || !rpc) throw new Error("the model is not running");
+  busy = true;
+  const audioS = pcm.length / SR;
   // The pass that kills a tab never reports back: the first passes, and every pass over a longer buffer than any before, are announced first.
-  if (realPasses === 0) { life.phase("first-pass"); step("first pass starting", undefined, `${(pcm.length / SR).toFixed(1)} s of audio`); }
-  else if (realPasses < 5 || pcm.length > maxPassSamples + SR) diag.send("pass-begin", { n: pk.passCount + 1, audioS: r1(pcm.length / SR), final: !!seg, longest: pcm.length > maxPassSamples });
+  if (realPasses === 0) { life.phase("first-pass"); step("first pass starting", undefined, `${audioS.toFixed(1)} s of audio`); }
+  else if (realPasses < 5 || pcm.length > maxPassSamples + SR) diag.send("pass-begin", { n: pk.passCount + 1, audioS: r1(audioS), kind: req.kind, longest: pcm.length > maxPassSamples });
   if (pcm.length > maxPassSamples) maxPassSamples = pcm.length;
   const gen = loadGen, t0 = performance.now();
   let r: any;
-  try { r = await rpc.call("run", { pcm }); } // a copy is sent: a final segment stays queued until its text is in
+  try { r = await rpc.call("run", { pcm }, [pcm.buffer]); }
   catch (e: any) {
-    if (gen !== loadGen) return;
-    busy = false;
-    return modelFailed(`transcription failed: ${e?.message ?? e}`);
+    if (gen === loadGen) { busy = false; modelFailed(`transcription failed: ${e?.message ?? e}`); }
+    throw e;
   }
-  if (gen !== loadGen) return;
+  if (gen !== loadGen) throw new Error("the model was reloaded"); // the engine was reset with it
   busy = false;
+  for (const w of readyWaiters.splice(0)) w();
   const ms = performance.now() - t0;
-  notePass(ms, pcm.length / SR, !!seg, r);
-  if (seg) {
-    if (finals[0] === seg) { finals.shift(); commit(r.text, seg, ms); coveredAbs = Math.max(coveredAbs, endAbs); }
-  } else if (jobEpoch === epoch) { provText = String(r.text).trim(); provTextEnd = endAbs; coveredAbs = Math.max(coveredAbs, endAbs); }
-  else pk.staleCount++; // the utterance was cut while this pass ran; its final pass supplies the text
-  render();
-  pump();
+  pk.passCount++;
+  if (++realPasses === 1) { life.phase("running"); step("first pass done", ms, `${audioS.toFixed(1)} s of audio, WASM heap ${r.heapMb} MB`); }
+  noteGpu(r.gpu);
+  const e = engine.stats();
+  // No text and no audio here: counts, times and the gate's numbers.
+  diag.send("pass", { n: pk.passCount, ms: r1(ms), audioS: r1(audioS), kind: req.kind, final: req.kind === "final", atS: r1(req.endSample / SR), words: r.words?.length ?? 0, melMs: r1(r.mel_ms), decodeMs: r1(r.decode_ms), heapMb: r.heapMb, heapUsedMb: r.heapUsedMb, lagS: r1(e.lagS),
+    gate: { open: e.open, floor: +e.noiseFloor.toFixed(5), thr: +e.threshold.toFixed(5), rms: +e.lastRms.toFixed(5), misses: e.gateMisses, holds: e.modelHolds }, gpu: gpuDiag(r.gpu) }, false);
+  if (pk.passes.length >= 4000) pk.passes.splice(0, 2000);
+  pk.passes.push([r1(ms), r1(audioS), req.kind === "final" ? 1 : req.kind === "probe" ? 2 : 0, r1(r.mel_ms), r1(r.decode_ms)]);
+  pk.heapMb = r.heapMb;
+  last = { ms, audioS };
+  gpuErrors("pass", r.gpuErrors);
+  if (r.gpuErrors?.length) throw new Error("GPU error"); // what comes out after that is not to be trusted
+  return { text: r.text, words: r.words ?? [] };
+};
+let gateSteps = 0;
+const reasonLine = (e: StreamStats) => Object.entries(e.byReason).filter(([, n]) => n).map(([k, n]) => `${k} ${n}`).join(", ") || "none";
+const engine = createStream(transcribe, {
+  onCommit(c) {
+    const add = (pk.committed ? " " : "") + c.text;
+    pk.committed += add;
+    $("committed").append(add); // append-only: earlier text nodes are never touched
+    render();
+  },
+  onTentative(text) { provText = text; render(); },
+  onGate(g) {
+    // The gate as the next phone log should show it: when it opened and closed, by what, and its floor and threshold then.
+    const ev = { atS: r1(g.atSample / SR), open: g.open, by: g.by, floor: +g.noiseFloor.toFixed(5), thr: +g.threshold.toFixed(5) };
+    if (pk.gateEvents.length < 2000) pk.gateEvents.push(ev);
+    diag.send("gate", ev, false);
+    if (g.open && ++gateSteps <= 150) step(`gate open at ${ev.atS.toFixed(1)} s: ${g.by === "probe" ? "a probe pass found words the gate had not opened for (gate miss)" : "energy"}`, undefined, `noise floor ${ev.floor}, threshold ${ev.thr}`);
+  },
+  onUtteranceEnd(u) {
+    const e = engine.stats();
+    const seg: Segment = { startS: r1(u.startSample / SR), endS: r1(u.endSample / SR), reason: u.reason, opened: u.opened, words: u.words };
+    if (pk.segments.length < 1000) pk.segments.push(seg);
+    pk.finalCount = e.utterances; pk.reusedCount = e.reusedFinals;
+    diag.send("utterance", { ...seg, commits: e.byReason, gateMisses: e.gateMisses, modelHolds: e.modelHolds, floor: +e.noiseFloor.toFixed(5), thr: +e.threshold.toFixed(5) }, false);
+    if (e.utterances <= 150) step(`utterance ${e.utterances}: ${(seg.endS - seg.startS).toFixed(1)} s of audio, ${u.words} words, ended by ${u.reason}, opened by ${u.opened}`, undefined, `words committed so far by reason: ${reasonLine(e)}; noise floor ${e.noiseFloor.toFixed(5)}, threshold ${e.threshold.toFixed(5)}`);
+    render();
+  },
+  onSkip(k) {
+    const n = Math.round((k.toSample - k.fromSample) / SR);
+    const add = `${pk.committed ? " " : ""}[${n} s of audio skipped: transcription is slower than real time here]`;
+    pk.committed += add; $("committed").append(add);
+    pk.droppedS = r1(pk.droppedS + (k.toSample - k.fromSample) / SR);
+    step(`audio was skipped: ${n} s (transcription is slower than real time)`);
+  },
+  onError(e: any) { if (modelState === "ready") modelFailed(`transcription failed: ${e?.message ?? e}`); },
+}, engineOptions);
+pk.params = engine.params;
+
+function onPcm(pcm: Float32Array) {
+  captured += pcm.length;
+  if (micOnly) { speechNow = false; return; }
+  engine.push(pcm);
+  speechNow = engine.stats().speech;
 }
 
 // ---------- rendering ----------
 let speechNow = false, levelPeak = 0, lagS = 0;
 function render() {
-  const pending = [...finals.map((f) => f.placeholder), provText].filter(Boolean).join(" ");
   const box = $("transcript");
   const atEnd = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
-  pk.provisional = pending;
-  $("prov").textContent = pending ? (pk.committed ? " " : "") + pending : "";
-  $("hint").hidden = !!(pk.committed || pending || recording);
+  pk.provisional = provText;
+  $("prov").textContent = provText ? (pk.committed ? " " : "") + provText : "";
+  $("hint").hidden = !!(pk.committed || provText || recording);
   if (atEnd) box.scrollTop = box.scrollHeight;
-  pk.idle = !busy && finals.length === 0 && !recording;
   setStats();
 }
 function setStats() {
-  // Lag: audio of pending utterances that no displayed text has seen yet (silence after an utterance does not count).
-  const oldest = finals.length ? finals[0].startAbs : hasSpeech ? bufAbs : null;
-  const newest = hasSpeech ? bufAbs + nFrames * FRAME : finals.length ? finals[finals.length - 1].endAbs : 0;
-  lagS = oldest === null ? 0 : Math.max(0, (newest - Math.max(coveredAbs, oldest)) / SR);
-  pk.lagS = r1(lagS); pk.bufferS = r1((nFrames * FRAME) / SR);
-  if (recording && lagS > pk.maxLagS) pk.maxLagS = r1(lagS);
+  const e = engine.stats();
+  pk.engine = e; pk.idle = !busy && engine.idle() && !recording;
+  // Lag: audio of the open utterance that no displayed text has seen yet (silence with the gate closed does not count).
+  lagS = e.lagS;
+  pk.lagS = r1(lagS); pk.bufferS = r1(e.bufferS); pk.maxLagS = r1(e.maxLagS); pk.staleCount = e.stale;
   $("s-pass").textContent = last ? fmtMs(last.ms) : "-";
-  $("s-buf").textContent = recording && micOnly ? `mic only ${(captured / SR).toFixed(0)} s` : recording || nFrames ? `${((hasSpeech ? nFrames * FRAME : 0) / SR).toFixed(1)} s${finals.length ? ` +${finals.length}` : ""}` : "-";
+  $("s-buf").textContent = recording && micOnly ? `mic only ${(captured / SR).toFixed(0)} s` : recording || e.open ? `${e.bufferS.toFixed(1)} s${e.open ? "" : " idle"}` : "-";
   $("s-rtf").textContent = last ? `${last.audioS * 1000 / last.ms >= 10 ? Math.round((last.audioS * 1000) / last.ms) : ((last.audioS * 1000) / last.ms).toFixed(1)}x` : "-";
-  const lagging = lagS > P.lagWarnS || dropping;
-  $("s-lag").textContent = recording || finals.length ? `${lagS.toFixed(1)} s${dropping ? ", skipping audio" : lagging ? ", lagging" : ""}` : "-";
+  const lagging = lagS > LAG_WARN_S || e.skipping;
+  $("s-lag").textContent = recording || e.open ? `${lagS.toFixed(1)} s${e.skipping ? ", skipping audio" : lagging ? ", lagging" : ""}` : "-";
   $("lagcell").classList.toggle("lagging", lagging);
   $("s-backend").textContent = backendLabel + (pk.inputRate ? ` · mic ${pk.inputRate} Hz` : "");
   $("s-gpu").textContent = pk.gpu ? gpuLine(pk.gpu, gpuPrev) : modelState === "ready" ? "GPU: none (CPU backend)" : "GPU: -";
+  // The gate, for whoever reads the screen or a screenshot of it: state, level, floor and threshold (RMS), and how often the model overruled it.
+  $("s-gate").textContent = recording && !micOnly ? `gate ${e.open ? "open" : "closed"} · level ${e.lastRms.toFixed(4)} · floor ${e.noiseFloor.toFixed(4)} · threshold ${e.threshold.toFixed(4)} · opened ${e.gateOpens}x, ${e.gateMisses} by probe · ${e.wordsCommitted} words (${reasonLine(e)})`
+    : e.passes ? `gate: opened ${e.gateOpens}x, ${e.gateMisses} by probe (gate misses), ${e.modelHolds} held open by the model · ${e.wordsCommitted} words (${reasonLine(e)})` : "gate: -";
 }
 function setLevel(peak: number) {
   levelPeak = Math.max(peak, levelPeak * 0.7); // quick attack, short decay
@@ -514,8 +424,9 @@ async function startRecording() {
     for (const evName of ["mute", "unmute", "ended"]) track?.addEventListener(evName, () => diag.send("mic-track", { event: evName, readyState: track.readyState, muted: track.muted }));
     c.onstatechange = () => { diag.send("audio-context", { state: c.state, sampleRate: c.sampleRate, recording }); if (ctx === c && recording && c.state !== "running") micMessage(`Audio capture is ${c.state} (paused by the browser); it resumes when this tab is in front`); else if (ctx === c && recording) micMessage(null); };
     const set = s.getAudioTracks()[0]?.getSettings?.() ?? {};
-    // fresh utterance state; the committed transcript is kept
-    nFrames = 0; bufAbs = 0; captured = 0; coveredAbs = 0; provEndAbs = 0; noiseFloor = 0.001; dropping = false; resetUtterance();
+    // a fresh engine (positions start at 0 again); the committed transcript is kept
+    if (!engine.idle() && modelState === "ready") await engine.stop(); // the last words of the previous recording first
+    engine.reset(); captured = 0; provText = ""; gateSteps = 0; pk.gateEvents.length = 0; pk.segments.length = 0;
     micOnly = ($("miconly") as HTMLInputElement).checked;
     recording = true; starting = false; recStart = performance.now(); sawSignal = false;
     pk.recording = true; pk.inputRate = c.sampleRate;
@@ -545,15 +456,19 @@ function stopRecording(message: string | null = null) {
   if (!recording) return;
   recording = false; pk.recording = false;
   releaseMic();
-  if (dropping) endDrop(captured);
-  if (hasSpeech) cut(nFrames, "stop"); // what was said since the last pause still gets its final pass
-  nFrames = 0; resetUtterance(); speechNow = false; levelPeak = 0; setLevel(0);
+  speechNow = false; levelPeak = 0; setLevel(0);
+  const capturedS = captured / SR;
+  // what was said since the last commit still gets its final pass
+  void engine.stop().then(() => {
+    const e = engine.stats();
+    step(`stopped after ${capturedS.toFixed(1)} s: ${e.passes} passes (${e.probes} probes), ${e.utterances} utterances, ${e.wordsCommitted} words committed (${reasonLine(e)}), gate opened ${e.gateOpens}x by energy and ${e.gateMisses}x by a probe, ${e.modelHolds} held open by the model, max lag ${e.maxLagS.toFixed(1)} s, max buffer ${e.maxBufferS.toFixed(1)} s${e.skippedS ? `, ${e.skippedS.toFixed(0)} s skipped` : ""}`);
+    diag.send("stopped", { capturedS: r1(capturedS), engine: { ...e, noiseFloor: +e.noiseFloor.toFixed(5), threshold: +e.threshold.toFixed(5), lastRms: +e.lastRms.toFixed(5) } });
+    render();
+  });
   $("rec").classList.remove("on"); $("rec").setAttribute("aria-pressed", "false"); $("rec").setAttribute("aria-label", "Record");
   ($("model") as HTMLSelectElement).disabled = false;
   micMessage(message);
-  step(`stopped after ${(captured / SR).toFixed(1)} s: ${pk.passCount} passes, ${pk.finalCount} commits, max lag ${pk.maxLagS} s`);
   render();
-  pump();
 }
 
 // ---------- soak test ----------
@@ -580,8 +495,9 @@ async function runSoak(n: number) {
   const { pcm: clip, from } = await soakAudio();
   const g0 = pk.gpu, t0 = performance.now();
   const S: any = (pk.soak = { n, done: 0, running: true, from, gapMs, gcMb: cfg.gcMb, start: gpuDiag(g0), series: [] as number[][], madeAfterWarm: 0, missesAfterWarm: 0, workMin: Infinity, workMax: 0, sameText: null as boolean | null, error: null as string | null, ms: [] as number[] });
-  head.push(`soak: ${n} passes over ${from}, lengths 0.3-${P.capS} s, ${gapMs} ms between passes, collector nudge ${cfg.gcMb ? cfg.gcMb + " MiB/pass" : "off"}`, `start: ${gpuLine(g0)}`);
-  step(`soak starting: ${n} passes, lengths 0.3-${P.capS} s`, undefined, `${from}; gap ${gapMs} ms; collector nudge ${cfg.gcMb} MiB; ${gpuLine(g0)}`);
+  const capS = engine.params.capS;
+  head.push(`soak: ${n} passes over ${from}, lengths 0.3-${capS} s, ${gapMs} ms between passes, collector nudge ${cfg.gcMb ? cfg.gcMb + " MiB/pass" : "off"}`, `start: ${gpuLine(g0)}`);
+  step(`soak starting: ${n} passes, lengths 0.3-${engine.params.capS} s`, undefined, `${from}; gap ${gapMs} ms; collector nudge ${cfg.gcMb} MiB; ${gpuLine(g0)}`);
   life.phase("soak", { at: `pass 0 of ${n}` });
   const WARM = 10; // passes after which nothing new should be made
   let seed = 12345, refText: string | null = null, warm: any = null;
@@ -590,7 +506,7 @@ async function runSoak(n: number) {
     for (let i = 1; i <= n && !soakStop; i++) {
       // Every 50th pass is the same 7 s: its text must not change. The others: a random length from a random place.
       const fixed = i % 50 === 1;
-      const len = fixed ? 7 * SR : Math.round((0.3 + rnd() * (P.capS - 0.3)) * SR);
+      const len = fixed ? 7 * SR : Math.round((0.3 + rnd() * (engine.params.capS - 0.3)) * SR);
       const off = fixed ? 0 : Math.floor(rnd() * (clip.length - len));
       const r = await rpc.call("run", { pcm: clip.slice(off, off + len) });
       if (gen !== loadGen) throw new Error("the model was reloaded");
@@ -626,6 +542,7 @@ async function runSoak(n: number) {
   head.push(summary);
   show(g ? `end: ${gpuLine(g)}` : "");
   soaking = false; busy = false;
+  for (const w of readyWaiters.splice(0)) w();
   life.phase("ready", { at: undefined });
   $("soakstop").hidden = true; ($("soakgo") as HTMLButtonElement).disabled = false; ($("model") as HTMLSelectElement).disabled = false;
   if (gen !== loadGen) return;
@@ -658,8 +575,7 @@ function init() {
     setTimeout(() => ($("copy").textContent = "Copy"), 1200);
   });
   $("clear").addEventListener("click", () => {
-    finals.length = 0; nFrames = 0; bufAbs = captured; resetUtterance();
-    pk.committed = ""; pk.segments.length = 0; $("committed").textContent = "";
+    pk.committed = ""; pk.segments.length = 0; $("committed").textContent = ""; // the transcript only: the engine keeps listening
     render();
   });
   $("forget").addEventListener("click", async () => {
@@ -676,20 +592,20 @@ function init() {
   pk.offline = async (url: string) => {
     if (busy || recording || modelState !== "ready") throw new Error("busy");
     busy = true;
-    try { const pcm = new Float32Array(await (await fetch(url)).arrayBuffer()); const r = await rpc!.call("run", { pcm }); return { text: r.text as string, ms: r.wallMs as number, seconds: pcm.length / SR }; } finally { busy = false; }
+    try { const pcm = new Float32Array(await (await fetch(url)).arrayBuffer()); const r = await rpc!.call("run", { pcm }); return { text: r.text as string, words: r.words, ms: r.wallMs as number, seconds: pcm.length / SR }; } finally { busy = false; for (const w of readyWaiters.splice(0)) w(); }
   };
-  pk.run = async (pcm: Float32Array) => { if (busy || recording || modelState !== "ready") throw new Error("busy"); busy = true; try { return await rpc!.call("run", { pcm }); } finally { busy = false; } };
-  pk.vad = () => ({ noiseFloor: +noiseFloor.toFixed(5), hasSpeech, lastRms: +(nFrames ? rms[nFrames - 1] : 0).toFixed(5) });
-  setInterval(() => { if (recording || finals.length) setStats(); }, 250);
+  pk.run = async (pcm: Float32Array) => { if (busy || recording || modelState !== "ready") throw new Error("busy"); busy = true; try { return await rpc!.call("run", { pcm }); } finally { busy = false; for (const w of readyWaiters.splice(0)) w(); } };
+  pk.vad = () => { const e = engine.stats(); return { noiseFloor: +e.noiseFloor.toFixed(5), threshold: +e.threshold.toFixed(5), hasSpeech: e.open, lastRms: +e.lastRms.toFixed(5), gateMisses: e.gateMisses }; };
+  setInterval(() => { if (recording || !engine.idle()) setStats(); }, 250);
   // Every 5 s while something is going on: the numbers that would show a tab growing before it is killed.
   setInterval(() => {
     if (!recording && !busy && modelState !== "loading" && !soaking) return;
     diag.send("heartbeat", { phase: pk.phase, recording, heapMb: pk.heapMb, jsHeapMb: (performance as any).memory ? Math.round((performance as any).memory.usedJSHeapSize / 2 ** 20) : null, passes: pk.passCount, lagS: pk.lagS, bufferS: pk.bufferS,
-      backlogS: r1(backlogS()), audioContext: ctx?.state ?? null, visibility: document.visibilityState, gpu: gpuDiag(pk.gpu), micOnly: recording && micOnly, capturedS: recording ? r1(captured / SR) : undefined });
+      gate: gateDiag(), audioContext: ctx?.state ?? null, visibility: document.visibilityState, gpu: gpuDiag(pk.gpu), micOnly: recording && micOnly, capturedS: recording ? r1(captured / SR) : undefined });
   }, 5000);
   setStats();
   setNote();
-  sendEnvironment(diag, { device, capS: P.capS, limits: cfg.limits || "raised", config: cfg });
+  sendEnvironment(diag, { device, capS: engine.params.capS, engine: engine.params, limits: cfg.limits || "raised", config: cfg });
   // How the last visit ended. pagehide marks a visit closed; a tab the browser killed never gets there.
   const prev = life.prev, prevRun = runs.at(-1);
   if (prev) {
@@ -702,6 +618,12 @@ function init() {
     if (!prev.closed && !prev.hidden && ["loading", "warmup", "first-pass", "soak"].includes(prev.phase) && params.get("guard") !== "0") return showGuard(prev, lastStep);
   }
   void loadModel(cfg.model);
+}
+/** The engine's counters for a heartbeat: gate state and numbers, misses, commit reasons. No text. */
+function gateDiag() {
+  const e = engine.stats();
+  return { open: e.open, floor: +e.noiseFloor.toFixed(5), thr: +e.threshold.toFixed(5), rms: +e.lastRms.toFixed(5), opens: e.gateOpens, misses: e.gateMisses, holds: e.modelHolds, probes: e.probes, probesSilent: e.probesSilent,
+    utterances: e.utterances, words: e.wordsCommitted, byReason: e.byReason, stale: e.stale, maxBufferS: r1(e.maxBufferS), maxLagS: r1(e.maxLagS), skippedS: r1(e.skippedS), failed: e.failed };
 }
 function setNote() { $("diagnote").textContent = diag.note(); $("diagshort").textContent = diag.url ? `diagnostics session ${diag.sid}` : "diagnostics off"; }
 function showGuard(prev: { sid: string; phase: string; model?: string; cpu?: boolean; at?: string }, lastStep: string) {

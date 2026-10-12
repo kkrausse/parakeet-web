@@ -15,9 +15,10 @@ const pk: any = ((window as any).__pkr = { phase: "loading", error: null, backen
 let rpc: Rpc;
 let lastGpu: any = null, lastHeap = 0;
 const model: Model = async (pcm) => {
+  pk.inPass = pcm.length / SR;
   const r = await rpc.call("run", { pcm }, [pcm.buffer]);
   if (r.gpuErrors?.length) throw new Error(`GPU error: ${r.gpuErrors.slice(0, 3).join("; ")}`);
-  lastGpu = r.gpu; lastHeap = r.heapMb;
+  lastGpu = r.gpu; lastHeap = r.heapMb; pk.lastPass = { audioS: pcm.length / SR, ms: r.wallMs, words: r.words?.length, tail: r.words?.slice(-6), n: (pk.lastPass?.n ?? 0) + 1 };
   return { text: r.text, words: r.words, ms: r.wallMs };
 };
 const clips = new Map<string, Float32Array>();
@@ -40,7 +41,7 @@ pk.run = async (s: Spec) => {
   const pcm = await conditioned(s);
   const memory: any[] = [];
   const o: ReplayOptions = { engine: s.engine, capS: s.capS, params: s.params, latencyMs: s.slow ? (audioS) => audioS * 1000 * s.slow! : s.latencyMs ?? "measured",
-    onProgress: (t) => { memory.push({ t, jsHeapMb: Math.round(((performance as any).memory?.usedJSHeapSize ?? 0) / 2 ** 20 * 10) / 10, wasmHeapMb: lastHeap, gpuWorkMb: lastGpu?.workingMb ?? 0, gpuBuffers: lastGpu?.buffers ?? 0, gpuMade: lastGpu?.created ?? 0 }); } };
+    onProgress: (t) => { pk.progress = t; memory.push({ t, jsHeapMb: Math.round(((performance as any).memory?.usedJSHeapSize ?? 0) / 2 ** 20 * 10) / 10, wasmHeapMb: lastHeap, gpuWorkMb: lastGpu?.workingMb ?? 0, gpuBuffers: lastGpu?.buffers ?? 0, gpuMade: lastGpu?.created ?? 0 }); } };
   const t0 = performance.now();
   const log = await replay(pcm, model, o);
   const frames = log.frames ? { floor: Array.from(log.frames.floor, (x) => Math.round(x * 1e5) / 1e5), speech: Array.from(log.frames.speech) } : undefined;
@@ -51,14 +52,14 @@ async function load() {
   const m = MODELS[pk.model];
   if (!m) throw new Error(`no model ${pk.model}`);
   const capS = Number(params.get("cap") ?? (params.get("phone") === "1" ? 12 : 24));
-  rpc = createRpc((e) => { if (e.type === "stage") say(e.name); });
+  rpc = createRpc((e) => { if (e.type === "stage") say(e.name); if (e.type === "stderr" && /error|abort|fail/i.test(e.line)) say(`wasm: ${e.line}`); });
   const variant = params.get("variant") ?? ("Suspending" in WebAssembly ? "jspi" : "asyncify");
   const init = await rpc.call("init", { base: location.href, variant, wantF16: params.get("f16") !== "0", limits: params.get("limits") === "default" ? "default" : "", gpuwatch: false, gcMb: 0 });
   const a = init.adapter;
   const { useF16, env } = backendEnv(a, { f16: params.get("f16") !== "0", flash: false, extra: params.get("cpu") === "1" ? { TRANSCRIBE_BACKENDS: "cpu" } : {} });
   const ld = await rpc.call("load", { url: new URL("models/" + m.file, location.href).href, name: m.file, store: "opfs", env, threads: 1, verbose: false });
   if (ld.gpuErrors?.length) throw new Error(`GPU error at load: ${ld.gpuErrors.join("; ")}`);
-  Object.assign(pk, { backend: ld.backend, webgpu: /webgpu/i.test(ld.backend), shaderF16: useF16, adapter: a.available ? `${a.vendor} ${a.architecture} ${a.description || ""}`.trim() : null, capS });
+  Object.assign(pk, { variant, jspi: init.jspi, adapterReason: a.available ? null : a.reason, backend: ld.backend, webgpu: /webgpu/i.test(ld.backend), shaderF16: useF16, adapter: a.available ? `${a.vendor} ${a.architecture} ${a.description || ""}`.trim() : null, capS });
   // warm-up and sizing as on the live page: pipelines compiled, the working buffer made for the longest pass
   let seed = 1;
   for (const s of [1.5, capS + 1]) {

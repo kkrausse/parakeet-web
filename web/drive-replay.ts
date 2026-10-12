@@ -4,7 +4,7 @@
 // (full logs, not in git); prints one line per run.
 // usage: bun drive-replay.ts <name> [--clip iv90] [--conditions clean,low,phone,noisy,far] [--engines old,new] [--model s4] [--cap 12]
 //        [--params '{"holdS":0.8}'] [--seconds N] [--latency measured|<ms>] [--slow <x real time>] [--url http://127.0.0.1:8793/replay.html] [--stock]
-import { chromium } from "playwright-core";
+import { chromium, webkit } from "playwright-core";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { CONDITIONS, coverage, measure, type Condition } from "./replay/lib";
@@ -17,6 +17,8 @@ const clipName = flag("--clip") ?? "iv90", model = flag("--model") ?? "s4", cap 
 const conds = (flag("--conditions") ?? "clean,low,phone,noisy,far").split(","), engines = (flag("--engines") ?? "old,new").split(",") as ("old" | "new")[];
 const paramsJson = flag("--params"), seconds = Number(flag("--seconds") ?? 0) || undefined, lat = flag("--latency"), slow = Number(flag("--slow") ?? 0) || undefined;
 const stock = bool("--stock"), saveRef = bool("--save-ref");
+const browser = flag("--browser") ?? "chrome"; // chrome | webkit (Playwright's Linux WebKit build, ~/.cache/ms-playwright/webkit-*)
+const query = flag("--query") ?? "";
 const [name] = args;
 if (!name) throw new Error("usage: bun drive-replay.ts <name> [--clip iv90] ...");
 const R = process.env.PK_CACHE ?? join(process.env.HOME!, "devfs/cache/parakeet-ggml-webgpu");
@@ -31,30 +33,37 @@ const xvfb = Bun.spawn(["Xvfb", display, "-screen", "0", "1280x900x24", "-nolist
 await Bun.sleep(700);
 const procMib = (pid: number) => { try { return Math.round(Number(readFileSync(`/proc/${pid}/status`, "utf8").match(/VmRSS:\s+(\d+)/)![1]) / 1024); } catch { return 0; } };
 
-const ctx = await chromium.launchPersistentContext(profile, {
-  executablePath: "/usr/bin/google-chrome", headless: false, viewport: null, env: { ...process.env, DISPLAY: display },
-  ignoreDefaultArgs: ["--enable-automation", "--disable-background-timer-throttling"],
-  args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--enable-features=Vulkan", "--use-angle=vulkan", "--enable-webgpu-developer-features", "--no-first-run", "--no-default-browser-check", "--password-store=basic", "--window-size=1200,860",
-    ...(stock ? [] : ["--enable-dawn-features=vulkan_enable_f16_on_nvidia"])],
-});
+// A persistent context in both: OPFS sync access handles (the model file) fail in WebKit's ephemeral one. Profiles stay under ../cache (not /tmp).
+const ctx = browser === "webkit"
+  ? await webkit.launchPersistentContext(profile, { headless: false, viewport: null, env: { ...process.env, DISPLAY: display } })
+  : await chromium.launchPersistentContext(profile, {
+      executablePath: "/usr/bin/google-chrome", headless: false, viewport: null, env: { ...process.env, DISPLAY: display },
+      ignoreDefaultArgs: ["--enable-automation", "--disable-background-timer-throttling"],
+      args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist", "--enable-features=Vulkan", "--use-angle=vulkan", "--enable-webgpu-developer-features", "--no-first-run", "--no-default-browser-check", "--password-store=basic", "--window-size=1200,860",
+        ...(stock ? [] : ["--enable-dawn-features=vulkan_enable_f16_on_nvidia"])],
+    });
 const clean = new Float32Array(readFileSync(clipFile).buffer.slice(0));
-const result: any = { name, clip: clipName, clipSeconds: clean.length / 16000, model, capS: cap, params: paramsJson ? JSON.parse(paramsJson) : {}, latency: slow ? `${slow} x audio` : lat ?? "measured", chrome: ctx.browser()?.version(), runs: [] };
+const result: any = { name, clip: clipName, clipSeconds: clean.length / 16000, model, capS: cap, params: paramsJson ? JSON.parse(paramsJson) : {}, latency: slow ? `${slow} x audio` : lat ?? "measured", browser, browserVersion: ctx.browser()?.version(), runs: [] };
 try {
   const page = ctx.pages()[0] ?? (await ctx.newPage());
   const logs: string[] = [];
   page.on("console", (m) => { if (m.type() === "error") logs.push(m.text().slice(0, 400)); });
   page.on("pageerror", (e) => logs.push(`pageerror: ${e.message}`));
   await page.route("**/__clip.f32", (r) => r.fulfill({ body: readFileSync(clipFile), contentType: "application/octet-stream" }));
-  await page.goto(`${url0}?model=${model}&cap=${cap}`);
+  await page.goto(`${url0}?model=${model}&cap=${cap}${query ? "&" + query : ""}`);
   for (const t0 = performance.now(); ; await Bun.sleep(200)) {
     const s = await page.evaluate(() => { const p = (window as any).__pkr; return { phase: p.phase, error: p.error }; });
     if (s.phase === "ready") break;
     if (s.phase === "failed") throw new Error(`model did not load: ${s.error}`);
-    if (performance.now() - t0 > 10 * 60e3) throw new Error("timeout loading the model");
+    if (performance.now() - t0 > 20 * 60e3) throw new Error("timeout loading the model");
   }
-  Object.assign(result, await page.evaluate(() => { const p = (window as any).__pkr; return { backend: p.backend, webgpu: p.webgpu, shaderF16: p.shaderF16, adapter: p.adapter }; }));
-  const { processInfo } = await (await ctx.browser()!.newBrowserCDPSession()).send("SystemInfo.getProcessInfo");
-  const renderers = processInfo.filter((p) => p.type === "renderer").map((p) => p.id), gpuPid = processInfo.find((p) => p.type === "GPU")?.id ?? 0;
+  Object.assign(result, await page.evaluate(() => { const p = (window as any).__pkr; return { backend: p.backend, webgpu: p.webgpu, shaderF16: p.shaderF16, adapter: p.adapter, variant: p.variant, jspi: p.jspi, adapterReason: p.adapterReason, loadLines: document.getElementById("out")!.textContent }; }));
+  console.log(`${browser} ${result.browserVersion}: backend ${result.backend}, ${result.variant} build, adapter ${result.adapter ?? `none (${result.adapterReason})`}`);
+  let renderers: number[] = [], gpuPid = 0;
+  if (browser !== "webkit") { // process ids come over CDP: Chrome only
+    const { processInfo } = await (await ctx.browser()!.newBrowserCDPSession()).send("SystemInfo.getProcessInfo");
+    renderers = processInfo.filter((p) => p.type === "renderer").map((p) => p.id); gpuPid = processInfo.find((p) => p.type === "GPU")?.id ?? 0;
+  }
   const rss = () => ({ rendererRssMib: Math.max(0, ...renderers.map(procMib)), gpuProcRssMib: procMib(gpuPid) });
   for (const c of conds) {
     const condition: Condition = CONDITIONS[c] ?? JSON.parse(c);

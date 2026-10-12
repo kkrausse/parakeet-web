@@ -200,7 +200,8 @@ export interface Measured {
 }
 /** `ref`: the whole-file pass over the same audio (words with times). */
 export function measure(log: ReplayLog, ref: Transcription): Measured {
-  const refN = ref.words.map((w) => norm(w.w).join("")).filter(Boolean), refW = ref.words.filter((w) => norm(w.w).join(""));
+  // word ends are cut to 1.2 s after the start, as the engine does (a closing full stop can be emitted seconds later)
+  const refN = ref.words.map((w) => norm(w.w).join("")).filter(Boolean), refW = ref.words.filter((w) => norm(w.w).join("")).map((w) => ({ ...w, e: Math.min(w.e, w.s + 1.2) }));
   const hyp = norm(log.committed);
   const a = align(refN, hyp);
   const spans: string[] = [];
@@ -232,8 +233,8 @@ export function measure(log: ReplayLog, ref: Transcription): Measured {
     }
     return { first, longS, longW, count };
   };
-  const committedSpans = log.commits.flatMap((c) => c.words.map((w) => ({ s: w.s, e: w.e, at: c.atSample / SR })));
-  const shownSpans = [...committedSpans, ...log.tentative.flatMap((t) => t.words.map((w) => ({ s: w.s, e: w.e, at: t.atSample / SR })))];
+  const committedSpans = log.commits.flatMap((c) => c.words.map((w) => ({ s: w.s, e: Math.min(w.e, w.s + 1.2), at: c.atSample / SR })));
+  const shownSpans = [...committedSpans, ...log.tentative.flatMap((t) => t.words.map((w) => ({ s: w.s, e: Math.min(w.e, w.s + 1.2), at: t.atSample / SR })))];
   const shown = cover(shownSpans), com = cover(committedSpans);
   const showLat: number[] = [];
   for (let k = 0; k < refW.length; k++) if (shown.first[k] !== Infinity) showLat.push(shown.first[k] - refW[k].e);

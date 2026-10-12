@@ -62,10 +62,12 @@ export interface StreamParams {
   probeS: number;
   /** A probe window whose peak is under this is digital silence and is not probed. */
   silencePeak: number;
+  /** A word's end time is taken to be no later than this after its start, seconds (see toAbs). */
+  maxWordS: number;
 }
 export const DEFAULT_PARAMS: StreamParams = {
-  capS: 24, gapMs: 250, minNewS: 0.1, stableS: 0.5, minPasses: 2, holdS: 0.8, keepS: 2, emptyHoldS: 1, forceHoldS: 1, lagS: 3, backlogS: 30,
-  hangS: 1.5, preRollS: 0.4, gateRatio: 2.5, gateAbsRms: 0.0004, floorWindowS: 4, onsetFrames: 2, probeEveryS: 2, probeS: 3, silencePeak: 1e-4,
+  capS: 24, gapMs: 250, minNewS: 0.1, stableS: 0.5, minPasses: 2, holdS: 1.2, keepS: 4, emptyHoldS: 1, forceHoldS: 1, lagS: 3, backlogS: 30,
+  hangS: 1.5, preRollS: 0.4, gateRatio: 2.5, gateAbsRms: 0.0004, floorWindowS: 4, onsetFrames: 2, probeEveryS: 2, probeS: 3, silencePeak: 1e-4, maxWordS: 1.2,
 };
 
 /** agree: passes agreed; idle / stop: the utterance ended; cap: full buffer; lag: passes behind the microphone; skip: draining before skipped audio. */
@@ -134,7 +136,7 @@ export function createStream(transcribe: Transcribe, events: StreamEvents = {}, 
   let hypEnd = 0; // how far the newest pass saw
   let drain: null | "idle" | "stop" | "skip" = null;
   let skipFrom = -1, holding = false;
-  let busy = false, failed = false, gen = 0, lastPassStart = -Infinity, lastProbeAt = 0, closedSince = 0;
+  let busy = false, failed = false, gen = 0, epoch = 0, lastPassStart = -Infinity, lastProbeAt = 0, closedSince = 0;
   let stopWaiters: (() => void)[] = [];
   const zero = (): StreamStats => ({ capturedS: 0, open: false, busy: false, failed: false, skipping: false, bufferS: 0, maxBufferS: 0, lagS: 0, maxLagS: 0, noiseFloor: 0, threshold: 0, lastRms: 0, speech: false,
     gateOpens: 0, gateMisses: 0, modelHolds: 0, probes: 0, probesSilent: 0, passes: 0, livePasses: 0, finalPasses: 0, stale: 0, reusedFinals: 0, utterances: 0, commits: 0, wordsCommitted: 0,
@@ -254,15 +256,16 @@ export function createStream(transcribe: Transcribe, events: StreamEvents = {}, 
       kind = "probe"; S.probes++;
     }
     const req: PassRequest = { kind, startSample: start + from, endSample: start + from + n };
-    const myGen = gen, t0 = now();
+    const myGen = gen, myEpoch = epoch, t0 = now();
     busy = true; lastPassStart = t0;
     let r: Transcription;
     try { r = await transcribe(buf.slice(from, from + n), req); }
-    catch (e) { busy = false; failed = true; events.onError?.(e); settle(); return; }
+    catch (e) { if (myEpoch !== epoch) return; busy = false; failed = true; events.onError?.(e); settle(); return; }
+    if (myEpoch !== epoch) return; // reset() while it ran: nothing here is this pass's any more
     busy = false;
     S.passes++; if (kind === "final") S.finalPasses++; else if (kind === "live") S.livePasses++;
     const ev: PassEvent = { ...req, ms: now() - t0, words: r.words?.length ?? 0, committed: 0, tentative: 0, stale: myGen !== gen, atSample: captured };
-    if (myGen !== gen) S.stale++; // reset() while it ran: the result belongs to nothing
+    if (myGen !== gen) S.stale++; // the utterance it was for is gone (a probe overtaken by the gate, or stop())
     else {
       const before = S.wordsCommitted;
       if (kind === "probe") onProbe(req, r); else onPass(req, r, kind === "final");
@@ -283,7 +286,10 @@ export function createStream(transcribe: Transcribe, events: StreamEvents = {}, 
     for (const x of r.words ?? []) {
       const n = normalizeWord(x.w);
       if (!n) continue; // punctuation on its own
-      out.push({ w: x.w, n, s: startSample + Math.round(x.s * SR), e: startSample + Math.round(x.e * SR), p: x.p ?? 1, since: 0, seen: 1 });
+      // A word's end is where its last token's duration ends, and closing punctuation is often emitted only after the
+      // pause that follows ("avail." from 1.9 s to 11.5 s): the end is cut to maxWordS after the start.
+      const ws = startSample + Math.round(x.s * SR), we = Math.max(ws, Math.min(startSample + Math.round(x.e * SR), ws + Math.round(P.maxWordS * SR)));
+      out.push({ w: x.w, n, s: ws, e: we, p: x.p ?? 1, since: 0, seen: 1 });
     }
     return out;
   }
@@ -338,15 +344,15 @@ export function createStream(transcribe: Transcribe, events: StreamEvents = {}, 
     let n = 0;
     while (n < tent.length && passEnd - tent[n].e >= P.holdS * SR && (hurry || (tent[n].seen >= P.minPasses && passEnd - tent[n].since >= P.stableS * SR))) n++;
     commit(n, hurry ?? "agree");
-    if (full) { // nothing may wait behind a full buffer
+    if (full) { // nothing may wait behind a full buffer: every word that began forceHoldS before its end goes, and the buffer moves on
       let m = 0;
-      while (m < tent.length && passEnd - tent[m].e >= P.forceHoldS * SR) m++;
-      commit(m, "cap");
-      boundary = Math.max(boundary, Math.min(tent.length ? tent[0].s : passEnd, passEnd - Math.round(P.keepS * SR)));
+      while (m < tent.length && passEnd - tent[m].s >= P.forceHoldS * SR) m++;
+      commit(m, hurry ?? "cap");
+      boundary = Math.max(boundary, passEnd - Math.round(P.keepS * SR));
     }
     // Audio no pass put a word on stops being a reason to keep the buffer long.
     boundary = Math.max(boundary, Math.min(passEnd, tent.length ? tent[0].s : passEnd) - Math.round(P.emptyHoldS * SR));
-    trim();
+    trim(behind >= P.lagS * SR);
     events.onTentative?.(tent.map((x) => x.w).join(" "), tent.map(outWord), captured);
   }
   /** The gate has been closed for hangS and the newest pass has no word younger than that. */
@@ -362,8 +368,9 @@ export function createStream(transcribe: Transcribe, events: StreamEvents = {}, 
     if (reason === "skip") { shiftTo(end()); endSkip(); }
     settle();
   }
-  function trim() {
-    const target = boundary - Math.round(P.keepS * SR);
+  function trim(lagging: boolean) {
+    // behind the microphone: less left context, so the passes get shorter and catch up
+    const target = boundary - Math.round((lagging ? Math.min(P.keepS, 1) : P.keepS) * SR);
     if (target - start < SR / 2) return;
     // Cut in the widest gap between committed words near the target, else at the target.
     let cut = target, gap = -1;
@@ -404,7 +411,7 @@ export function createStream(transcribe: Transcribe, events: StreamEvents = {}, 
     return p;
   }
   function reset() {
-    gen++; busy = false; failed = false;
+    gen++; epoch++; busy = false; failed = false;
     start = 0; len = 0; captured = 0; open = false; drain = null; skipFrom = -1; holding = false; tent = []; tail = []; boundary = 0; hypEnd = 0; uttStart = 0; uttWords = 0;
     subFill = 0; subCur = Infinity; subAt = 0; floor = 0; lastRms = 0; speech = false; run = 0; r1 = r2 = 0; frames = 0; frameFill = 0; lastSpeech = -1;
     lastPassStart = -Infinity; lastProbeAt = 0; closedSince = 0;

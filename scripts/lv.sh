@@ -4,8 +4,9 @@
 # CLIP is a name in $R/audio/live (t14 t56 g2 g5: fixtures with silences, made by scripts/live-clips.py).
 # STOCK=1 drops the Dawn f16 flag (f32-only shaders); URL=... runs against another copy of the page.
 R=~/devfs/cache/parakeet-ggml-webgpu
-W=~/devfs/repos/kkrausse/random/.claude/worktrees/parakeet-ggml-web/parakeet-ggml-web
+W=$(cd "$(dirname "$0")/.." && pwd)
 name=$1; clip=$2; q=${3:-}; shift; shift; shift
 F16="--chrome-arg --enable-dawn-features=vulkan_enable_f16_on_nvidia"; [ -n "$STOCK" ] && F16=""
-cd $W/web && bun drive-live.ts "$name" "$q" --wav $R/audio/live/$clip.wav --f32 $R/audio/live/$clip.f32 --expect $R/audio/live/$clip.txt \
+D=$R/audio/live; [ -f $D/$clip.wav ] || D=$R/audio/replay   # iv6 and friends: scripts/replay-clips.py
+cd $W/web && bun drive-live.ts "$name" "$q" --wav $D/$clip.wav --f32 $D/$clip.f32 --expect $D/$clip.txt \
   ${URL:+--url "$URL"} $F16 "$@"

@@ -3,7 +3,7 @@
 // lag, memory over time (GPU process from nvidia-smi, renderer RSS, WASM heap), and word diffs against
 // an offline pass over the same audio (through the same worker) and against a reference text.
 // usage: bun drive-live.ts <name> "<query>" --wav FILE.wav [--f32 FILE.f32] [--expect FILE.txt] [--seconds N]
-//        [--url http://127.0.0.1:8791/live.html] [--viewport 390x844] [--shot SECONDS] [--no-webgpu] [--chrome-arg ARG]...
+//        [--url http://127.0.0.1:8793/live.html] [--viewport 390x844] [--shot SECONDS] [--no-webgpu] [--chrome-arg ARG]...
 import { chromium } from "playwright-core";
 import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -11,7 +11,7 @@ import { join } from "node:path";
 const args = Bun.argv.slice(2);
 const flag = (k: string) => { const i = args.indexOf(k); return i < 0 ? undefined : args.splice(i, 2)[1]; };
 const bool = (k: string) => { const i = args.indexOf(k); if (i < 0) return false; args.splice(i, 1); return true; };
-const url0 = flag("--url") ?? "http://127.0.0.1:8791/live.html";
+const url0 = flag("--url") ?? "http://127.0.0.1:8793/live.html";
 const wav = flag("--wav"), f32 = flag("--f32"), expectFile = flag("--expect");
 const viewport = flag("--viewport"), shotAt = Number(flag("--shot") ?? 0), tail = Number(flag("--tail") ?? 2);
 const noWebgpu = bool("--no-webgpu");
@@ -114,7 +114,7 @@ try {
   await page.click("#rec");
   for (const s0 = performance.now(); !(await state()).idle; await Bun.sleep(100)) if (performance.now() - s0 > 10 * 60e3) throw new Error("timeout waiting for the last passes");
   result.drainMs = Math.round(performance.now() - r0 - seconds * 1000);
-  const live = await page.evaluate(() => { const s = (window as any).__pkl; return { committed: s.committed, provisional: s.provisional, segments: s.segments, passes: s.passes, passCount: s.passCount, finalCount: s.finalCount, reusedCount: s.reusedCount, staleCount: s.staleCount, maxLagS: s.maxLagS, droppedS: s.droppedS, inputRate: s.inputRate, backend: s.backend, webgpu: s.webgpu, shaderF16: s.shaderF16, variant: s.variant, errors: s.errors, steps: s.steps, params: s.params, load: s.load }; });
+  const live = await page.evaluate(() => { const s = (window as any).__pkl; return { committed: s.committed, provisional: s.provisional, segments: s.segments, engine: s.engine, gateEvents: s.gateEvents, passes: s.passes, passCount: s.passCount, finalCount: s.finalCount, reusedCount: s.reusedCount, staleCount: s.staleCount, maxLagS: s.maxLagS, droppedS: s.droppedS, inputRate: s.inputRate, backend: s.backend, webgpu: s.webgpu, shaderF16: s.shaderF16, variant: s.variant, errors: s.errors, steps: s.steps, params: s.params, load: s.load }; });
   series.push(await sample(seconds + result.drainMs / 1000));
   const prov = live.passes.filter((x: number[]) => !x[2]), fin = live.passes.filter((x: number[]) => x[2]);
   const settled = series.filter((s) => s.t >= Math.min(30, seconds / 3));
@@ -143,7 +143,7 @@ finally { await ctx.close().catch(() => {}); xvfb.kill(); }
 writeFileSync(join(outDir, `${name}.json`), JSON.stringify(result, null, 1));
 const d = (x: any) => (x ? `${x.raw.differing}/${x.raw.words} raw, ${x.normalized.differing}/${x.normalized.words} words` : "-");
 console.log(JSON.stringify({ name, error: result.error, backend: result.live?.backend, f16: result.live?.shaderF16, variant: result.live?.variant, adapter: result.live?.load?.adapter, inputRate: result.live?.inputRate,
-  commits: result.live?.finalCount, reused: result.live?.reusedCount, reasons: result.live?.segments?.map((s: any) => `${s.reason}:${(s.endS - s.startS).toFixed(1)}`).join(" "), passes: result.live?.passCount, stale: result.live?.staleCount,
+  utterances: result.live?.finalCount, reused: result.live?.reusedCount, engine: result.live?.engine && { gateOpens: result.live.engine.gateOpens, gateMisses: result.live.engine.gateMisses, modelHolds: result.live.engine.modelHolds, probes: result.live.engine.probes, words: result.live.engine.wordsCommitted, byReason: result.live.engine.byReason, maxBufferS: result.live.engine.maxBufferS, maxLagS: result.live.engine.maxLagS, skippedS: result.live.engine.skippedS, noiseFloor: result.live.engine.noiseFloor, threshold: result.live.engine.threshold }, reasons: result.live?.segments?.map((s: any) => `${s.reason}:${(s.endS - s.startS).toFixed(1)}`).join(" "), passes: result.live?.passCount, stale: result.live?.staleCount,
   provMs: result.provisionalPassMs, finalMs: result.finalPassMs, provAudioS: result.provisionalAudioS, lag: result.lagS, maxLagS: result.maxLagS, drainMs: result.drainMs, droppedS: result.live?.droppedS,
   vsOffline: d(result.vsOffline), offlineSpans: result.vsOffline?.normalized.spans.slice(0, 12), vsExpected: d(result.vsExpected), expectedSpans: result.vsExpected?.normalized.spans.slice(0, 12),
   memory: result.memoryAfterWarmup, pageErrors: result.live?.errors, console: result.console?.slice(0, 5) }, null, 1));
