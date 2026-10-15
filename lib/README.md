@@ -6,15 +6,15 @@ takes part; the library sends nothing anywhere and stores only the model file (i
 file system).
 
 This file is how to use it. Building it, the runtime it is compiled from and the demo pages are in the repository's
-README (`kkrausse/parakeet-web`, private).
+README ([`kkrausse/parakeet-web`](https://github.com/kkrausse/parakeet-web)).
 
 ## Install
 
-The package is not on a registry. It is installed from the private repository by tag (the tag points at the
-`release` branch, which holds the built package and nothing else); this needs read access to the repository over ssh:
+The package is not on a registry. It is installed from the repository by tag (the tag points at the `release`
+branch, which holds the built package and nothing else):
 
 ```sh
-bun add git+ssh://git@github.com/kkrausse/parakeet-web.git#v0.1.0
+bun add github:kkrausse/parakeet-web#v0.1.0
 bunx parakeet-web-assets public/parakeet-web     # copies the runtime files into a folder your app serves
 ```
 

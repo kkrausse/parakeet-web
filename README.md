@@ -1,27 +1,79 @@
 # parakeet-web
 
-Speech to text in the browser, on the device: NVIDIA Parakeet on transcribe.cpp + ggml's WebGPU backend, compiled
-to WASM. Dictation with text appearing as you speak, or offline transcription of a clip with word times. No server
-takes part; the library sends nothing anywhere and stores only the model file (in the browser's origin-private
-file system).
+**Speech to text that runs in a browser tab, on the device, in about 200 MiB of GPU memory.**
 
-- **Manual: [`lib/README.md`](lib/README.md)** (install, the model file, every option, browser support as measured,
-  limits, what was not tested).
-- Demo (the live dictation page): built and pushed as the `gh-pages` branch, **not served yet**. GitHub refused to
-  enable Pages on 2026-10-12 ("Your current plan does not support GitHub Pages for this repository": Pages on a
-  private repository needs a paid plan). Once enabled it will be at <https://kkrausse.github.io/parakeet-web/>.
-- This repository is private. The package is not on a registry.
+NVIDIA Parakeet on [transcribe.cpp](https://github.com/handy-computer/transcribe.cpp) + ggml's WebGPU backend,
+compiled to WASM. Dictation with text appearing as you speak, or offline transcription of a clip with word times.
+No server takes part: the library sends nothing anywhere and stores only the model file (in the browser's
+origin-private file system).
+
+**Try it: <https://kkrausse.github.io/parakeet-web/>** (live dictation; 81 MB model download on the first visit,
+cached after that). It has run on an iPhone in Safari and Brave on WebGPU.
+
+- 81 MB model, about **120 MiB of GPU memory held by the library** while dictating (81 MiB of 4-bit weights +
+  41 MiB of working memory), flat for as long as you talk.
+- A pass every 250 ms takes about 80 ms on a desktop GPU; text trails speech by 0.1 s median.
+- 2.5-5x less peak GPU memory and 4-8x less tab memory than the same models on onnxruntime-web, same clips,
+  same machine ([Memory](#memory)).
+- Manual: **[`lib/README.md`](lib/README.md)** (install, the model file, every option, browser support as
+  measured, limits, what was not tested).
+
+## Memory
+
+Memory is what decides whether speech recognition can live in a tab at all, and on a phone it is the hard wall:
+iOS kills a Safari tab's web content process at 2 GiB. Most of the work here went into keeping it low and flat.
+
+### Per model
+
+Chrome 154 on Linux, RTX 2080 Ti, benchmark page over a 7 s, a 13.7 s and a 56 s clip in one page (the 56 s clip
+sets the peaks). "Held by the library" is the bytes the backend asks of the GPU device (the worker's own
+accounting, the same on any device); the other columns are what the browser process uses.
+
+| Model | Download | Held by the library: weights + working (12 s dictation cap) | GPU memory after load / peak | Tab (renderer) peak |
+| --- | ---: | ---: | ---: | ---: |
+| **110m Q4_0** (recommended, the demo's) | **81 MB** | **81 + 41 MiB** | **151 / 217 MiB** | 315 MiB |
+| 110m Q8_0 | 129 MB | 129 + 42 MiB | 199 / 268 MiB | 309 MiB |
+| 0.6b v2 Q4_0 | 438 MB | 438 + 57 MiB | 497 / 590 MiB | 324 MiB |
+| 0.6b v2 Q8_0 | 696 MB | 696 + 58 MiB | 760 / 849 MiB | 396 MiB |
+| 0.6b v2 F16 | 1.2 GB | | 1243 / 1383 MiB | 459 MiB |
+| *onnxruntime-web, 110m WebGPU fp32* | *455 MB* | | *495 / 1091 MiB* | *1200 MiB* |
+| *onnxruntime-web, 0.6b WebGPU fp16* | | | *1245 / 1544 MiB* | *2657 MiB* |
+| *onnxruntime-web, 0.6b WebGPU fp32* | | | *2423 / 2771 MiB* | *4375 MiB* |
+
+A blank page with the worker and the WASM module loaded is already about 150-175 MiB of renderer memory and
+57 MiB of GPU memory, so the tab column is mostly the browser. Working memory does not depend on the weight
+type. Live dictation with 110m Q4_0 through the library: Chrome's whole GPU process 194-201 MiB, WASM heap 46 MB,
+renderer 252-313 MiB, unchanged from the first minute to the last of a 6.5 min recording (1428 passes) and
+over a 400-pass soak test.
+
+### What brought it down
+
+Each line is one change, measured before and after on the same machine.
+
+| Change | Before | After |
+| --- | ---: | ---: |
+| Quantized weights stay packed in GPU memory; a matmul shader reads the 4-bit / 8-bit blocks directly | 0.6b F16: 1243 MiB after load | 0.6b Q4_0: **497 MiB** |
+| The model file is read in place from OPFS through a sync access handle, tensor by tensor, instead of being copied into the WASM heap (0.6b Q4_0, renderer peak) | 1219 MiB | **343 MiB** |
+| The subsampling convolutions run in 10 s time tiles, and a freed compute buffer is reused instead of a second one being made (GPU peak over the three clips) | 0.6b Q4_0: 969 MiB; 110m Q8_0: 386 MiB | **590 MiB; 268 MiB** |
+| Audio over 60 s is encoded in 30 s windows with 4 s of overlap (110m Q8_0, GPU peak at 2.1 / 4.4 / 8.9 min) | 616 / 1330 MiB / - | **248 / 247 / 246 MiB** |
+| Mel spectrogram without whole-clip copies (WASM heap at 2.1 / 4.4 / 8.9 min) | 124 / 184 / 282 MB | **80 / 115 / 178 MB** |
+| A size-classed GPU buffer pool, plus one sizing pass at start (200 live dictation passes, GPU buffers created after load) | 1958 MiB in 109 buffers | **44 MiB in 2**, working memory flat at 42 MiB |
+| No giant WASM functions (clang and binaryen had inlined every ggml op into two functions of 160k and 260k lines; JavaScriptCore's optimizing compiler ate gigabytes on them). This was why the iPhone killed the tab at 2 GiB. iOS 18.3 simulator Safari, 250 passes, web content process | 3.9-4.7 GiB peak | **0.83-0.98 GiB** (CPU path, weights in the heap) |
+
+The measurements, the attempts that did not work and the result files are in
+[`docs/history/work-log.md`](docs/history/work-log.md).
 
 ## Install
 
 ```sh
-bun add git+ssh://git@github.com/kkrausse/parakeet-web.git#v0.1.0   # needs read access to this repository over ssh; `github:kkrausse/parakeet-web#v0.1.0` does not work (bun asks the API for a tarball without credentials: 404)
-bunx parakeet-web-assets public/parakeet-web                         # copies the runtime files into a folder your app serves
+bun add github:kkrausse/parakeet-web#v0.1.0
+bunx parakeet-web-assets public/parakeet-web     # copies the runtime files into a folder your app serves
 ```
 
-The tag points at the `release` branch, whose tree is the built package (index.js, types, the worker, the worklet
-and both WASM builds, 12 MB); source branches hold no binaries. Then host one model file
-(`parakeet-tdt_ctc-110m-Q4_0.gguf`, 81 MB; see the manual) and:
+The package is not on a registry; the tag points at the `release` branch, whose tree is the built package
+(index.js, types, the worker, the worklet and both WASM builds, 12 MB). Then host one model file
+(`parakeet-tdt_ctc-110m-Q4_0.gguf`, 81 MB: download the demo's copy from
+<https://kkrausse.github.io/parakeet-web/models/parakeet-tdt_ctc-110m-Q4_0.gguf>, or make it as the manual says) and:
 
 ```ts
 import { createDictation } from "parakeet-web";
@@ -38,7 +90,8 @@ const dictation = createDictation({
 button.onclick = () => (dictation.state.recording ? dictation.stop() : dictation.start());
 ```
 
-[`lib/example/`](lib/example/) is this as a complete small app.
+[`lib/example/`](lib/example/) is this as a complete small app. The assets must be on the same origin as the
+page; no COOP / COEP headers are needed; the microphone needs https or `localhost`.
 
 ## Layers
 
@@ -56,16 +109,16 @@ The table with numbers is in the manual. In short:
 
 - **Chrome 154, Linux, RTX 2080 Ti**: measured with this package, WebGPU, both the JSPI and the ASYNCIFY build:
   a pass every 250 ms takes about 80 ms, text trails speech by 0.1 s median.
-- **iPhone**: the library build ran on WebGPU on an iPhone on 2026-10-12, as reported by the owner. No numbers
-  from that run are recorded here.
+- **iPhone**: the library build ran on WebGPU on an iPhone on 2026-10-12, as reported by the owner; before the
+  library, the same runtime ran there in Safari and Brave with passes of 30-80 ms. No numbers from the library
+  run are recorded here.
 - **Playwright's Linux WebKit 27.2**: works on the CPU backend (no WebGPU there), about 6x real time per pass;
   no microphone in that build.
 - **Firefox**: not working when last tried. **Android**: never run.
 
-Limits (English only, a word is final 1.2-1.6 s after it was said, about 185-200 MiB of GPU memory and 81 MB of
-browser storage for the recommended model, same-origin assets) and the list of what was **not tested** are in the
-manual: [Known limits](lib/README.md#known-limits), [Not tested](lib/README.md#not-tested); the engine's own list
-is at the end of [`docs/streaming-engine.md`](docs/streaming-engine.md).
+Limits (English only, a word is final 1.2-1.6 s after it was said, same-origin assets) and the list of what was
+**not tested** are in the manual: [Known limits](lib/README.md#known-limits), [Not tested](lib/README.md#not-tested);
+the engine's own list is at the end of [`docs/streaming-engine.md`](docs/streaming-engine.md).
 
 ## Layout
 
@@ -152,7 +205,7 @@ bun scripts/release.ts --push
 ```
 
 builds the package, commits exactly its files as the next commit of the `release` branch (which shares no history
-with `main`), tags it `v<version>` and pushes both. Apps then `bun add git+ssh://git@github.com/kkrausse/parakeet-web.git#v<version>`.
+with `main`), tags it `v<version>` and pushes both. Apps then `bun add github:kkrausse/parakeet-web#v<version>`.
 
 ## Demo page on GitHub Pages
 
@@ -162,13 +215,11 @@ bun scripts/pages.ts publish      # dist-pages/ becomes the single commit of gh-
 ```
 
 The public build posts nothing anywhere (the demo's diagnostics collector is compiled out) and `build` refuses to
-finish if a private host name or a machine path is in any shipped file. A Pages site is public although this
-repository is private. The model ships inside the branch (81 MB, under GitHub's 100 MB file limit) because no
+finish if a private host name or a machine path is in any shipped file. The model ships inside the branch (81 MB, under GitHub's 100 MB file limit) because no
 Q4_0 file is published on Hugging Face (`handy-computer/parakeet-tdt_ctc-110m-gguf` has F32, F16, Q8_0, Q4_K_M,
 Q5_K_M and Q6_K; Q4_K has no direct kernel in this runtime), and same-origin needs no CORS. Checked from a local
 server under `/parakeet-web/`: Chrome with the fake microphone, and Linux WebKit to "ready" on the CPU backend.
-To serve it, enable Pages for the `gh-pages` branch (repository Settings, Pages), which needs a plan that allows
-Pages on a private repository.
+Pages serves the `gh-pages` branch at <https://kkrausse.github.io/parakeet-web/>.
 
 ## Credits and licences
 
@@ -179,7 +230,7 @@ Pages on a private repository.
   ships was quantized from their F32 file with transcribe.cpp's quantizer. The demo page carries this notice.
 - Runtime: transcribe.cpp and ggml, MIT. Their licence texts, with Emscripten's and Dawn's, are built into
   `dist/assets/LICENSES.txt`, which travels with the WASM files.
-- This repository's own code has no licence file yet (private).
+- This repository's own code has no licence file yet.
 
 ## History
 
