@@ -1,6 +1,6 @@
 // A release = the built package as the whole tree of a commit on the `release` branch, tagged v<version>.
 // Apps install that tag straight from the (private) repository; nothing is published to a registry:
-//   bun add git+ssh://git@github.com/kkrausse/parakeet-web.git#v0.1.0
+//   bun add github:kkrausse/parakeet-web#v0.1.0
 // The tree is exactly what `bun pm pack` puts in the tarball (package.json, README.md, bin/, dist/ with index.js,
 // the .d.ts files, licenses/ and assets/ with both WASM builds), with the package.json reduced to what a consumer needs.
 //
